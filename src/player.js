@@ -20,7 +20,8 @@
 //   air   0..1    air brake: stand tall with arms spread
 //   push  bool    kick while true (a touch tap holds it for one stroke)
 //   slide bool    hold to throw and hold a powerslide
-//   down  bool    footbrake
+//   down  bool    brake: air brake at speed, footbrake when slow
+//   downAmount 0..1 how hard (analogue trigger)
 
 import * as THREE from 'three';
 import { RiderModel, DECK_HEIGHT } from './rider.js';
@@ -36,6 +37,8 @@ const RHO = 1.2;
 const CDA_UPRIGHT = 0.5;
 const CDA_TUCK = 0.22;
 const CDA_AIRBRAKE = 0.95; // stood tall, chest open, arms spread
+const AIR_BRAKE_FROM = 9; // m/s: above this the brake button air brakes
+const AIR_BRAKE_TO = 6.5; // m/s: below this an air brake turns into a footbrake
 const CDA_SLIDE = 0.08; // extra while side-on in a slide
 const CRR = 0.012; // urethane on asphalt
 const STEP = 1 / 120;
@@ -117,6 +120,7 @@ export class Player {
     this.slipRate = 0;
     this.tuck = 0;
     this.airbrake = 0;
+    this.brakeMode = null;
     this.crouch = 0.3;
     this.brake = 0;
     this.push = 0; // 0..1 pose blend
@@ -179,11 +183,17 @@ export class Player {
     // ---- Rider inputs, limited to how fast a body can move.
     this.steer += clamp((input.steer || 0) - this.steer, -dt * 6, dt * 6);
     const footOff = this.pushT >= 0 || this.brake > 0.05;
-    const wantTuck = this.slideMode || footOff ? 0 : Math.max(input.tuck || 0, input.up && speed > 6 ? 1 : 0);
+    const wantTuck = this.slideMode || footOff || this.brakeMode === 'air' ? 0 : Math.max(input.tuck || 0, input.up && speed > 6 ? 1 : 0);
     this.tuck += clamp(wantTuck - this.tuck, -dt * 3, dt * 2.5);
-    const wantAir = this.slideMode ? 0 : input.air || 0;
+    // The brake button stands you up into an air brake at speed and drags a
+    // foot once slow, the way push and tuck share the up button.
+    if (!input.down || this.slideMode) this.brakeMode = null;
+    else if (!this.brakeMode) this.brakeMode = speed > AIR_BRAKE_FROM ? 'air' : 'foot';
+    else if (this.brakeMode === 'air' && speed < AIR_BRAKE_TO) this.brakeMode = 'foot';
+    const airButton = this.brakeMode === 'air' ? input.downAmount ?? 1 : 0;
+    const wantAir = this.slideMode ? 0 : Math.max(input.air || 0, airButton);
     this.airbrake += clamp(wantAir - this.airbrake, -dt * 3, dt * 3);
-    const wantBrake = input.down && !this.slideMode && this.pushT < 0 && speed > 0.3 && straight;
+    const wantBrake = this.brakeMode === 'foot' && this.pushT < 0 && speed > 0.3 && straight;
     this.brake += clamp((wantBrake ? 1 : 0) - this.brake, -dt * 5, dt * 4);
 
     // Pushing: one kick at a time, each needing the foot to match the road.

@@ -141,6 +141,7 @@ export class Input {
     let steer = this.kbSteer;
     let up = k.has('KeyW') || k.has('ArrowUp');
     let down = k.has('KeyS') || k.has('ArrowDown');
+    let downAmount = down ? 1 : 0; // how hard: LT is analogue
     let slide = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight');
 
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -153,6 +154,8 @@ export class Input {
       const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
       if (b(7) || b(12) || (gp.axes[1] || 0) < -0.5) up = true;
       if (b(6) || b(13) || (gp.axes[1] || 0) > 0.5) down = true;
+      const lt = gp.buttons[6] ? gp.buttons[6].value : 0;
+      downAmount = Math.max(downAmount, b(13) || (gp.axes[1] || 0) > 0.5 ? 1 : 0, b(6) ? Math.max(0.35, lt) : 0);
       if (b(0) || b(5) || b(4)) slide = true;
       // Rising edges for menu navigation: reported as Pad0, Pad1, ...
       const prev = (this.padPrev[gp.index] ||= []);
@@ -169,6 +172,7 @@ export class Input {
     this.state.steer = Math.max(-1, Math.min(1, steer));
     this.state.up = up;
     this.state.down = down;
+    this.state.downAmount = downAmount;
     this.state.slide = slide;
     this.state.tuck = t.tuck;
     this.state.air = t.air;

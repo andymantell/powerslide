@@ -75,6 +75,29 @@ const _a = new THREE.Vector3();
 const _c = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
 
+const _bx = new THREE.Vector3();
+const _bz = new THREE.Vector3();
+const _bm = new THREE.Matrix4();
+
+function makeBibTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 128;
+  cv.height = 140;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#f4f2ea';
+  ctx.fillRect(0, 0, 128, 140);
+  ctx.fillStyle = '#c8262e';
+  ctx.fillRect(0, 0, 128, 18);
+  ctx.fillStyle = '#16161a';
+  ctx.font = 'bold 92px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('7', 64, 84);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function place(mesh, a, b) {
   mesh.position.addVectors(a, b).multiplyScalar(0.5);
   _c.subVectors(b, a).normalize();
@@ -184,6 +207,12 @@ export class RiderModel {
     stripe.rotation.y = Math.PI / 2;
     this.head.add(shell, vis, chin, stripe);
     shell.castShadow = true;
+    // Race bibs on chest and back, so you can see which way the body faces.
+    const bibGeo = new THREE.PlaneGeometry(0.2, 0.22);
+    const bibMat = new THREE.MeshStandardMaterial({ map: makeBibTexture(), roughness: 0.7, side: THREE.DoubleSide });
+    this.m.bibFront = new THREE.Mesh(bibGeo, bibMat);
+    this.m.bibBack = new THREE.Mesh(bibGeo, bibMat);
+    this.rig.add(this.m.bibFront, this.m.bibBack);
     for (const k of ['shoeF', 'shoeR', 'handF', 'handR']) {
       this.m[k].castShadow = true;
       this.rig.add(this.m[k]);
@@ -216,6 +245,16 @@ export class RiderModel {
     m.handF.position.copy(J.haF);
     m.handR.position.copy(J.haR);
     this.head.position.copy(J.head);
+    // Bibs sit on the torso surface, facing the way the chest points.
+    const up = pose.torsoDir;
+    _bz.copy(pose.chestFacing).addScaledVector(up, -pose.chestFacing.dot(up)).normalize();
+    _bx.crossVectors(up, _bz);
+    _bm.makeBasis(_bx, up, _bz);
+    for (const [bib, side] of [[m.bibFront, 1], [m.bibBack, -1]]) {
+      bib.quaternion.setFromRotationMatrix(_bm);
+      if (side < 0) bib.rotateY(Math.PI);
+      bib.position.copy(J.chest).addScaledVector(up, -0.06).addScaledVector(_bz, 0.163 * side);
+    }
     this.head.rotation.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
   }
 
