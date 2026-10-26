@@ -43,11 +43,16 @@ export const QUALITY = {
 };
 export const QUALITY_ORDER = ['auto', 'low', 'medium', 'high', 'ultra'];
 
+// muStatic/muKinetic: wheel grip before and after breaking away. carveLimit:
+// how close full lock carves to the grip limit. leanRate: how quickly the
+// rider can lean into a turn (rad/s natural frequency). recover: how hard the
+// rider straightens out an unintended drift.
 export const DIFFICULTY = {
   cruiser: {
     label: 'Cruiser',
     blurb: 'Forgiving grip, gentle traffic',
     muStatic: 1.05, muKinetic: 0.65, carveLimit: 0.93,
+    leanRate: 7, recover: 16,
     wobble: false, highside: false,
     dirtGrip: 0.8,
     trafficDensity: 1, trafficSpeed: 1,
@@ -57,6 +62,7 @@ export const DIFFICULTY = {
     label: 'Pro',
     blurb: 'Less grip, speed wobbles, highsides, faster traffic',
     muStatic: 0.95, muKinetic: 0.6, carveLimit: 0.9,
+    leanRate: 5.5, recover: 9,
     wobble: true, wobbleSpeed: 20, highside: true, highsideSlip: 1.05, highsideSpeed: 13,
     dirtGrip: 0.55,
     trafficDensity: 1.4, trafficSpeed: 1.2,

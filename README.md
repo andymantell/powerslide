@@ -75,11 +75,28 @@ preset.
   into the valley, with ridged noise for peaks and snow. Detailed tiles near
   the rider and coarse tiles out to about 4 km are split by a circular cut in
   the shader.
-- **Physics** (`src/player.js`): a semi-realistic model with gravity along the
-  grade, aero drag (upright vs. tuck CdA), rolling resistance and a tyre-style
-  grip model. The wheels grip up to static friction, then slide with kinetic
-  friction. Carves, drifts, standup slides and 180s to fakie all come from
-  that one model. Top speeds land around 80–95 km/h on the steeper sections.
+- **Physics** (`src/player.js`): a rigid board and rider on two trucks.
+  - *Lean to steer:* the rider leans, the deck rolls on its bushings, and the
+    angled kingpins (48° front, 42° rear) turn that roll into steer. The front
+    truck turns into the corner and the rear truck turns out of it.
+  - *Balance:* the rider's centre of mass has to lean into a carve to match
+    the cornering force, and leaning takes time. So turn-in is snappy when
+    slow and gets lazier as speed builds, like a real board.
+  - *Grip:* each truck's wheels grip up to about 6° of slip, then break away
+    and slide on urethane at lower friction. Grip is solved per truck, so
+    drifts, standup slides, hook-ups and 180s to fakie all come from one model.
+  - *Weight shift:* weight goes onto the front foot to throw a slide (the tail
+    steps out), in a tuck, and while pushing or footbraking. Weight forward
+    also calms speed wobbles, which shake the trucks on Pro.
+  - *Drag* depends on the body: upright, a progressive tuck, or an air brake
+    with roughly double the upright drag. Pushing is a kick at a time and
+    stops helping once the road is faster than your foot.
+  - Top speeds land around 50 km/h on a 5% grade and 90 km/h on 12% in a tuck.
+    `npm run sim` prints these and other numbers from a headless run.
+- **Rider pose** (`src/riderpose.js`, `src/ik.js`): the body is solved from
+  the physics. Feet stay planted on the rolling deck, the hips lean with the
+  balance model, and IK places knees and elbows. The joints don't depend on
+  the model, so `SkeletonDriver` in `src/ik.js` can drive a skinned rig too.
 - **Traffic** (`src/traffic.js`): downhill cars share your lane and slow for
   bends. Uphill cars come at you in the other lane. Close passes score bonus
   points.

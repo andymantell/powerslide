@@ -1,8 +1,26 @@
-// Rider physics. The board is modelled like a tyre: velocity is split into a
-// rolling component along the deck and a lateral component across it. The
-// wheels grip up to a static friction limit; beyond it (or when the rider
-// throws the board sideways) they slide with kinetic friction. Carving, drifts,
-// powerslides and 180s all fall out of that one model.
+// Rider physics: a rigid board-plus-rider on two trucks.
+//
+// - Steering: the rider leans and the deck rolls on its bushings; the angled
+//   truck kingpins turn that roll into steer (front truck into the turn, rear
+//   truck out of it), which sets the carve radius.
+// - Balance: the rider's centre of mass is a pendulum that has to lean into
+//   the turn to match the cornering force. Leaning takes time, so turn-in
+//   gets lazier the faster you go, just like the real thing.
+// - Wheels: each truck's pair of wheels grips up to a peak slip angle, then
+//   breaks away and slides on urethane at a lower, kinetic friction. Grip is
+//   solved per truck with impulses, so drifts, powerslides, hook-ups and 180s
+//   come out of the same model.
+// - Weight shift moves load between the trucks: weight forward lets the tail
+//   step out to start a slide and calms speed wobbles.
+// - Aero drag depends on the body: upright, progressive tuck or air brake.
+//
+// Inputs (see Input.update):
+//   steer -1..1   lean left/right to carve
+//   tuck  0..1    progressive tuck (touch); `up` = full tuck when fast, or push when slow
+//   air   0..1    air brake: stand tall with arms spread
+//   push  bool    kick while true (a touch tap holds it for one stroke)
+//   slide bool    hold to throw and hold a powerslide
+//   down  bool    footbrake
 
 import * as THREE from 'three';
 import { RiderModel, DECK_HEIGHT } from './rider.js';
@@ -13,15 +31,50 @@ import { DIFFICULTY } from './settings.js';
 
 const G = 9.81;
 const MASS = 82; // rider + board, kg
+const YAW_INERTIA = 9; // kg m², rider standing side-on along the board
 const RHO = 1.2;
 const CDA_UPRIGHT = 0.5;
-const CDA_TUCK = 0.23;
+const CDA_TUCK = 0.22;
 const CDA_AIRBRAKE = 0.95; // stood tall, chest open, arms spread
+const CDA_SLIDE = 0.08; // extra while side-on in a slide
 const CRR = 0.012; // urethane on asphalt
-const MAX_CURVATURE = 0.38; // tightest carve at walking pace (~2.6 m radius)
 const STEP = 1 / 120;
 
+// A typical downhill setup: 48° front and a calmer 42° rear baseplate.
+const WHEELBASE = 0.6;
+const HALF_BASE = WHEELBASE / 2;
+const SIN_FRONT = Math.sin((48 * Math.PI) / 180);
+const SIN_REAR = Math.sin((42 * Math.PI) / 180);
+const MAX_ROLL = 0.21; // deck roll at full lock (bushings bottom out)
+const MAX_CURVATURE = (Math.tan(MAX_ROLL) * (SIN_FRONT + SIN_REAR)) / WHEELBASE; // ~2 m radius
+
+// Urethane grips up to about 6° of slip, then breaks away to sliding friction.
+const PEAK_SLIP = 0.1;
+const SLIP_FALLOFF = 0.12;
+const BALANCE_WINDOW = 0.12; // rad of lean error the rider can hold through the feet
+
+const PUSH_PERIOD = 0.8; // s per kick
+const PUSH_ACCEL = 4; // peak, at a standstill
+const PUSH_TOP = 7.5; // m/s: faster than this the foot can't keep up with the road
+const FOOTBRAKE = 3.2; // m/s² with the rear foot dragging
+
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+// Wheel friction against slip angle: full grip up to the peak, then falling
+// away towards sliding friction.
+function gripCurve(alpha, muPeak, muSlide) {
+  if (alpha <= PEAK_SLIP) return muPeak;
+  return muSlide + (muPeak - muSlide) * Math.exp(-(alpha - PEAK_SLIP) / SLIP_FALLOFF);
+}
+
+const _axles = [
+  { x: HALF_BASE, nx: 0, nz: 0, arm: 0, inv: 0, max: 0, acc: 0, sliding: false },
+  { x: -HALF_BASE, nx: 0, nz: 0, arm: 0, inv: 0, max: 0, acc: 0, sliding: false },
+];
+const _n = new THREE.Vector3();
+const _qa = new THREE.Quaternion();
+const _qb = new THREE.Quaternion();
+const UP = new THREE.Vector3(0, 1, 0);
 
 export class Player {
   constructor(scene, road, terrain, diff = DIFFICULTY.cruiser) {
@@ -37,7 +90,6 @@ export class Player {
     this.proj = {};
     this.events = [];
     this.handLocal = new THREE.Vector3();
-    this.handWorld = new THREE.Vector3();
     this.reset(400);
   }
 
@@ -47,21 +99,32 @@ export class Player {
     this.d = 1.75;
     this.pos.set(f.x + f.rightX * this.d, f.y, f.z + f.rightZ * this.d);
     this.yaw = f.heading;
+    this.yawRate = 0;
     this.vel.set(f.dirX * 6, f.dirZ * 6);
     this.steer = 0;
-    this.lean = 0;
+    this.lean = 0; // centre-of-mass lean, rad, + towards deck right
+    this.leanRate = 0;
+    this.leanZ = 0; // fore/aft body lean for the pose
+    this.roll = 0; // deck roll on the trucks, rad
+    this.steerFront = 0; // truck steer angles, rad
+    this.steerRear = 0;
+    this.curvature = 0;
+    this.weight = 0; // -1..1, + = onto the front truck
     this.sliding = false; // wheels currently sliding
     this.slideMode = false; // rider is throwing a slide
     this.slideDir = 1;
     this.slip = 0; // angle between deck and travel
+    this.slipRate = 0;
     this.tuck = 0;
     this.airbrake = 0;
     this.crouch = 0.3;
     this.brake = 0;
-    this.push = 0;
+    this.push = 0; // 0..1 pose blend
+    this.pushT = -1; // time into the current kick, -1 when not pushing
     this.pushPhase = 0;
     this.handAmount = 0;
     this.accLocal = new THREE.Vector2(); // contact accel in deck frame (x right, y forward)
+    this.aLat = 0; // smoothed lateral contact accel, for balance
     this.surface = 'asphalt';
     this.fakie = false;
     this.crashed = false;
@@ -105,22 +168,36 @@ export class Player {
 
   step(dt, input) {
     const road = this.road;
+    const d = this.diff;
     const f = road.sample(this.s, this.frame);
     const speed = this.vel.length();
-    const ux = Math.sin(this.yaw), uz = -Math.cos(this.yaw); // deck forward
-    const rx = -uz, rz = ux; // deck right (toe side)
-    let vLong = this.vel.x * ux + this.vel.y * uz;
+    let ux = Math.sin(this.yaw), uz = -Math.cos(this.yaw); // deck forward
+    let rx = -uz, rz = ux; // deck right (toe side)
+    const vLong0 = this.vel.x * ux + this.vel.y * uz;
+    const straight = Math.abs(this.slip) < 0.4;
 
-    // Rider inputs, smoothed so the board responds like a body would.
-    this.steer += clamp(input.steer - this.steer, -dt * 4.5, dt * 4.5);
-    // Touch gives analogue tuck and air brake; keys and triggers are all-or-nothing.
-    const wantTuck = this.slideMode ? 0 : Math.max(input.tuck || 0, input.up && speed > 6 ? 1 : 0);
+    // ---- Rider inputs, limited to how fast a body can move.
+    this.steer += clamp((input.steer || 0) - this.steer, -dt * 6, dt * 6);
+    const footOff = this.pushT >= 0 || this.brake > 0.05;
+    const wantTuck = this.slideMode || footOff ? 0 : Math.max(input.tuck || 0, input.up && speed > 6 ? 1 : 0);
     this.tuck += clamp(wantTuck - this.tuck, -dt * 3, dt * 2.5);
     const wantAir = this.slideMode ? 0 : input.air || 0;
     this.airbrake += clamp(wantAir - this.airbrake, -dt * 3, dt * 3);
-    this.brake += clamp((input.down && !this.slideMode && speed > 0.3 ? 1 : 0) - this.brake, -dt * 5, dt * 5);
-    const wantPush = (input.up || input.push) && speed < 7 && !this.slideMode && !input.down;
-    this.push += clamp((wantPush ? 1 : 0) - this.push, -dt * 4, dt * 4);
+    const wantBrake = input.down && !this.slideMode && this.pushT < 0 && speed > 0.3 && straight;
+    this.brake += clamp((wantBrake ? 1 : 0) - this.brake, -dt * 5, dt * 4);
+
+    // Pushing: one kick at a time, each needing the foot to match the road.
+    const wantPush = (input.push || (input.up && speed < 7)) && !this.slideMode && !input.down && straight;
+    if (this.pushT < 0 && wantPush && this.brake < 0.05 && vLong0 < PUSH_TOP - 0.5) this.pushT = 0;
+    let pushAcc = 0;
+    if (this.pushT >= 0) {
+      const ph = this.pushT / PUSH_PERIOD;
+      if (ph < 0.6) pushAcc = PUSH_ACCEL * Math.sin((ph / 0.6) * Math.PI) * Math.max(0, 1 - Math.max(0, vLong0) / PUSH_TOP);
+      this.pushPhase = ph;
+      this.pushT += dt;
+      if (this.pushT >= PUSH_PERIOD || this.slideMode) this.pushT = -1;
+    }
+    this.push += clamp((this.pushT >= 0 ? 1 : 0) - this.push, -dt * 5, dt * 6);
 
     // Slide initiation / release.
     if (input.slide && !this.slideMode && speed > 3) {
@@ -130,82 +207,147 @@ export class Player {
     } else if (!input.slide && this.slideMode) {
       this.slideMode = false;
       const a = Math.abs(this.slip);
-      const d = this.diff;
       if (d.highside && speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7) {
         this.crash('Highsided: the wheels hooked up while sideways');
         return;
       }
     }
 
-    // Forces (as accelerations) in the horizontal plane.
-    const gAlong = (G * f.grade) / Math.sqrt(1 + f.grade * f.grade);
+    // Weight shift: onto the front foot to throw a slide, for a tuck, and
+    // whenever the back foot is off the board.
+    const wantWeight = clamp((this.slideMode ? 0.4 : 0) + this.tuck * 0.15 + (footOff ? 0.5 : 0) - this.airbrake * 0.1, -1, 1);
+    this.weight += clamp(wantWeight - this.weight, -dt * 3, dt * 3);
+
+    // ---- Forces along the road (as accelerations).
+    const cosGrade = 1 / Math.sqrt(1 + f.grade * f.grade);
+    const gAlong = G * f.grade * cosGrade;
     let ax = f.dirX * gAlong;
     let az = f.dirZ * gAlong;
-    const cda = lerp(lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck), CDA_AIRBRAKE, this.airbrake) + (this.slideMode ? 0.08 : 0);
+    const cda = lerp(lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck), CDA_AIRBRAKE, this.airbrake) + (this.slideMode ? CDA_SLIDE : 0);
     const dragK = (0.5 * RHO * cda) / MASS;
     ax -= dragK * speed * this.vel.x;
     az -= dragK * speed * this.vel.y;
 
-    // Longitudinal: rolling resistance, footbrake, pushing.
+    // Along the deck: rolling resistance, footbrake, pushing.
     const onGravel = Math.abs(this.d) > HALF_WIDTH;
     this.dirt = road.dirtAt(this.s, this.d);
-    let crr = CRR + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
-    let long = -crr * G * Math.sign(vLong);
-    if (this.brake > 0.5 && !this.sliding) long -= 3.2 * this.brake * Math.sign(vLong);
-    if (this.push > 0.5 && vLong > -0.5) long += 1.9;
+    const crr = CRR + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
+    let long = -crr * G * cosGrade * Math.sign(vLong0) - FOOTBRAKE * this.brake * Math.sign(vLong0) + pushAcc;
     // Don't let resistance reverse the board.
-    if (Math.abs(vLong) < Math.abs(long) * dt && long * vLong < 0) long = -vLong / dt;
+    if (pushAcc === 0 && Math.abs(vLong0) < Math.abs(long) * dt && long * vLong0 < 0) long = -vLong0 / dt;
     ax += ux * long;
     az += uz * long;
+    let vx = this.vel.x + ax * dt;
+    let vz = this.vel.y + az * dt;
 
-    // Predict velocity, then decide how much lateral force the wheels can give.
-    let nvx = this.vel.x + ax * dt;
-    let nvz = this.vel.y + az * dt;
-    const vLat = nvx * rx + nvz * rz;
-    const need = -vLat / dt;
-    const mu = this.slideMode || this.sliding ? this.diff.muKinetic : this.diff.muStatic;
-    const cap = mu * G * (onGravel ? 0.75 : 1) * lerp(1, this.diff.dirtGrip, this.dirt);
-    let aLat;
-    if (!this.slideMode && Math.abs(need) <= cap) {
-      aLat = need;
-      this.sliding = false;
-    } else {
-      aLat = clamp(need, -cap, cap);
-      this.sliding = Math.abs(vLat) > 0.25;
-    }
-    nvx += rx * aLat * dt;
-    nvz += rz * aLat * dt;
-    this.vel.set(nvx, nvz);
-    this.accLocal.set(aLat, long);
-
-    // Board yaw.
-    const v = this.vel.length();
-    vLong = nvx * ux + nvz * uz;
-    const travel = Math.atan2(nvx, -nvz);
-    this.slip = v > 0.5 ? wrap(this.yaw - travel) : 0;
-    let yawRate;
+    // ---- Rider's yaw effort: twisting the board into and through a slide,
+    // or straightening it out of a drift. Only does much once wheels slide.
+    const v = Math.hypot(vx, vz);
+    const travel = Math.atan2(vx, -vz);
+    const slip = v > 0.5 ? wrap(this.yaw - travel) : 0;
+    let yawAcc;
     if (this.slideMode) {
       // Steering into the slide opens it up; steering out closes it down.
       const base = 1.3 + 0.55 * this.steer * this.slideDir;
       const target = this.slideDir * clamp(base, 0.7, 1.8);
-      yawRate = clamp((target - this.slip) * 9, -6.5, 6.5);
-    } else if (this.sliding || Math.abs(this.slip) > 0.15) {
-      // Wheels hooking back up: rotate the deck back in line with travel,
-      // or all the way round to fakie if that's closer.
-      const target = Math.abs(this.slip) > Math.PI / 2 ? Math.sign(this.slip) * Math.PI : 0;
-      yawRate = clamp((target - this.slip) * 6, -5, 5) + vLong * this.carveCurvature(v) * 0.5;
+      yawAcc = clamp(40 * (target - slip) - 9 * this.slipRate, -45, 45);
     } else {
-      yawRate = vLong * this.carveCurvature(v);
+      // Hook back up in line with travel, or all the way round to fakie.
+      const target = Math.abs(slip) > Math.PI / 2 ? Math.sign(slip) * Math.PI : 0;
+      yawAcc = clamp(d.recover * (target - slip) - 5 * this.slipRate, -30, 30);
     }
-    yawRate += this.updateWobble(dt, v);
+    this.yawRate += yawAcc * dt;
+
+    // ---- Lean to steer. The rider wants a carve; the body has to lean to
+    // match it before the deck can roll that far.
+    const v2 = Math.max(v * v, 0.25);
+    const vLong = vx * ux + vz * uz;
+    const rolling = !this.slideMode && vLong > 0;
+    const kWant = rolling ? this.steer * Math.min(MAX_CURVATURE, (d.carveLimit * d.muStatic * G) / v2) : 0;
+    const carveLean = Math.atan((v2 * kWant) / G);
+    const heldLean = Math.atan(this.aLat / G);
+    // In a slide or a drift the body has to lean against what the wheels give.
+    const leanTarget = this.slideMode ? heldLean : this.sliding ? lerp(carveLean, heldLean, 0.6) : carveLean;
+    const w = d.leanRate;
+    this.leanRate += (w * w * (leanTarget - this.lean) - 2 * w * this.leanRate) * dt;
+    this.lean += this.leanRate * dt;
+    let k = kWant;
+    if (rolling) {
+      k = clamp(k, (G * Math.tan(this.lean - BALANCE_WINDOW)) / v2, (G * Math.tan(this.lean + BALANCE_WINDOW)) / v2);
+    }
+    this.curvature = clamp(k, -MAX_CURVATURE, MAX_CURVATURE);
+    this.roll = Math.atan((this.curvature * WHEELBASE) / (SIN_FRONT + SIN_REAR)) + this.updateWobble(dt, v);
     if (this.crashed) return;
-    this.yaw = wrap(this.yaw + yawRate * dt);
-    if (Math.abs(this.slip) > Math.PI * 0.9 && !this.slideMode && !this.sliding) {
+    // Riding fakie, the 42° truck leads.
+    const tanRoll = Math.tan(this.roll);
+    this.steerFront = Math.atan(tanRoll * (this.fakie ? SIN_REAR : SIN_FRONT));
+    this.steerRear = -Math.atan(tanRoll * (this.fakie ? SIN_FRONT : SIN_REAR));
+
+    // ---- Wheels: grip impulses at each truck, solved iteratively.
+    const N = MASS * G * cosGrade;
+    const share = 0.3 * this.weight;
+    const gripScale = (onGravel ? 0.75 : 1) * lerp(1, d.dirtGrip, this.dirt);
+    let r = this.yawRate;
+    for (let i = 0; i < 2; i++) {
+      const a = _axles[i];
+      const delta = i === 0 ? this.steerFront : this.steerRear;
+      const c = Math.cos(delta), sn = Math.sin(delta);
+      // Wheel rolling direction e, and lateral n (along which grip acts).
+      const ex = c * ux + sn * rx, ez = c * uz + sn * rz;
+      a.nx = -sn * ux + c * rx;
+      a.nz = -sn * uz + c * rz;
+      a.arm = a.x * c;
+      a.inv = 1 / MASS + (a.arm * a.arm) / YAW_INERTIA;
+      const px = vx + r * a.x * rx, pz = vz + r * a.x * rz;
+      const vn = px * a.nx + pz * a.nz;
+      const ve = px * ex + pz * ez;
+      const alpha = Math.atan2(Math.abs(vn), Math.abs(ve) + 0.5);
+      const load = N * (i === 0 ? 0.5 + share : 0.5 - share);
+      a.max = gripCurve(alpha, d.muStatic, d.muKinetic) * gripScale * load * dt;
+      a.acc = 0;
+    }
+    for (let it = 0; it < 4; it++) {
+      for (const a of _axles) {
+        const vn = (vx + r * a.x * rx) * a.nx + (vz + r * a.x * rz) * a.nz;
+        const acc = clamp(a.acc - vn / a.inv, -a.max, a.max);
+        const dj = acc - a.acc;
+        a.acc = acc;
+        vx += (a.nx * dj) / MASS;
+        vz += (a.nz * dj) / MASS;
+        r += (a.arm * dj) / YAW_INERTIA;
+      }
+    }
+    let latImpulse = 0;
+    let longImpulse = 0;
+    this.sliding = false;
+    for (const a of _axles) {
+      const vn = (vx + r * a.x * rx) * a.nx + (vz + r * a.x * rz) * a.nz;
+      a.sliding = Math.abs(a.acc) > a.max * 0.98 && Math.abs(vn) > 0.3;
+      if (a.sliding) this.sliding = true;
+      latImpulse += a.acc * (a.nx * rx + a.nz * rz);
+      longImpulse += a.acc * (a.nx * ux + a.nz * uz);
+    }
+    this.vel.set(vx, vz);
+    this.yawRate = r;
+    const aLat = latImpulse / (MASS * dt);
+    this.accLocal.set(aLat, long + longImpulse / (MASS * dt));
+    this.aLat += (aLat - this.aLat) * Math.min(1, dt * 15);
+
+    // ---- Board yaw.
+    this.yaw = wrap(this.yaw + r * dt);
+    const vNow = this.vel.length();
+    const newSlip = vNow > 0.5 ? wrap(this.yaw - Math.atan2(vx, -vz)) : 0;
+    this.slipRate += (wrap(newSlip - this.slip) / dt - this.slipRate) * Math.min(1, dt * 30);
+    this.slip = newSlip;
+    if (Math.abs(this.slip) > Math.PI * 0.75 && !this.slideMode && !this.sliding) {
       // Completed a 180: we are now riding the other way round.
       this.fakie = !this.fakie;
       this.yaw = wrap(this.yaw + Math.PI);
       this.slip = wrap(this.slip + Math.PI);
       this.slideDir = -this.slideDir;
+      this.lean = -this.lean;
+      this.leanRate = -this.leanRate;
+      this.aLat = -this.aLat;
       this.events.push('fakie');
     }
 
@@ -220,27 +362,31 @@ export class Player {
     this.pos.y = p.y;
     this.surface = onGravel ? 'gravel' : 'asphalt';
     this.checkEdges(p);
-    this.model.spinWheels(Math.abs(vLong) * dt);
+    ux = Math.sin(this.yaw);
+    uz = -Math.cos(this.yaw);
+    this.model.spinWheels((this.vel.x * ux + this.vel.y * uz) * dt);
   }
 
-  // Speed wobbles (Pro): energy builds above a threshold speed, faster when
-  // upright or making jerky inputs; tucking and smooth lines keep it calm,
-  // and throwing a slide kills it.
+  // Speed wobbles (Pro): the trucks start to oscillate above a threshold
+  // speed. Energy builds faster when upright, with weight on the back foot or
+  // with jerky inputs; tucking with weight forward and smooth lines keep it
+  // calm, and throwing a slide kills it. Returns the deck roll it adds.
   updateWobble(dt, v) {
     const d = this.diff;
     const steerRate = Math.abs(this.steer - this.prevSteer) / dt;
     this.prevSteer = this.steer;
     if (!d.wobble) return 0;
-    const over = v - d.wobbleSpeed;
-    let grow = over > 0 ? over * 0.035 * (1.2 - 0.7 * this.tuck) * (1 + steerRate * 0.8) : 0;
-    let decay = 0.25 + (over < 0 ? 0.8 : 0) + (this.slideMode ? 2 : 0);
+    const over = v - d.wobbleSpeed - this.weight * 3;
+    const stance = 1.2 - 0.7 * this.tuck + 0.3 * this.airbrake;
+    const grow = over > 0 ? over * 0.035 * stance * (1 + steerRate * 0.8) : 0;
+    const decay = 0.25 + (over < 0 ? 0.8 : 0) + (this.slideMode ? 2 : 0);
     this.wobble = Math.max(0, this.wobble + (grow - decay * this.wobble) * dt);
     if (this.wobble > 1) {
       this.crash('Speed wobbles threw you off');
       return 0;
     }
-    this.wobblePhase += dt * Math.PI * 2 * (7 + v * 0.1);
-    return Math.cos(this.wobblePhase) * this.wobble * 2.5;
+    this.wobblePhase += dt * Math.PI * 2 * (6 + v * 0.1);
+    return Math.sin(this.wobblePhase) * this.wobble * 0.012;
   }
 
   // Pro only: letting go of the slide right now would highside.
@@ -248,13 +394,6 @@ export class Player {
     const d = this.diff;
     const a = Math.abs(this.slip);
     return !!d.highside && this.slideMode && this.speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7;
-  }
-
-  carveCurvature(v) {
-    // A board can carve tighter than the wheels can hold at speed; cap the
-    // demand just under the grip limit so full lock is a fast, clean carve.
-    const gripLimit = (this.diff.muStatic * this.diff.carveLimit * G) / Math.max(v * v, 0.01);
-    return this.steer * Math.min(MAX_CURVATURE, gripLimit);
   }
 
   checkEdges(p) {
@@ -356,31 +495,26 @@ export class Player {
   animate(dt) {
     const m = this.model;
     const v = this.speed;
-    // Rider lean follows the contact force: into turns when carving, away
-    // from travel when sliding.
-    const leanX = Math.atan2(this.accLocal.x, G);
-    const leanZ = Math.atan2(-this.accLocal.y, G) * 0.6;
-    this.lean = lerp(this.lean, leanX, 1 - Math.exp(-dt * 10));
-    this.leanZ = lerp(this.leanZ ?? 0, leanZ, 1 - Math.exp(-dt * 8));
-    let wantCrouch = this.slideMode ? 0.75 : this.brake > 0.1 ? 0.45 : 0.3 + Math.abs(this.steer) * 0.25;
+    // Fore/aft: the body leans against the push, the brake and the drag.
+    this.leanZ = lerp(this.leanZ, Math.atan2(-this.accLocal.y, G) * 0.6, 1 - Math.exp(-dt * 8));
+    let wantCrouch = this.slideMode ? 0.75 : this.brake > 0.1 ? 0.45 : 0.3 + Math.min(0.35, Math.abs(this.lean) * 0.6);
     wantCrouch = lerp(wantCrouch, 0.05, this.airbrake);
     this.crouch = lerp(this.crouch, wantCrouch, 1 - Math.exp(-dt * 6));
-    this.pushPhase += dt * 7 * this.push;
     const wantHand = this.slideMode && Math.abs(this.lean) > 0.25 ? 1 : 0;
     this.handAmount = lerp(this.handAmount, wantHand, 1 - Math.exp(-dt * 10));
-    const fakieSign = this.fakie ? -1 : 1;
 
     this.applyTransform();
 
-    // Hand target on the road surface on the leaning side.
-    const handSide = Math.sign(this.lean) || 1;
-    m.root.updateMatrixWorld(true);
-    this.handWorld.set(handSide * 0.62, 0.02, 0.1 * fakieSign);
-    m.root.localToWorld(this.handWorld);
-    this.handLocal.copy(this.handWorld);
-    m.rig.worldToLocal(this.handLocal);
-
+    // The rig is turned round when riding fakie, so mirror into rig space.
+    const sgn = this.fakie ? -1 : 1;
+    const lean = this.lean * sgn;
+    const handSide = Math.sign(lean) || 1;
+    this.handLocal.set(handSide * 0.62, -DECK_HEIGHT + 0.03, 0.1);
     m.pose({
+      roll: this.roll * sgn,
+      lean,
+      pitch: this.leanZ,
+      weight: this.weight,
       crouch: this.crouch,
       tuck: this.tuck,
       spread: this.airbrake,
@@ -388,9 +522,9 @@ export class Player {
       push: this.push,
       pushPhase: this.pushPhase,
       fakie: this.fakie,
-      slideHand: this.handAmount > 0.01 ? handSide * fakieSign : 0,
+      slideHand: this.handAmount > 0.01 ? handSide : 0,
       handAmount: this.handAmount,
-      handTargetLocal: this.handLocal,
+      handTarget: this.handLocal,
       lookYaw: clamp(this.slip, -1.2, 1.2) * 0.8,
     });
     this.topSpeed = Math.max(this.topSpeed, v);
@@ -402,16 +536,14 @@ export class Player {
     const f = this.road.sample(this.s, this.frame);
     m.root.position.set(this.pos.x, this.pos.y + (this.surface === 'gravel' ? -0.05 : 0), this.pos.z);
     // Align to the road surface: yaw, then tilt to the road normal.
-    const n = new THREE.Vector3(f.dirX * f.grade, 1, f.dirZ * f.grade).normalize();
-    const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -this.yaw);
-    const qTilt = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
-    m.root.quaternion.copy(qTilt).multiply(qYaw);
-    // Deck rolls a little with the trucks; the body leans the rest.
-    const deckRoll = clamp(this.lean * 0.3, -0.22, 0.22) * (this.slideMode ? 0.3 : 1);
-    m.deck.rotation.z = -deckRoll;
-    m.lean.rotation.z = -(this.lean - deckRoll);
-    m.lean.rotation.x = this.leanZ ?? 0;
-    m.lean.position.y = DECK_HEIGHT;
+    _n.set(f.dirX * f.grade, 1, f.dirZ * f.grade).normalize();
+    _qa.setFromUnitVectors(UP, _n);
+    _qb.setFromAxisAngle(UP, -this.yaw);
+    m.root.quaternion.copy(_qa).multiply(_qb);
+    // Deck rolls on the bushings; trucks steer (front into the turn, rear out).
+    m.deck.rotation.z = -this.roll;
+    m.trucks[0].rotation.y = -this.steerFront;
+    m.trucks[1].rotation.y = -this.steerRear;
     m.rig.rotation.y = this.fakie ? Math.PI : 0;
   }
 }
