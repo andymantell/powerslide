@@ -315,7 +315,7 @@ function updateHud(dt) {
   if (game.combo > 1) st += `  x${game.combo}`;
   const wobbling = player.wobble > 0.3 && !player.crashed;
   const risk = player.highsideRisk;
-  if (risk) st = 'SLIDE · STEER OUT TO CLOSE IT';
+  if (risk) st = 'SLIDE · CLOSE IT BEFORE LETTING GO';
   if (wobbling) st = 'WOBBLE!';
   else if (player.dirt > 0.3 && !player.crashed) st = 'GRIT';
   $('state').textContent = st;

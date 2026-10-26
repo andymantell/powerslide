@@ -105,19 +105,31 @@ for (const diff of ['cruiser', 'pro']) {
   const closed = p.slip;
   const crash = run(p, 0.8, { steer: 0 });
   console.log(`${diff.padEnd(8)} 1.5 s slide: ${fmt(after)}, max slip ${(maxSlip * 57.3).toFixed(0)}°, closed to ${(closed * 57.3).toFixed(0)}°, 0.8 s after release ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°, ${crash !== null ? 'CRASH: ' + p.crashReason : 'rode away'}`);
-  // Letting go while fully sideways instead.
+  // Letting go while fully sideways (brake held to throw it wide) instead.
   const q = make(0.08, diff, 60 / 3.6);
-  run(q, 0.5, { slide: true, steer: 0 });
+  run(q, 0.5, { slide: true, steer: 0, down: true });
   const at = q.speed;
   const c2 = run(q, 1, { steer: 0 });
   console.log(`${''.padEnd(8)} let go fully sideways at ${fmt(at)}: ${c2 !== null ? 'CRASH: ' + q.crashReason : 'rode away'}`);
+}
+
+console.log('\n== Steering mid-slide (Cruiser, 50 km/h on 6%, 1.2 s): sideways travel');
+for (const steer of [-1, 0, 1]) {
+  const p = make(0.06, 'cruiser', 50 / 3.6);
+  run(p, 1.2, { slide: true, steer });
+  console.log(`steer ${String(steer).padStart(2)}: moved ${p.pos.x.toFixed(2).padStart(6)} m across, ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
+}
+{
+  const p = make(0.06, 'cruiser', 50 / 3.6);
+  run(p, 1.2, { slide: true, steer: 0, down: true });
+  console.log(`brake held (full scrub): ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
 }
 
 console.log('\n== 180 to fakie: open the slide wide, then let go (Cruiser, 30 km/h, flat)');
 {
   const p = make(0.0, 'cruiser', 30 / 3.6);
   let fakie = false;
-  run(p, 0.8, { slide: true, steer: 1 }, (pp) => (fakie ||= pp.events.includes('fakie')));
+  run(p, 0.8, { slide: true, steer: 1, down: true }, (pp) => (fakie ||= pp.events.includes('fakie')));
   // Let go past sideways: the rider carries it round instead of back.
   for (let t = 0; t < 1.2 && !fakie; t += DT) {
     p.update(DT, { slide: false, steer: 0 });

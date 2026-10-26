@@ -84,6 +84,7 @@ function makeBibTexture() {
   cv.width = 128;
   cv.height = 140;
   const ctx = cv.getContext('2d');
+  if (!ctx) return null; // headless (tools/sim.mjs)
   ctx.fillStyle = '#f4f2ea';
   ctx.fillRect(0, 0, 128, 140);
   ctx.fillStyle = '#c8262e';
@@ -209,7 +210,7 @@ export class RiderModel {
     shell.castShadow = true;
     // Race bibs on chest and back, so you can see which way the body faces.
     const bibGeo = new THREE.PlaneGeometry(0.2, 0.22);
-    const bibMat = new THREE.MeshStandardMaterial({ map: makeBibTexture(), roughness: 0.7, side: THREE.DoubleSide });
+    const bibMat = new THREE.MeshStandardMaterial({ map: makeBibTexture(), color: '#f4f2ea', roughness: 0.7, side: THREE.DoubleSide });
     this.m.bibFront = new THREE.Mesh(bibGeo, bibMat);
     this.m.bibBack = new THREE.Mesh(bibGeo, bibMat);
     this.rig.add(this.m.bibFront, this.m.bibBack);

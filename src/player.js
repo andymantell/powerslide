@@ -41,6 +41,8 @@ const AIR_BRAKE_FROM = 9; // m/s: above this the brake button air brakes
 const AIR_BRAKE_TO = 6.5; // m/s: below this an air brake turns into a footbrake
 const CDA_SLIDE = 0.08; // extra while side-on in a slide
 const CRR = 0.012; // urethane on asphalt
+const SLIDE_ANGLE = 0.7; // rad: default slide angle to travel (~40°)
+const SLIDE_STEER = 0.45; // g of path steering available mid-slide
 const STEP = 1 / 120;
 
 // A typical downhill setup: 48° front and a calmer 42° rear baseplate.
@@ -257,9 +259,11 @@ export class Player {
     const slip = v > 0.5 ? wrap(this.yaw - travel) : 0;
     let yawAcc;
     if (this.slideMode) {
-      // Steering into the slide opens it up; steering out closes it down.
-      const base = 1.3 + 0.55 * this.steer * this.slideDir;
-      const target = this.slideDir * clamp(base, 0.7, 1.8);
+      // A controllable drift by default, about 40° to travel, so most of the
+      // speed carries. Steering into the slide opens it a little; brake throws
+      // it fully sideways to scrub hard; tuck closes it down to carry speed.
+      const base = SLIDE_ANGLE + 0.25 * this.steer * this.slideDir + (input.down ? 0.9 : 0) - (input.up ? 0.25 : 0);
+      const target = this.slideDir * clamp(base, 0.4, 1.9);
       yawAcc = clamp(40 * (target - slip) - 9 * this.slipRate, -45, 45);
     } else {
       // Hook back up in line with travel, or all the way round to fakie.
@@ -316,6 +320,7 @@ export class Player {
       a.max = gripCurve(alpha, d.muStatic, d.muKinetic) * gripScale * load * dt;
       a.acc = 0;
     }
+    const vx0 = vx, vz0 = vz;
     for (let it = 0; it < 4; it++) {
       for (const a of _axles) {
         const vn = (vx + r * a.x * rx) * a.nx + (vz + r * a.x * rz) * a.nz;
@@ -337,6 +342,7 @@ export class Player {
       latImpulse += a.acc * (a.nx * rx + a.nz * rz);
       longImpulse += a.acc * (a.nx * ux + a.nz * uz);
     }
+    if (this.slideMode) [vx, vz] = this.steerSlide(vx0, vz0, vx, vz, dt, gripScale);
     this.vel.set(vx, vz);
     this.yawRate = r;
     const aLat = latImpulse / (MASS * dt);
@@ -397,6 +403,21 @@ export class Player {
     }
     this.wobblePhase += dt * Math.PI * 2 * (6 + v * 0.1);
     return Math.sin(this.wobblePhase) * this.wobble * 0.012;
+  }
+
+  // While sliding, the rider steers the path by weighting toes or heels: the
+  // sideways pull the wheels give is replaced by one the stick asks for (a
+  // little of the natural pull towards the nose stays), within what sliding
+  // urethane can deliver. The board's slip target follows the new heading.
+  steerSlide(vx0, vz0, vx, vz, dt, gripScale) {
+    const v = Math.hypot(vx, vz);
+    if (v < 2) return [vx, vz];
+    const rx = -vz / v, rz = vx / v; // right of travel
+    const aWheels = ((vx - vx0) * rx + (vz - vz0) * rz) / dt;
+    const cap = this.diff.muKinetic * G * gripScale;
+    const want = clamp(this.steer * SLIDE_STEER * G * gripScale + 0.3 * aWheels, -cap, cap);
+    const dv = (want - aWheels) * dt;
+    return [vx + rx * dv, vz + rz * dv];
   }
 
   // Pro only: letting go of the slide right now would highside.
