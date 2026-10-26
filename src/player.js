@@ -9,6 +9,7 @@ import { RiderModel, DECK_HEIGHT } from './rider.js';
 import { DS, HALF_WIDTH, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
 import { RoadMesh } from './roadmesh.js';
 import { clamp, lerp } from './noise.js';
+import { DIFFICULTY } from './settings.js';
 
 const G = 9.81;
 const MASS = 82; // rider + board, kg
@@ -16,16 +17,15 @@ const RHO = 1.2;
 const CDA_UPRIGHT = 0.5;
 const CDA_TUCK = 0.23;
 const CRR = 0.012; // urethane on asphalt
-const MU_STATIC = 1.05;
-const MU_KINETIC = 0.65;
 const MAX_CURVATURE = 0.38; // tightest carve at walking pace (~2.6 m radius)
 const STEP = 1 / 120;
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 export class Player {
-  constructor(scene, road, terrain) {
+  constructor(scene, road, terrain, diff = DIFFICULTY.cruiser) {
     this.scene = scene;
+    this.diff = diff;
     this.road = road;
     this.terrain = terrain;
     this.model = new RiderModel();
@@ -67,6 +67,10 @@ export class Player {
     this.distance = 0;
     this.topSpeed = 0;
     this.shake = 0;
+    this.wobble = 0;
+    this.wobblePhase = 0;
+    this.dirt = 0;
+    this.prevSteer = 0;
     if (this.boardLoose) {
       this.model.root.add(this.model.board);
       this.model.board.position.set(0, 0, 0);
@@ -120,6 +124,12 @@ export class Player {
       this.events.push('slideStart');
     } else if (!input.slide && this.slideMode) {
       this.slideMode = false;
+      const a = Math.abs(this.slip);
+      const d = this.diff;
+      if (d.highside && speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7) {
+        this.crash('Highsided: the wheels hooked up while sideways');
+        return;
+      }
     }
 
     // Forces (as accelerations) in the horizontal plane.
@@ -133,7 +143,8 @@ export class Player {
 
     // Longitudinal: rolling resistance, footbrake, pushing.
     const onGravel = Math.abs(this.d) > HALF_WIDTH;
-    let crr = CRR + (onGravel ? 0.12 : 0);
+    this.dirt = road.dirtAt(this.s, this.d);
+    let crr = CRR + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
     let long = -crr * G * Math.sign(vLong);
     if (this.brake > 0.5 && !this.sliding) long -= 3.2 * this.brake * Math.sign(vLong);
     if (this.push > 0.5 && vLong > -0.5) long += 1.9;
@@ -147,8 +158,8 @@ export class Player {
     let nvz = this.vel.y + az * dt;
     const vLat = nvx * rx + nvz * rz;
     const need = -vLat / dt;
-    const mu = this.slideMode || this.sliding ? MU_KINETIC : MU_STATIC;
-    const cap = mu * G * (onGravel ? 0.75 : 1);
+    const mu = this.slideMode || this.sliding ? this.diff.muKinetic : this.diff.muStatic;
+    const cap = mu * G * (onGravel ? 0.75 : 1) * lerp(1, this.diff.dirtGrip, this.dirt);
     let aLat;
     if (!this.slideMode && Math.abs(need) <= cap) {
       aLat = need;
@@ -169,8 +180,9 @@ export class Player {
     this.slip = v > 0.5 ? wrap(this.yaw - travel) : 0;
     let yawRate;
     if (this.slideMode) {
-      const base = 1.35 + 0.35 * this.steer * this.slideDir;
-      const target = this.slideDir * clamp(base, 0.85, 1.75);
+      // Steering into the slide opens it up; steering out closes it down.
+      const base = 1.3 + 0.55 * this.steer * this.slideDir;
+      const target = this.slideDir * clamp(base, 0.7, 1.8);
       yawRate = clamp((target - this.slip) * 9, -6.5, 6.5);
     } else if (this.sliding || Math.abs(this.slip) > 0.15) {
       // Wheels hooking back up: rotate the deck back in line with travel,
@@ -180,6 +192,8 @@ export class Player {
     } else {
       yawRate = vLong * this.carveCurvature(v);
     }
+    yawRate += this.updateWobble(dt, v);
+    if (this.crashed) return;
     this.yaw = wrap(this.yaw + yawRate * dt);
     if (Math.abs(this.slip) > Math.PI * 0.9 && !this.slideMode && !this.sliding) {
       // Completed a 180: we are now riding the other way round.
@@ -204,10 +218,37 @@ export class Player {
     this.model.spinWheels(Math.abs(vLong) * dt);
   }
 
+  // Speed wobbles (Pro): energy builds above a threshold speed, faster when
+  // upright or making jerky inputs; tucking and smooth lines keep it calm,
+  // and throwing a slide kills it.
+  updateWobble(dt, v) {
+    const d = this.diff;
+    const steerRate = Math.abs(this.steer - this.prevSteer) / dt;
+    this.prevSteer = this.steer;
+    if (!d.wobble) return 0;
+    const over = v - d.wobbleSpeed;
+    let grow = over > 0 ? over * 0.035 * (1.2 - 0.7 * this.tuck) * (1 + steerRate * 0.8) : 0;
+    let decay = 0.25 + (over < 0 ? 0.8 : 0) + (this.slideMode ? 2 : 0);
+    this.wobble = Math.max(0, this.wobble + (grow - decay * this.wobble) * dt);
+    if (this.wobble > 1) {
+      this.crash('Speed wobbles threw you off');
+      return 0;
+    }
+    this.wobblePhase += dt * Math.PI * 2 * (7 + v * 0.1);
+    return Math.cos(this.wobblePhase) * this.wobble * 2.5;
+  }
+
+  // Pro only: letting go of the slide right now would highside.
+  get highsideRisk() {
+    const d = this.diff;
+    const a = Math.abs(this.slip);
+    return !!d.highside && this.slideMode && this.speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7;
+  }
+
   carveCurvature(v) {
     // A board can carve tighter than the wheels can hold at speed; cap the
     // demand just under the grip limit so full lock is a fast, clean carve.
-    const gripLimit = (MU_STATIC * 0.93 * G) / Math.max(v * v, 0.01);
+    const gripLimit = (this.diff.muStatic * this.diff.carveLimit * G) / Math.max(v * v, 0.01);
     return this.steer * Math.min(MAX_CURVATURE, gripLimit);
   }
 
@@ -219,7 +260,7 @@ export class Player {
     if (absD < limit) return;
     const vSide = (this.vel.x * p.rightX + this.vel.y * p.rightZ) * side;
     if (rail) {
-      if (vSide > 6) {
+      if (vSide > this.diff.railCrashSpeed) {
         this.crash('Hit the guardrail');
         return;
       }
@@ -346,7 +387,7 @@ export class Player {
       lookYaw: clamp(this.slip, -1.2, 1.2) * 0.8,
     });
     this.topSpeed = Math.max(this.topSpeed, v);
-    this.shake = Math.max(0, this.shake - dt * 2);
+    this.shake = Math.max(0, this.shake - dt * 2, this.wobble * 0.5);
   }
 
   applyTransform() {

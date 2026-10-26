@@ -10,46 +10,34 @@ import { SlideMarks } from './marks.js';
 import { createSky, SUN_DIR } from './sky.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
+import { store, loadSettings, QUALITY, QUALITY_ORDER, DIFFICULTY, autoQuality } from './settings.js';
 
 const $ = (id) => document.getElementById(id);
-const store = {
-  get(k, d) {
-    try {
-      const v = localStorage.getItem(k);
-      return v === null ? d : JSON.parse(v);
-    } catch {
-      return d;
-    }
-  },
-  set(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch {
-      /* storage unavailable */
-    }
-  },
-};
+const settings = loadSettings();
+const Q = QUALITY[settings.quality];
 
 const canvas = $('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: Q.antialias, powerPreference: 'high-performance' });
+// Dynamic resolution: start at the preset's cap and adapt to the frame rate.
+const res = { ratio: Math.min(devicePixelRatio, Q.maxPixelRatio), acc: 0, frames: 0 };
+renderer.setPixelRatio(res.ratio);
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = Q.shadows;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12000);
-const { sky, sun } = createSky(scene);
+const { sky, sun } = createSky(scene, Q);
 
 const seed = Math.floor(Math.random() * 1e9);
 const road = new Road(seed);
 road.ensure(7000);
-const terrain = new Terrain(scene, road, seed + 11);
+const terrain = new Terrain(scene, road, seed + 11, Q);
 const roadMesh = new RoadMesh(scene, road, renderer);
-const player = new Player(scene, road, terrain);
-const traffic = new Traffic(scene, road);
+const player = new Player(scene, road, terrain, DIFFICULTY[settings.difficulty]);
+const traffic = new Traffic(scene, road, DIFFICULTY[settings.difficulty]);
 const input = new Input();
 const audio = new Audio();
 const marks = new SlideMarks(scene);
@@ -69,7 +57,9 @@ const game = {
   slidePts: 0,
   slideStartSpeed: 0,
   wasSliding: false,
-  best: store.get('powerslide.best', 0),
+  difficulty: settings.difficulty,
+  best: 0,
+  showFps: false,
   mph: store.get('powerslide.mph', false),
   muted: store.get('powerslide.muted', false),
   camMode: 0,
@@ -79,6 +69,81 @@ const game = {
   hintShown: false,
 };
 audio.muted = game.muted;
+const bestKey = () => `powerslide.best.${game.difficulty}`;
+game.best = store.get(bestKey(), 0);
+
+// ---------------------------------------------------------------- menus
+function toast(text) {
+  const el = document.createElement('div');
+  el.textContent = text;
+  $('toast').replaceChildren(el);
+  setTimeout(() => el.remove(), 2700);
+}
+
+function renderOptions() {
+  const diff = $('opt-diff');
+  diff.replaceChildren(
+    ...Object.entries(DIFFICULTY).map(([key, d]) => {
+      const b = document.createElement('button');
+      b.textContent = d.label;
+      b.className = key === game.difficulty ? 'on' : '';
+      b.onclick = () => setDifficulty(key);
+      return b;
+    }),
+  );
+  $('diff-blurb').textContent = DIFFICULTY[game.difficulty].blurb;
+  const qual = $('opt-quality');
+  qual.replaceChildren(
+    ...QUALITY_ORDER.map((key) => {
+      const b = document.createElement('button');
+      b.textContent = key === 'auto' ? `Auto (${QUALITY[autoQuality(settings.device)].label})` : QUALITY[key].label;
+      b.className = key === settings.qualityChoice ? 'on' : '';
+      b.onclick = () => setQuality(key);
+      return b;
+    }),
+  );
+}
+
+function setDifficulty(key) {
+  if (game.mode !== 'title' || key === game.difficulty) return;
+  game.difficulty = key;
+  store.set('powerslide.difficulty', key);
+  const d = DIFFICULTY[key];
+  player.diff = d;
+  traffic.density = d.trafficDensity;
+  traffic.speedScale = d.trafficSpeed;
+  game.best = store.get(bestKey(), 0);
+  renderOptions();
+}
+
+function setQuality(key) {
+  if (key === settings.qualityChoice) return;
+  store.set('powerslide.quality', key);
+  // Antialiasing and terrain detail are fixed at start-up, so reload.
+  location.reload();
+}
+
+function toTitle() {
+  $('crash').classList.add('hidden');
+  $('hud').classList.add('hidden');
+  $('title').classList.remove('hidden');
+  player.reset(player.s);
+  game.mode = 'title';
+  renderOptions();
+}
+
+renderOptions();
+if (settings.device === 'xbox') {
+  $('xbox-tip').classList.remove('hidden');
+  $('pad-hint').classList.remove('hidden');
+}
+document.body.classList.add(`is-${settings.device}`);
+if ('ontouchstart' in window) document.body.classList.add('is-touch');
+input.onPad = (on) => {
+  toast(on ? 'Controller connected' : 'Controller disconnected');
+  $('pad-hint').classList.toggle('hidden', !on);
+  document.body.classList.toggle('has-pad', on);
+};
 
 function score() {
   return Math.floor(player.distance - game.runStartDist) + Math.floor(game.bonus);
@@ -126,11 +191,11 @@ function endRun() {
   const isBest = sc > game.best;
   if (isBest) {
     game.best = sc;
-    store.set('powerslide.best', sc);
+    store.set(bestKey(), sc);
   }
   $('crash-reason').textContent = player.crashReason;
   const unit = game.mph ? 'mph' : 'km/h';
-  $('crash-stats').innerHTML = `Score <b>${sc}</b>${isBest ? ' — new best!' : ''}<br>
+  $('crash-stats').innerHTML = `${DIFFICULTY[game.difficulty].label} · Score <b>${sc}</b>${isBest ? ' — new best!' : ''}<br>
     Distance <b>${((player.distance - game.runStartDist) / 1000).toFixed(2)} km</b><br>
     Top speed <b>${fmtSpeed(player.topSpeed)} ${unit}</b><br>
     Near misses <b>${game.nearMisses}</b>`;
@@ -139,6 +204,7 @@ function endRun() {
 
 $('start').addEventListener('click', startRun);
 $('again').addEventListener('click', startRun);
+$('menu').addEventListener('click', toTitle);
 
 // ---------------------------------------------------------------- camera
 const cam = {
@@ -236,7 +302,13 @@ function updateHud(dt) {
   else if (player.brake > 0.5) st = 'FOOTBRAKE';
   if (player.fakie) st = (st ? st + ' · ' : '') + 'FAKIE';
   if (game.combo > 1) st += `  x${game.combo}`;
+  const wobbling = player.wobble > 0.3 && !player.crashed;
+  const risk = player.highsideRisk;
+  if (risk) st = 'SLIDE · STEER OUT TO CLOSE IT';
+  if (wobbling) st = 'WOBBLE!';
+  else if (player.dirt > 0.3 && !player.crashed) st = 'GRIT';
   $('state').textContent = st;
+  $('state').classList.toggle('warn', wobbling || risk || st === 'GRIT');
   if (game.hintTimer > 0) {
     game.hintTimer -= dt;
     if (game.hintTimer <= 0) $('hint').textContent = '';
@@ -246,6 +318,26 @@ function updateHud(dt) {
 function hint(text, time = 4) {
   $('hint').textContent = text;
   game.hintTimer = time;
+}
+
+// ---------------------------------------------------------------- resolution
+function updateResolution(dt) {
+  res.acc += dt;
+  res.frames++;
+  if (res.acc < 1.5) return;
+  const avg = res.acc / res.frames;
+  const fps = 1 / avg;
+  res.acc = 0;
+  res.frames = 0;
+  if (game.showFps) $('fps').textContent = `${fps.toFixed(0)} fps · ${res.ratio.toFixed(2)}x · ${Q.label}`;
+  const max = Math.min(devicePixelRatio, Q.maxPixelRatio);
+  let next = res.ratio;
+  if (fps < 48) next = Math.max(Q.minPixelRatio, res.ratio - 0.15);
+  else if (fps > 57) next = Math.min(max, res.ratio + 0.1);
+  if (Math.abs(next - res.ratio) > 0.01) {
+    res.ratio = next;
+    renderer.setPixelRatio(next);
+  }
 }
 
 // ---------------------------------------------------------------- loop
@@ -260,6 +352,9 @@ function frame(now) {
   last = now;
   if (game.mode === 'loading') return;
 
+  const state = input.update(dt);
+  const pad = (i) => input.wasPressed(`Pad${i}`);
+
   // Global keys.
   if (input.wasPressed('KeyM')) {
     game.muted = !game.muted;
@@ -270,18 +365,24 @@ function frame(now) {
     game.mph = !game.mph;
     store.set('powerslide.mph', game.mph);
   }
-  if (input.wasPressed('KeyC')) game.camMode = (game.camMode + 1) % 3;
-  if ((input.wasPressed('KeyP') || input.wasPressed('Escape')) && (game.mode === 'play' || game.mode === 'paused')) {
+  if (input.wasPressed('KeyF')) {
+    game.showFps = !game.showFps;
+    $('fps').classList.toggle('hidden', !game.showFps);
+  }
+  if (input.wasPressed('KeyC') || (pad(3) && game.mode === 'play')) game.camMode = (game.camMode + 1) % 3;
+  if ((input.wasPressed('KeyP') || input.wasPressed('Escape') || pad(9)) && (game.mode === 'play' || game.mode === 'paused')) {
     game.mode = game.mode === 'play' ? 'paused' : 'play';
     $('pause').classList.toggle('hidden', game.mode !== 'paused');
     if (audio.ctx) game.mode === 'paused' ? audio.ctx.suspend() : audio.ctx.resume();
-  }
-  if (input.wasPressed('Enter') || input.wasPressed('NumpadEnter')) {
-    if (game.mode === 'title') startRun();
-    else if (game.mode === 'crashed' && player.crashTime > 1) startRun();
+  } else if (game.mode === 'title') {
+    if (input.wasPressed('Enter') || input.wasPressed('NumpadEnter') || pad(0) || pad(9)) startRun();
+    else if (pad(2)) setDifficulty(game.difficulty === 'pro' ? 'cruiser' : 'pro');
+    else if (pad(3)) setQuality(QUALITY_ORDER[(QUALITY_ORDER.indexOf(settings.qualityChoice) + 1) % QUALITY_ORDER.length]);
+  } else if (game.mode === 'crashed' && player.crashTime > 1) {
+    if (input.wasPressed('Enter') || input.wasPressed('NumpadEnter') || pad(0) || pad(9)) startRun();
+    else if (input.wasPressed('Escape') || pad(1)) toTitle();
   }
 
-  const state = input.update(dt);
   if (game.mode === 'paused') {
     input.endFrame();
     renderer.render(scene, camera);
@@ -370,6 +471,7 @@ function frame(now) {
   sun.target.position.copy(player.pos);
   sky.position.copy(camera.position);
 
+  updateResolution(dt);
   updateCamera(dt, time);
   audio.update(player, traffic.cars, camera);
   if (game.mode !== 'title') updateHud(dt);
@@ -382,7 +484,7 @@ async function boot() {
   roadMesh.update(player.s);
   let done = false;
   let built = 0;
-  const total = 9 * 9 + 7 * 7;
+  const total = terrain.tileCount;
   while (!done) {
     const before = terrain.near.size + terrain.far.size;
     done = terrain.update(player.pos.x, player.pos.z, 30);
@@ -403,4 +505,4 @@ requestAnimationFrame(frame);
 boot();
 
 // Exposed for debugging in the console.
-window.__powerslide = { game, player, road, terrain, traffic, camera, renderer, scene };
+window.__powerslide = { game, player, road, terrain, traffic, camera, renderer, scene, settings };

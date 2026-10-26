@@ -19,23 +19,50 @@
       <div id="state"></div>
       <div id="popups"></div>
       <div id="hint"></div>
+      <div id="fps" class="hidden"></div>
     </div>
+
+    <div id="toast"></div>
 
     <div id="title" class="panel">
       <h1>POWERSLIDE</h1>
       <p class="tag">Downhill longboarding on an endless mountain pass</p>
       <div id="loading">Generating mountains… <span id="load-pct">0%</span></div>
       <div id="controls" class="hidden">
-        <table>
+        <table class="kb">
           <tr><td><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></td><td>Lean / carve</td></tr>
           <tr><td><kbd>W</kbd> / <kbd>↑</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
           <tr><td><kbd>S</kbd> / <kbd>↓</kbd></td><td>Footbrake</td></tr>
           <tr><td><kbd>Space</kbd> / <kbd>Shift</kbd></td><td>Hold to powerslide (steer picks the side)</td></tr>
           <tr><td><kbd>C</kbd></td><td>Camera</td></tr>
-          <tr><td><kbd>M</kbd> · <kbd>U</kbd> · <kbd>P</kbd></td><td>Mute · km/h/mph · Pause</td></tr>
+          <tr><td><kbd>M</kbd> <kbd>U</kbd> <kbd>P</kbd> <kbd>F</kbd></td><td>Mute · km/h/mph · Pause · FPS</td></tr>
         </table>
-        <p class="small">Gamepad supported. Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
+        <table class="pad">
+          <tr><td>Left stick</td><td>Lean / carve</td></tr>
+          <tr><td><kbd>RT</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
+          <tr><td><kbd>LT</kbd></td><td>Footbrake</td></tr>
+          <tr><td><kbd>A</kbd> / <kbd>LB</kbd> / <kbd>RB</kbd></td><td>Hold to powerslide (steer picks the side)</td></tr>
+          <tr><td><kbd>Y</kbd> · <kbd>☰</kbd></td><td>Camera · Pause</td></tr>
+        </table>
+        <table class="touchctl">
+          <tr><td>Left pad</td><td>Slide your thumb to lean / carve</td></tr>
+          <tr><td>TUCK</td><td>Push (slow) · Tuck (fast)</td></tr>
+          <tr><td>BRAKE</td><td>Footbrake</td></tr>
+          <tr><td>SLIDE</td><td>Hold to powerslide (lean picks the side)</td></tr>
+        </table>
+        <p class="small">Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
+        <div class="opts">
+          <div class="opt-row"><label>Difficulty</label><div id="opt-diff" class="seg"></div></div>
+          <p id="diff-blurb" class="small"></p>
+          <div class="opt-row"><label>Graphics</label><div id="opt-quality" class="seg"></div></div>
+        </div>
+        <div id="xbox-tip" class="tip hidden">
+          <b>On Xbox:</b> if the controller moves a cursor instead of the rider, press and hold the
+          Menu button <kbd>☰</kbd> (or select the controller icon in Edge's address bar) and choose
+          <i>Use game controls</i>.
+        </div>
         <button id="start">RIDE</button>
+        <p id="pad-hint" class="small hidden">Controller: <kbd>A</kbd> ride · <kbd>X</kbd> difficulty · <kbd>Y</kbd> graphics</p>
       </div>
     </div>
 
@@ -43,13 +70,16 @@
       <h2>BAIL!</h2>
       <p id="crash-reason"></p>
       <div id="crash-stats"></div>
-      <button id="again">RIDE AGAIN</button>
-      <p class="small">Press <kbd>Enter</kbd></p>
+      <div class="btns">
+        <button id="again">RIDE AGAIN</button>
+        <button id="menu" class="secondary">MENU</button>
+      </div>
+      <p class="small"><kbd>Enter</kbd> / <kbd>A</kbd> ride again · <kbd>Esc</kbd> / <kbd>B</kbd> menu</p>
     </div>
 
     <div id="pause" class="panel hidden">
       <h2>PAUSED</h2>
-      <p class="small">Press <kbd>P</kbd> or <kbd>Esc</kbd> to continue</p>
+      <p class="small">Press <kbd>P</kbd> / <kbd>Esc</kbd> / <kbd>☰</kbd> to continue</p>
     </div>
 
     <div id="touch">

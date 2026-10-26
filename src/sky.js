@@ -3,10 +3,10 @@ import * as THREE from 'three';
 
 export const SUN_DIR = new THREE.Vector3(-0.55, 0.42, -0.72).normalize();
 
-export function createSky(scene) {
+export function createSky(scene, q = {}) {
   const horizon = new THREE.Color('#e9c9a3');
   const zenith = new THREE.Color('#3f6fb3');
-  scene.fog = new THREE.FogExp2(horizon.clone().lerp(new THREE.Color('#b9c6d6'), 0.55), 0.00032);
+  scene.fog = new THREE.FogExp2(horizon.clone().lerp(new THREE.Color('#b9c6d6'), 0.55), q.fog ?? 0.00032);
   scene.background = horizon;
 
   const geo = new THREE.SphereGeometry(9000, 32, 16);
@@ -48,13 +48,15 @@ export function createSky(scene) {
   const hemi = new THREE.HemisphereLight('#cfe0ff', '#5a4a36', 1.1);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight('#ffe2b8', 2.6);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.castShadow = q.shadows ?? true;
+  const size = q.shadowMap ?? 2048;
+  sun.shadow.mapSize.set(size, size);
+  const ext = q.shadowExtent ?? 45;
   const sc = sun.shadow.camera;
-  sc.left = -45;
-  sc.right = 45;
-  sc.top = 45;
-  sc.bottom = -45;
+  sc.left = -ext;
+  sc.right = ext;
+  sc.top = ext;
+  sc.bottom = -ext;
   sc.near = 1;
   sc.far = 400;
   sun.shadow.bias = -0.0004;

@@ -14,6 +14,17 @@ export class Input {
     addEventListener('blur', () => this.keys.clear());
     this.state = { steer: 0, up: false, down: false, slide: false };
     this.kbSteer = 0;
+    this.padPrev = [];
+    this.padConnected = false;
+    addEventListener('gamepadconnected', () => {
+      this.padConnected = true;
+      this.onPad?.(true);
+    });
+    addEventListener('gamepaddisconnected', () => {
+      const any = [...(navigator.getGamepads?.() || [])].some(Boolean);
+      this.padConnected = any;
+      if (!any) this.onPad?.(false);
+    });
     this.setupTouch();
   }
 
@@ -82,15 +93,19 @@ export class Input {
     for (const gp of pads) {
       if (!gp) continue;
       const ax = gp.axes[0] || 0;
-      if (Math.abs(ax) > 0.12) steer = ax;
+      // Deadzone plus a gentle curve for fine control at speed.
+      const dz = 0.12;
+      if (Math.abs(ax) > dz) steer = Math.sign(ax) * Math.pow((Math.abs(ax) - dz) / (1 - dz), 1.4);
       const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
       if (b(7) || b(12) || (gp.axes[1] || 0) < -0.5) up = true;
       if (b(6) || b(13) || (gp.axes[1] || 0) > 0.5) down = true;
       if (b(0) || b(5) || b(4)) slide = true;
-      if (b(9) && !this.padStart) this.pressed.add('Enter');
-      this.padStart = b(9);
-      if (b(3) && !this.padY) this.pressed.add('KeyC');
-      this.padY = b(3);
+      // Rising edges for menu navigation: reported as Pad0, Pad1, ...
+      const prev = (this.padPrev[gp.index] ||= []);
+      gp.buttons.forEach((btn, i) => {
+        if (btn.pressed && !prev[i]) this.pressed.add(`Pad${i}`);
+        prev[i] = btn.pressed;
+      });
     }
     if (this.touch.steer) steer = this.touch.steer;
     up = up || this.touch.up;

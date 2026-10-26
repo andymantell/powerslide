@@ -54,14 +54,15 @@ function carMesh(rand) {
 }
 
 export class Traffic {
-  constructor(scene, road) {
+  constructor(scene, road, diff = {}) {
     this.scene = scene;
     this.road = road;
     this.cars = [];
     this.rand = mulberry32(2024);
     this.frame = {};
     this.spawnTimer = 0;
-    this.density = 1;
+    this.density = diff.trafficDensity ?? 1;
+    this.speedScale = diff.trafficSpeed ?? 1;
   }
 
   clear() {
@@ -83,7 +84,7 @@ export class Traffic {
       s,
       dir,
       lane: dir > 0 ? LANE_WIDTH / 2 : -LANE_WIDTH / 2,
-      vmax: dir > 0 ? 13 + r() * 7 : 14 + r() * 9,
+      vmax: (dir > 0 ? 13 + r() * 7 : 14 + r() * 9) * this.speedScale,
       v: 0,
       passed: false,
       minGap: Infinity,

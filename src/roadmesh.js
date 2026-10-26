@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { DS, HALF_WIDTH, RAIL_OFFSET } from './road.js';
-import { ROAD_TEX_LENGTH, makeAsphaltTexture } from './textures.js';
+import { ROAD_TEX_LENGTH, makeAsphaltTexture, makeGritTexture } from './textures.js';
 
 const CHUNK = 160; // samples per chunk
 const AHEAD = 1600; // metres
@@ -23,6 +23,14 @@ export class RoadMesh {
     this.skirtMat = new THREE.MeshLambertMaterial({ color: '#5b5550' });
     this.railMat = new THREE.MeshStandardMaterial({ color: '#c9cdd1', metalness: 0.6, roughness: 0.4 });
     this.postMat = new THREE.MeshLambertMaterial({ color: '#6b5a48' });
+    this.gritMat = new THREE.MeshLambertMaterial({
+      map: makeGritTexture(),
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
     this.postGeo = new THREE.BoxGeometry(0.14, 0.9, 0.14);
     this.postGeo.translate(0, 0.25, 0);
   }
@@ -98,6 +106,7 @@ export class RoadMesh {
     const group = new THREE.Group();
     group.add(mesh, skirt);
     this.buildRails(group, i0, i1);
+    this.buildGrit(group, i0, i1);
     return group;
   }
 
@@ -158,6 +167,46 @@ export class RoadMesh {
       im.computeBoundingSphere();
       group.add(im);
     }
+  }
+
+  buildGrit(group, i0, i1) {
+    const pos = [];
+    const uv = [];
+    const idx = [];
+    const f = {};
+    const N = 4;
+    for (const p of this.road.patches) {
+      if (p.s < i0 * DS || p.s >= i1 * DS) continue;
+      const base = pos.length / 3;
+      // Texture is drawn slightly larger than the gripless area.
+      const L = p.len * 1.2;
+      const W = p.width * 1.2;
+      for (let a = 0; a <= N; a++) {
+        const s = p.s + (a / N - 0.5) * L;
+        this.road.sample(s, f);
+        for (let b = 0; b <= N; b++) {
+          const d = Math.max(-HALF_WIDTH, Math.min(HALF_WIDTH, p.d + (b / N - 0.5) * W));
+          pos.push(f.x + f.rightX * d, f.y + 0.035 - 0.04 * (d / HALF_WIDTH) ** 2, f.z + f.rightZ * d);
+          uv.push(b / N, a / N);
+        }
+      }
+      for (let a = 0; a < N; a++) {
+        for (let b = 0; b < N; b++) {
+          const p0 = base + a * (N + 1) + b;
+          const p2 = p0 + N + 1;
+          idx.push(p0, p0 + 1, p2, p0 + 1, p2 + 1, p2);
+        }
+      }
+    }
+    if (!idx.length) return;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, this.gritMat);
+    mesh.receiveShadow = true;
+    group.add(mesh);
   }
 
   update(playerS) {

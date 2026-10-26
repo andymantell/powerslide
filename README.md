@@ -18,17 +18,47 @@ Then open the URL Vite prints (usually http://localhost:5173).
 
 ## Controls
 
-| Input | Action |
-| --- | --- |
-| `A` / `D` or `←` / `→` | Lean and carve |
-| `W` / `↑` | Push (slow) or tuck (fast) |
-| `S` / `↓` | Footbrake |
-| `Space` / `Shift` (hold) | Powerslide. Steering when you start picks the side |
-| `C` | Cycle camera (chase, low, helmet) |
-| `M` / `U` / `P` | Mute, km/h or mph, pause |
+| Keyboard | Xbox controller | Touch | Action |
+| --- | --- | --- | --- |
+| `A` / `D` or `←` / `→` | Left stick | Left pad | Lean and carve |
+| `W` / `↑` | RT | TUCK | Push (slow) or tuck (fast) |
+| `S` / `↓` | LT | BRAKE | Footbrake |
+| `Space` / `Shift` (hold) | A, LB or RB (hold) | SLIDE | Powerslide. Steer into it to open it up, steer out to close it |
+| `C` | Y | | Cycle camera (chase, low, helmet) |
+| `P` / `Esc` | ☰ Menu | | Pause |
+| `M` / `U` / `F` | | | Mute, km/h or mph, FPS counter |
 
-Gamepads are supported (left stick, RT tuck, LT brake, A/bumpers slide). On
-touch devices, on-screen controls appear.
+In menus, use A to ride, B to go back, X to switch difficulty and Y to cycle the
+graphics setting.
+
+**Xbox:** Edge on Xbox may use the controller to move a cursor rather than
+passing it to the game. If so, hold the Menu button (or select the controller
+icon in the address bar) and choose *Use game controls*. The game shows this
+tip when it detects an Xbox.
+
+## Difficulty
+
+- **Cruiser:** forgiving grip and gentle traffic.
+- **Pro:** less grip and faster, busier traffic. It adds three hazards:
+  - **Speed wobbles** above about 72 km/h, worse when you ride upright or
+    steer jerkily. Tuck and stay smooth, or throw a slide to kill them.
+  - **Highsides:** letting go of a slide while the board is still well
+    sideways at speed throws you. Steer out of the slide to close it down
+    first. A warning shows when releasing would highside.
+  - **Grit:** sandy patches, mostly on the inside of tight bends, that cost a
+    lot of grip.
+
+Best scores are kept separately per difficulty.
+
+## Graphics
+
+Auto picks Low on phones, Medium on iPad and Android tablets, and High on the
+Xbox and desktops. You can override this with Low, Medium, High or Ultra. The
+setting controls antialiasing, shadow resolution, terrain detail, view
+distance and tree density. On top of the preset, dynamic resolution lowers the
+render scale when the frame rate drops below about 48 fps and raises it again
+when there is headroom. Press `F` to see the frame rate, render scale and
+preset.
 
 ## How it works
 

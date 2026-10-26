@@ -9,12 +9,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createNoise2D, fbm, ridged, smoothstep, lerp, mulberry32 } from './noise.js';
 
 const NEAR_SIZE = 160;
-const NEAR_SEGS = 64;
-const NEAR_RADIUS_TILES = 4;
 const FAR_SIZE = 1280;
 const FAR_SEGS = 32;
-const FAR_RADIUS_TILES = 3;
-export const NEAR_CUT = 600;
 const SHOULDER = 6.5;
 
 const col = new THREE.Color();
@@ -29,8 +25,15 @@ const COLORS = {
 };
 
 export class Terrain {
-  constructor(scene, road, seed = 99) {
+  // q: quality preset (nearRadius, nearSegs, farRadius, treeSpacing).
+  constructor(scene, road, seed = 99, q = {}) {
     this.scene = scene;
+    this.nearRadius = q.nearRadius ?? 4;
+    this.nearSegs = q.nearSegs ?? 64;
+    this.farRadius = q.farRadius ?? 3;
+    this.treeSpacing = q.treeSpacing ?? 7;
+    // Near tiles always cover at least nearRadius tiles from the rider.
+    this.nearCut = { value: this.nearRadius * NEAR_SIZE - 40 };
     this.road = road;
     this.noise = createNoise2D(seed);
     this.noise2 = createNoise2D(seed + 1);
@@ -42,6 +45,7 @@ export class Terrain {
 
     const patch = (inside) => (shader) => {
       shader.uniforms.uCut = { value: this.cutCenter };
+      shader.uniforms.uCutR = this.nearCut;
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vWorldPosT;')
         .replace(
@@ -51,13 +55,13 @@ export class Terrain {
       shader.fragmentShader = shader.fragmentShader
         .replace(
           '#include <common>',
-          '#include <common>\nvarying vec3 vWorldPosT;\nuniform vec2 uCut;',
+          '#include <common>\nvarying vec3 vWorldPosT;\nuniform vec2 uCut;\nuniform float uCutR;',
         )
         .replace(
           '#include <clipping_planes_fragment>',
           `#include <clipping_planes_fragment>
           float cutD = distance(vWorldPosT.xz, uCut);
-          ${inside ? `if (cutD > ${NEAR_CUT.toFixed(1)}) discard;` : `if (cutD < ${NEAR_CUT.toFixed(1)}) discard;`}`,
+          ${inside ? 'if (cutD > uCutR) discard;' : 'if (cutD < uCutR) discard;'}`,
         );
     };
 
@@ -154,7 +158,7 @@ export class Terrain {
     const s = new THREE.Vector3();
     const p = new THREE.Vector3();
     const up = new THREE.Vector3(0, 1, 0);
-    const spacing = 7;
+    const spacing = this.treeSpacing;
     for (let gx = 0; gx < size / spacing; gx++) {
       for (let gz = 0; gz < size / spacing; gz++) {
         const x = cx - size / 2 + (gx + rand()) * spacing;
@@ -220,8 +224,8 @@ export class Terrain {
     this.cutCenter.set(px, pz);
     const t0 = performance.now();
     const passes = [
-      [this.near, NEAR_SIZE, NEAR_SEGS, NEAR_RADIUS_TILES, false],
-      [this.far, FAR_SIZE, FAR_SEGS, FAR_RADIUS_TILES, true],
+      [this.near, NEAR_SIZE, this.nearSegs, this.nearRadius, false],
+      [this.far, FAR_SIZE, FAR_SEGS, this.farRadius, true],
     ];
     let built = 0;
     for (const [map, size, segs, radius, coarse] of passes) {
@@ -243,6 +247,10 @@ export class Terrain {
       }
     }
     return true;
+  }
+
+  get tileCount() {
+    return (this.nearRadius * 2 + 1) ** 2 + (this.farRadius * 2 + 1) ** 2;
   }
 
   disposeGroup(g) {

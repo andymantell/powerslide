@@ -101,3 +101,25 @@ export function makeSoftDotTexture() {
   ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(cv);
 }
+
+// Irregular sandy blotch with soft, noisy edges for grit patches.
+export function makeGritTexture() {
+  const size = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const ctx = cv.getContext('2d');
+  const rand = mulberry32(77);
+  for (let i = 0; i < 6000; i++) {
+    const a = rand() * Math.PI * 2;
+    const r = Math.pow(rand(), 0.7) * size * 0.46;
+    const x = size / 2 + Math.cos(a) * r;
+    const y = size / 2 + Math.sin(a) * r;
+    const g = 170 + rand() * 70;
+    ctx.fillStyle = `rgba(${g}, ${g * 0.86}, ${g * 0.66}, ${0.45 + rand() * 0.5})`;
+    const s = 1 + rand() * 4;
+    ctx.fillRect(x, y, s, s);
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}

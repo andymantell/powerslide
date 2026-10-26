@@ -26,6 +26,8 @@ export class Road {
     this.g = new Float64Array(cap); // grade, + = downhill
     this.c = new Float64Array(cap); // cliff side: + = mountain on the right
     this.count = 0;
+    // Patches of gravel/sand washed onto the asphalt, sorted by s.
+    this.patches = [];
 
     this.state = {
       x: 0, y: 0, z: 0, heading: 0, kappa: 0, kappaTarget: 0, segLeft: 120,
@@ -110,6 +112,38 @@ export class Road {
     s.z -= Math.cos(s.heading) * DS;
     s.y -= s.grade * DS;
     this.push();
+    // Grit collects on the inside of tight bends more than on straights.
+    const chance = Math.abs(s.kappa) > 1 / 70 ? 0.006 : 0.0007;
+    if (this.count > 500 && this.rand() < chance * DS) {
+      const inside = Math.sign(s.kappa) || (this.rand() < 0.5 ? -1 : 1);
+      this.patches.push({
+        s: (this.count - 1) * DS,
+        d: inside * (0.5 + this.rand() * 3.2),
+        len: 3 + this.rand() * 7,
+        width: 0.8 + this.rand() * 1.6,
+      });
+    }
+  }
+
+  // 0..1 amount of grit under the wheels at (s, d).
+  dirtAt(s, d) {
+    const P = this.patches;
+    let lo = 0;
+    let hi = P.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (P[mid].s < s - 8) lo = mid + 1;
+      else hi = mid;
+    }
+    let amount = 0;
+    for (let i = lo; i < P.length && P[i].s < s + 8; i++) {
+      const p = P[i];
+      const u = (s - p.s) / (p.len / 2);
+      const v = (d - p.d) / (p.width / 2);
+      const r = u * u + v * v;
+      if (r < 1) amount = Math.max(amount, 1 - r * r);
+    }
+    return amount;
   }
 
   ensure(distance) {
