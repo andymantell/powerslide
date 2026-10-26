@@ -28,7 +28,7 @@ import { RiderModel, DECK_HEIGHT } from './rider.js';
 import { DS, HALF_WIDTH, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
 import { RoadMesh } from './roadmesh.js';
 import { clamp, lerp } from './noise.js';
-import { DIFFICULTY } from './settings.js';
+import { TUNING } from './settings.js';
 
 const G = 9.81;
 const MASS = 82; // rider + board, kg
@@ -82,7 +82,7 @@ const _qb = new THREE.Quaternion();
 const UP = new THREE.Vector3(0, 1, 0);
 
 export class Player {
-  constructor(scene, road, terrain, diff = DIFFICULTY.cruiser) {
+  constructor(scene, road, terrain, diff = TUNING) {
     this.scene = scene;
     this.diff = diff;
     this.road = road;

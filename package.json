@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "sim": "node tools/sim.mjs",
-    "icons": "node tools/icons.mjs"
+    "icons": "node tools/icons.mjs",
+    "levels": "node tools/levels.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"

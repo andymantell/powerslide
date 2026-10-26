@@ -1,8 +1,8 @@
 # Powerslide
 
-A browser-based, fully 3D downhill longboarding game. Bomb an endless,
-procedurally generated mountain pass, tuck for speed, throw powerslides to
-scrub it before the bends, and dodge two-way traffic.
+A browser-based, fully 3D downhill longboarding game. Ride hand-built levels
+down a mountain pass (or an endless random one), tuck for speed, throw
+powerslides to scrub it before the bends, and dodge two-way traffic.
 
 Built with [three.js](https://threejs.org/) and [Vite](https://vite.dev/). Every
 texture, model and sound is generated in code, so there are no asset files.
@@ -32,27 +32,80 @@ Then open the URL Vite prints (usually http://localhost:5173).
 Touch has no buttons: the whole screen is one invisible analogue stick, centred
 wherever your finger lands.
 
-In menus, use A to ride, B to go back, X to switch difficulty and Y to cycle the
-graphics setting.
+In menus, use the d-pad, left stick or arrow keys to move between buttons, A or
+Enter to select, B or Esc to go back, and Y to cycle the graphics setting.
 
 **Xbox:** Edge on Xbox may use the controller to move a cursor rather than
 passing it to the game. If so, hold the Menu button (or select the controller
 icon in the address bar) and choose *Use game controls*. The game shows this
 tip when it detects an Xbox.
 
-## Difficulty
+## Levels
 
-- **Cruiser:** forgiving grip and gentle traffic.
-- **Pro:** less grip and faster, busier traffic. It adds three hazards:
-  - **Speed wobbles** above about 72 km/h, worse when you ride upright or
-    steer jerkily. Tuck and stay smooth, or throw a slide to kill them.
-  - **Highsides:** letting go of a slide while the board is still well
-    sideways at speed throws you. Steer out of the slide to close it down
-    first. A warning shows when releasing would highside.
-  - **Grit:** sandy patches, mostly on the inside of tight bends, that cost a
-    lot of grip.
+The campaign is a run of biomes, each with 10 levels that unlock strictly in
+order. Finishing a biome's last level opens the next biome. Each level has three
+stars: one for finishing, one for beating the target time and one for beating
+the target score (distance plus slide, close-pass and 180 bonuses). Later
+levels have checkpoints: crash after one and you can restart from it. Endless
+mode is the old random mountain pass, with its own best score.
 
-Best scores are kept separately per difficulty.
+Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,
+Pine Forest, Desert Canyon, City at Night, Coastal Cliffs and High Alpine Pass)
+show as coming soon.
+
+There is one difficulty. The levels set how hard a run is, and three hazards
+are always on:
+
+- **Speed wobbles** above about 72 km/h, worse when you ride upright or steer
+  jerkily. Tuck and stay smooth, or throw a slide to kill them.
+- **Highsides:** letting go of a slide while the board is still well sideways
+  at speed throws you. Steer out of the slide to close it down first. A warning
+  shows when releasing would highside.
+- **Grit:** sandy patches that cost a lot of grip. Levels place them by hand;
+  in endless mode they collect on the inside of tight bends.
+
+### Making levels
+
+Each level is a JSON file, `src/levels/<biome>/NN.json`, numbered from `01`.
+Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
+
+```json
+{
+  "id": "alpine-03",
+  "name": "Cowbell Corner",
+  "biome": "alpine",
+  "seed": 1303,
+  "hint": "Shown on the level card and as the run starts.",
+  "pieces": [
+    { "straight": 150, "grade": 0.06 },
+    { "bend": "right", "radius": 160, "length": 140 },
+    { "bend": "left", "radius": 40, "length": 55, "grade": 0.07 }
+  ],
+  "features": [{ "type": "grit", "at": 420, "d": -1.5, "len": 6, "width": 1.5 }],
+  "checkpoints": [700],
+  "traffic": { "density": 0.3, "speed": 1 },
+  "targets": { "time": 140, "score": 1900 }
+}
+```
+
+- `pieces` is the road from the start line down, in metres. A `grade` is the
+  downhill slope (0.06 = 6%) and carries on until a later piece changes it.
+  The road builder eases in and out of every bend, so a short, tight bend
+  turns less sharply than its radius suggests.
+- `features` are placed by distance from the start (`at`, metres) and lateral
+  offset (`d`, metres, + = right). Only `grit` exists so far.
+- `seed` fixes the scenery, the guardrail sides and the traffic, so every run
+  of a level looks and plays the same.
+- `traffic.density` scales how often cars spawn (0 = none); `speed` scales how
+  fast they drive.
+
+`npm run levels` checks every level: that the road never turns more than about
+66° off downhill (past that it would cross itself), bends and slopes against
+the biome's rules, features, checkpoints and targets. It also estimates how
+long a quick, clean run takes; keep the target time comfortably above that.
+`npm run levels -- draft alpine 42 1500 out.json` turns the random generator
+into a 1.5 km draft level to hand-tune. Open `/?level=alpine-03` to jump
+straight to a level (locked or not) while working on it.
 
 ## Graphics
 
@@ -67,8 +120,9 @@ preset.
 ## How it works
 
 - **Road** (`src/road.js`): the centreline is built from clothoid-style
-  transitions between straights, big sweepers, tight bends and near-hairpins,
-  with a varying 5–14% grade. The heading is kept within about ±66° of
+  transitions between straights, big sweepers, tight bends and near-hairpins.
+  A level supplies the pieces; endless mode rolls them at random, with a
+  varying 5–14% grade. The heading is kept within about ±66° of
   downhill, so the road never crosses itself.
 - **Terrain** (`src/terrain.js`): the height is a world-space function of
   distance to the road. One side rises into the mountain and the other drops
@@ -87,7 +141,7 @@ preset.
     drifts, standup slides, hook-ups and 180s to fakie all come from one model.
   - *Weight shift:* weight goes onto the front foot to throw a slide (the tail
     steps out), in a tuck, and while pushing or footbraking. Weight forward
-    also calms speed wobbles, which shake the trucks on Pro.
+    also calms speed wobbles, which shake the trucks at speed.
   - *Drag* depends on the body: upright, a progressive tuck, or an air brake
     with roughly double the upright drag. Pushing is a kick at a time and
     stops helping once the road is faster than your foot.

@@ -1,0 +1,92 @@
+{
+  "id": "alpine-05",
+  "name": "Edelweiss Slide",
+  "biome": "alpine",
+  "seed": 1505,
+  "hint": "Steer out of a slide to close it before you let go, or the wheels will hook up and throw you.",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.075
+    },
+    {
+      "bend": "right",
+      "radius": 32,
+      "length": 30
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "left",
+      "radius": 30,
+      "length": 56
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "right",
+      "radius": 28,
+      "length": 45
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 90
+    },
+    {
+      "straight": 150
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 37
+    },
+    {
+      "straight": 90
+    },
+    {
+      "bend": "left",
+      "radius": 28,
+      "length": 53
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 80
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 32,
+      "length": 42
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 50
+    },
+    {
+      "straight": 247
+    }
+  ],
+  "features": [],
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.4,
+    "speed": 1
+  },
+  "targets": {
+    "time": 155,
+    "score": 2300
+  }
+}

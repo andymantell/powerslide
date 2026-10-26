@@ -72,6 +72,15 @@ export class SlideMarks {
     this.geo.attributes.position.needsUpdate = true;
   }
 
+  // Wipe every mark, for a new road.
+  clear() {
+    this.geo.attributes.position.array.fill(0);
+    this.geo.attributes.position.needsUpdate = true;
+    this.next = 0;
+    this.last = [null, null, null, null];
+    this.life.fill(0);
+  }
+
   // wheels: array of 4 world positions (Vector3) on the road surface.
   update(dt, sliding, wheels, intensity, vel) {
     for (let i = 0; i < 4; i++) {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Road } from './road.js';
+import { Road, START_S } from './road.js';
 import { Terrain } from './terrain.js';
 import { RoadMesh } from './roadmesh.js';
 import { Player } from './player.js';
@@ -14,7 +14,8 @@ import { Forest } from './forest.js';
 import { Boulders } from './boulders.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
-import { store, loadSettings, QUALITY, QUALITY_ORDER, DIFFICULTY, autoQuality } from './settings.js';
+import { store, loadSettings, QUALITY, QUALITY_ORDER, ENDLESS_TRAFFIC, autoQuality } from './settings.js';
+import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
 
 const $ = (id) => document.getElementById(id);
 const settings = loadSettings();
@@ -36,17 +37,17 @@ const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12
 const { sky, sun } = createSky(scene, renderer, Q);
 const post = new Post(renderer, scene, camera, Q);
 
-const seed = Math.floor(Math.random() * 1e9);
-const road = new Road(seed);
-road.ensure(7000);
-const terrain = new Terrain(scene, road, seed + 11, Q, renderer);
+// The world is rebuilt for each level (see loadWorld); start with a stub road.
+const road = new Road(1);
+road.ensure(START_S + 200);
+const terrain = new Terrain(scene, road, 12, Q, renderer);
 const forest = new Forest(scene, renderer, Q);
 terrain.forest = forest;
 const boulders = new Boulders(scene, renderer);
 terrain.boulders = boulders;
 const roadMesh = new RoadMesh(scene, road, renderer);
-const player = new Player(scene, road, terrain, DIFFICULTY[settings.difficulty]);
-const traffic = new Traffic(scene, road, DIFFICULTY[settings.difficulty]);
+const player = new Player(scene, road, terrain);
+const traffic = new Traffic(scene, road);
 const input = new Input();
 const audio = new Audio();
 const marks = new SlideMarks(scene);
@@ -60,15 +61,19 @@ addEventListener('resize', () => {
 
 // ---------------------------------------------------------------- game state
 const game = {
-  mode: 'loading', // loading | title | play | crashed | paused
+  mode: 'loading', // loading | title | intro | play | crashed | finished | paused
+  level: null, // the level being played; null for endless
+  seed: 0,
+  time: 0, // run time in seconds (levels)
+  checkpoint: null, // { s, time, bonus } of the last checkpoint passed
+  cpNext: 0, // index of the next checkpoint
   bonus: 0,
   combo: 0,
   comboTimer: 0,
   slidePts: 0,
   slideStartSpeed: 0,
   wasSliding: false,
-  difficulty: settings.difficulty,
-  best: 0,
+  best: 0, // endless best score
   showFps: false,
   mph: store.get('powerslide.mph', false),
   muted: store.get('powerslide.muted', false),
@@ -79,8 +84,52 @@ const game = {
   hintShown: false,
 };
 audio.muted = game.muted;
-const bestKey = () => `powerslide.best.${game.difficulty}`;
-game.best = store.get(bestKey(), 0);
+const BEST_KEY = 'powerslide.best.endless';
+game.best = store.get(BEST_KEY, store.get('powerslide.best.pro', 0));
+
+// ---------------------------------------------------------------- world
+const PANELS = ['loading', 'title', 'help', 'intro', 'crash', 'finish', 'pause'];
+function show(id) {
+  for (const p of PANELS) $(p).classList.toggle('hidden', p !== id);
+  $('hud').classList.toggle('hidden', !!id && id !== 'crash' && id !== 'finish' && id !== 'pause');
+  if (id) focusFirst($(id));
+}
+
+// Builds terrain tiles around the rider, with a progress readout.
+async function buildTiles() {
+  if (terrain.update(player.pos.x, player.pos.z, 12)) return;
+  const prevMode = game.mode;
+  game.mode = 'loading';
+  show('loading');
+  let built = 0;
+  const total = terrain.tileCount;
+  for (let done = false; !done; ) {
+    const before = terrain.near.size + terrain.far.size;
+    done = terrain.update(player.pos.x, player.pos.z, 30);
+    built += Math.max(0, terrain.near.size + terrain.far.size - before);
+    $('load-pct').textContent = `${Math.min(100, Math.round((built / total) * 100))}%`;
+    await new Promise((r) => setTimeout(r, 0));
+  }
+  forest.update(player.pos.x, player.pos.z);
+  boulders.update();
+  game.mode = prevMode;
+}
+
+// Swaps in the road for a level (or a fresh random road for endless).
+async function loadWorld(level) {
+  game.level = level;
+  game.seed = level ? level.seed : Math.floor(Math.random() * 1e9);
+  road.reset(game.seed, level);
+  road.ensure(START_S + 7000);
+  terrain.reset(game.seed + 11);
+  roadMesh.clear();
+  marks.clear();
+  traffic.configure(level ? level.traffic : ENDLESS_TRAFFIC, game.seed);
+  player.reset(road.start);
+  cam.init = false;
+  roadMesh.update(player.s);
+  await buildTiles();
+}
 
 // ---------------------------------------------------------------- menus
 function toast(text) {
@@ -90,18 +139,54 @@ function toast(text) {
   setTimeout(() => el.remove(), 2700);
 }
 
-function renderOptions() {
-  const diff = $('opt-diff');
-  diff.replaceChildren(
-    ...Object.entries(DIFFICULTY).map(([key, d]) => {
+function stars(list, cls = 'stars') {
+  const el = document.createElement('i');
+  el.className = cls;
+  el.innerHTML = list.map((on) => `<span class="${on ? 'on' : ''}">★</span>`).join('');
+  return el;
+}
+
+function fmtTime(t) {
+  const m = Math.floor(t / 60);
+  const s = t - m * 60;
+  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
+}
+
+function renderMenu() {
+  const next = nextLevel();
+  const out = [];
+  const coming = [];
+  for (const biome of BIOMES) {
+    if (!biome.levels.length) {
+      coming.push(biome.name);
+      continue;
+    }
+    const sec = document.createElement('div');
+    sec.className = 'biome';
+    const total = biome.levels.reduce((n, l) => n + starCount(l.id), 0);
+    sec.innerHTML = `<h3>${biome.name}<small>★ ${total} / ${biome.levels.length * 3}</small></h3><p class="small">${biome.blurb}</p>`;
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    biome.levels.forEach((level, i) => {
       const b = document.createElement('button');
-      b.textContent = d.label;
-      b.className = key === game.difficulty ? 'on' : '';
-      b.onclick = () => setDifficulty(key);
-      return b;
-    }),
-  );
-  $('diff-blurb').textContent = DIFFICULTY[game.difficulty].blurb;
+      b.className = 'tile' + (level === next ? ' next' : '');
+      b.disabled = !levelUnlocked(level);
+      b.innerHTML = `<b>${i + 1}</b><span>${level.name}</span>`;
+      b.appendChild(stars(levelProgress(level.id).stars));
+      b.onclick = () => selectLevel(level);
+      grid.appendChild(b);
+    });
+    sec.appendChild(grid);
+    out.push(sec);
+  }
+  if (coming.length) {
+    const sec = document.createElement('div');
+    sec.className = 'biome';
+    sec.innerHTML = `<h3>Coming soon</h3><div class="coming">${coming.map((n) => `<span>🔒 ${n}</span>`).join('')}</div>`;
+    out.push(sec);
+  }
+  $('biomes').replaceChildren(...out);
+
   const qual = $('opt-quality');
   qual.replaceChildren(
     ...QUALITY_ORDER.map((key) => {
@@ -114,18 +199,6 @@ function renderOptions() {
   );
 }
 
-function setDifficulty(key) {
-  if (game.mode !== 'title' || key === game.difficulty) return;
-  game.difficulty = key;
-  store.set('powerslide.difficulty', key);
-  const d = DIFFICULTY[key];
-  player.diff = d;
-  traffic.density = d.trafficDensity;
-  traffic.speedScale = d.trafficSpeed;
-  game.best = store.get(bestKey(), 0);
-  renderOptions();
-}
-
 function setQuality(key) {
   if (key === settings.qualityChoice) return;
   store.set('powerslide.quality', key);
@@ -133,16 +206,50 @@ function setQuality(key) {
   location.reload();
 }
 
-function toTitle() {
-  $('crash').classList.add('hidden');
-  $('hud').classList.add('hidden');
-  $('title').classList.remove('hidden');
-  player.reset(player.s);
+async function toTitle() {
+  player.reset(road.start);
+  cam.init = false;
+  await buildTiles();
   game.mode = 'title';
-  renderOptions();
+  renderMenu();
+  show('title');
+  const next = $('biomes').querySelector('.tile.next');
+  if (next) next.focus();
 }
 
-renderOptions();
+async function selectLevel(level) {
+  if (game.mode === 'loading') return;
+  if (level !== game.level || !level) await loadWorld(level);
+  else player.reset(road.start);
+  showIntro();
+}
+
+function showIntro() {
+  const level = game.level;
+  game.mode = 'intro';
+  if (level) {
+    const biome = biomeOf(level);
+    $('intro-where').textContent = `${biome.name} · Level ${biome.levels.indexOf(level) + 1}`;
+    $('intro-name').textContent = level.name;
+    $('intro-hint').textContent = level.hint || '';
+    const km = ((road.finish - road.start) / 1000).toFixed(1);
+    $('intro-targets').innerHTML = `★ Finish the ${km} km run<br>★ Finish in under <b>${fmtTime(level.targets.time)}</b><br>★ Score <b>${level.targets.score}</b> or more`;
+    const p = levelProgress(level.id);
+    $('intro-best').replaceChildren();
+    if (p.bestTime !== null) {
+      $('intro-best').append(stars(p.stars), ` Best ${fmtTime(p.bestTime)} · ${p.bestScore} points`);
+    }
+  } else {
+    $('intro-where').textContent = 'Endless';
+    $('intro-name').textContent = 'The Long Way Down';
+    $('intro-hint').textContent = 'A mountain road that never ends. Ride as far as you can.';
+    $('intro-targets').innerHTML = '';
+    $('intro-best').textContent = game.best ? `Best ${game.best} points` : '';
+  }
+  show('intro');
+}
+
+renderMenu();
 if (settings.device === 'xbox') {
   $('xbox-tip').classList.remove('hidden');
   $('pad-hint').classList.remove('hidden');
@@ -155,7 +262,9 @@ input.onPad = (on) => {
   document.body.classList.toggle('has-pad', on);
 };
 
+// Levels score the distance covered towards the finish; endless scores all of it.
 function score() {
+  if (game.level) return Math.floor(Math.max(0, Math.min(player.s, road.finish) - road.start)) + Math.floor(game.bonus);
   return Math.floor(player.distance - game.runStartDist) + Math.floor(game.bonus);
 }
 
@@ -172,49 +281,207 @@ function fmtSpeed(ms) {
   return game.mph ? Math.round(ms * 2.23694) : Math.round(ms * 3.6);
 }
 
-function startRun() {
+// from: 'start' (a level from the top), 'checkpoint', or 'here' (endless:
+// carry on from where you came off).
+async function startRun(from = game.level ? 'start' : 'here') {
   audio.start();
-  $('title').classList.add('hidden');
-  $('crash').classList.add('hidden');
-  $('hud').classList.remove('hidden');
-  if (game.mode === 'crashed') {
-    player.reset(player.s);
+  const level = game.level;
+  const cp = from === 'checkpoint' ? game.checkpoint : null;
+  if (level) {
+    player.reset(cp ? cp.s : road.start);
+    traffic.configure(level.traffic, game.seed + (cp ? game.cpNext : 0));
+    game.time = cp ? cp.time : 0;
+    game.bonus = cp ? cp.bonus : 0;
+    if (!cp) {
+      game.checkpoint = null;
+      game.cpNext = 0;
+    }
+    cam.init = false;
+    await buildTiles();
+  } else {
+    if (game.mode === 'crashed') player.reset(player.s);
     for (const c of [...traffic.cars]) {
       if (Math.abs(c.s - player.s) < 90) {
         scene.remove(c.mesh);
         traffic.cars.splice(traffic.cars.indexOf(c), 1);
       }
     }
+    game.bonus = 0;
   }
   game.mode = 'play';
-  game.bonus = 0;
+  show(null);
   game.combo = 0;
   game.slidePts = 0;
+  game.wasSliding = false;
   game.nearMisses = 0;
   game.runStartDist = player.distance;
   player.topSpeed = 0;
+  if (level?.hint && !cp) hint(level.hint, 6);
 }
 
 function endRun() {
   game.mode = 'crashed';
   const sc = score();
-  const isBest = sc > game.best;
-  if (isBest) {
-    game.best = sc;
-    store.set(bestKey(), sc);
-  }
-  $('crash-reason').textContent = player.crashReason;
   const unit = game.mph ? 'mph' : 'km/h';
-  $('crash-stats').innerHTML = `${DIFFICULTY[game.difficulty].label} · Score <b>${sc}</b>${isBest ? ' — new best!' : ''}<br>
-    Distance <b>${((player.distance - game.runStartDist) / 1000).toFixed(2)} km</b><br>
-    Top speed <b>${fmtSpeed(player.topSpeed)} ${unit}</b><br>
-    Near misses <b>${game.nearMisses}</b>`;
-  $('crash').classList.remove('hidden');
+  $('crash-reason').textContent = player.crashReason;
+  if (game.level) {
+    const togo = Math.max(0, road.finish - player.s);
+    $('crash-stats').innerHTML = `Score <b>${sc}</b> · Time <b>${fmtTime(game.time)}</b><br>
+      <b>${(togo / 1000).toFixed(2)} km</b> from the finish<br>
+      Top speed <b>${fmtSpeed(player.topSpeed)} ${unit}</b>`;
+    $('again').textContent = 'RESTART';
+  } else {
+    const isBest = sc > game.best;
+    if (isBest) {
+      game.best = sc;
+      store.set(BEST_KEY, sc);
+    }
+    $('crash-stats').innerHTML = `Score <b>${sc}</b>${isBest ? ' — new best!' : ''}<br>
+      Distance <b>${((player.distance - game.runStartDist) / 1000).toFixed(2)} km</b><br>
+      Top speed <b>${fmtSpeed(player.topSpeed)} ${unit}</b><br>
+      Near misses <b>${game.nearMisses}</b>`;
+    $('again').textContent = 'RIDE AGAIN';
+  }
+  $('from-cp').classList.toggle('hidden', !game.checkpoint);
+  $('again').classList.toggle('secondary', !!game.checkpoint);
+  show('crash');
+  if (game.checkpoint) $('from-cp').focus();
 }
 
-$('start').addEventListener('click', startRun);
-$('again').addEventListener('click', startRun);
+function finishRun() {
+  game.mode = 'finished';
+  const level = game.level;
+  const sc = score();
+  const r = recordFinish(level, game.time, sc);
+  $('finish-stars').replaceChildren(stars(levelProgress(level.id).stars.map((had, i) => had || r.earned[i]), 'stars big'));
+  const t = level.targets;
+  const line = (ok, text) => `<span class="${ok ? '' : 'miss'}">${ok ? '★' : '☆'} ${text}</span>`;
+  $('finish-stats').innerHTML = [
+    line(true, 'Finished'),
+    line(r.earned[1], `Time <b>${fmtTime(game.time)}</b> (target ${fmtTime(t.time)})${r.bestTime ? ' · best!' : ''}`),
+    line(r.earned[2], `Score <b>${sc}</b> (target ${t.score})${r.bestScore ? ' · best!' : ''}`),
+  ].join('<br>');
+  const after = levelAfter(level);
+  $('next').classList.toggle('hidden', !after);
+  const biome = biomeOf(level);
+  if (!after && biome.levels[biome.levels.length - 1] === level) {
+    const nb = BIOMES[BIOMES.indexOf(biome) + 1];
+    if (nb) popup(biomeUnlocked(nb) ? `${nb.name.toUpperCase()} UNLOCKED` : `${biome.name.toUpperCase()} COMPLETE`);
+  }
+  show('finish');
+}
+
+// ---------------------------------------------------------------- menu navigation
+// Arrow keys, the d-pad and the left stick move focus between the buttons of
+// the open panel; A or Enter presses the focused one, B or Esc goes back.
+function panelButtons() {
+  const panel = PANELS.map($).find((p) => !p.classList.contains('hidden'));
+  if (!panel) return [];
+  return [...panel.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent !== null);
+}
+
+function focusFirst(panel) {
+  if (matchMedia('(hover: none)').matches && !document.body.classList.contains('has-pad')) return;
+  const b = [...panel.querySelectorAll('button')].find((x) => !x.disabled && x.offsetParent !== null);
+  b?.focus({ preventScroll: true });
+}
+
+function moveFocus(dx, dy) {
+  const list = panelButtons();
+  if (!list.length) return;
+  const cur = list.includes(document.activeElement) ? document.activeElement : null;
+  if (!cur) {
+    list[0].focus();
+    return;
+  }
+  const r0 = cur.getBoundingClientRect();
+  const cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
+  let best = null, bestScore = Infinity;
+  for (const b of list) {
+    if (b === cur) continue;
+    const r = b.getBoundingClientRect();
+    const x = r.left + r.width / 2 - cx, y = r.top + r.height / 2 - cy;
+    const along = x * dx + y * dy;
+    if (along <= 1) continue;
+    const across = Math.abs(x * dy - y * dx);
+    const sc = along + across * 2.5;
+    if (sc < bestScore) {
+      bestScore = sc;
+      best = b;
+    }
+  }
+  if (best) {
+    best.focus();
+    best.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+const stickNav = { x: 0, y: 0, t: 0 };
+function menuInput(dt) {
+  const pressed = (c) => input.wasPressed(c);
+  let dx = 0, dy = 0;
+  if (pressed('ArrowLeft') || pressed('Pad14')) dx = -1;
+  if (pressed('ArrowRight') || pressed('Pad15')) dx = 1;
+  if (pressed('ArrowUp') || pressed('Pad12')) dy = -1;
+  if (pressed('ArrowDown') || pressed('Pad13')) dy = 1;
+  // Left stick, with auto-repeat while held.
+  const gp = [...(navigator.getGamepads?.() || [])].find(Boolean);
+  if (gp) {
+    const ax = Math.abs(gp.axes[0]) > 0.6 ? Math.sign(gp.axes[0]) : 0;
+    const ay = Math.abs(gp.axes[1]) > 0.6 ? Math.sign(gp.axes[1]) : 0;
+    stickNav.t -= dt;
+    if ((ax || ay) && (ax !== stickNav.x || ay !== stickNav.y || stickNav.t <= 0)) {
+      dx = dx || ax;
+      dy = dy || ay;
+      stickNav.t = ax === stickNav.x && ay === stickNav.y ? 0.18 : 0.4;
+    }
+    stickNav.x = ax;
+    stickNav.y = ay;
+  }
+  if (dx || dy) moveFocus(dx, dy);
+  const list = panelButtons();
+  const focused = list.includes(document.activeElement) ? document.activeElement : null;
+  // Enter on a focused button is a native click already.
+  if (pressed('Pad0') || ((pressed('Enter') || pressed('NumpadEnter')) && !focused)) (focused || list[0])?.click();
+  if (pressed('Pad1') || pressed('Escape')) back();
+}
+
+function back() {
+  if (game.mode === 'intro' || game.mode === 'finished' || (game.mode === 'crashed' && player.crashTime > 1)) toTitle();
+  else if (!$('help').classList.contains('hidden')) {
+    show('title');
+    $('howto').focus();
+  }
+}
+
+$('start').addEventListener('click', () => startRun());
+$('again').addEventListener('click', () => startRun());
+$('from-cp').addEventListener('click', () => startRun('checkpoint'));
 $('menu').addEventListener('click', toTitle);
+$('retry').addEventListener('click', () => startRun());
+$('next').addEventListener('click', () => {
+  const after = levelAfter(game.level);
+  if (after) selectLevel(after);
+});
+$('finish-menu').addEventListener('click', toTitle);
+$('intro-back').addEventListener('click', toTitle);
+$('endless').addEventListener('click', () => selectLevel(null));
+$('howto').addEventListener('click', () => show('help'));
+$('help-back').addEventListener('click', () => {
+  show('title');
+  $('howto').focus();
+});
+$('resume').addEventListener('click', () => togglePause());
+$('quit').addEventListener('click', () => {
+  togglePause();
+  toTitle();
+});
+
+function togglePause() {
+  game.mode = game.mode === 'play' ? 'paused' : 'play';
+  show(game.mode === 'paused' ? 'pause' : null);
+  if (audio.ctx) game.mode === 'paused' ? audio.ctx.suspend() : audio.ctx.resume();
+}
 
 // ---------------------------------------------------------------- camera
 const cam = {
@@ -237,7 +504,7 @@ function updateCamera(dt, t) {
   const fx = Math.sin(cam.heading), fz = -Math.cos(cam.heading);
 
   let dist, height, lookAhead, lookH;
-  if (game.mode === 'title') {
+  if (game.mode === 'title' || game.mode === 'intro' || game.mode === 'loading') {
     const a = t * 0.12;
     dist = 7;
     height = 2.2;
@@ -303,8 +570,21 @@ function updateHud(dt) {
   $('speed-val').textContent = fmtSpeed(player.crashed ? 0 : player.speed);
   $('speed-unit').textContent = game.mph ? 'mph' : 'km/h';
   $('score').textContent = score();
-  $('dist').textContent = `${((player.distance - game.runStartDist) / 1000).toFixed(2)} km`;
-  $('best').textContent = Math.max(game.best, score());
+  if (game.level) {
+    const len = road.finish - road.start;
+    const done = Math.max(0, Math.min(1, (player.s - road.start) / len));
+    $('stat2-label').textContent = 'Time';
+    $('stat2').textContent = fmtTime(game.time);
+    $('stat3-label').textContent = 'To go';
+    $('stat3').textContent = `${((1 - done) * len / 1000).toFixed(2)} km`;
+    $('progress-bar').style.width = `${(done * 100).toFixed(1)}%`;
+  } else {
+    $('stat2-label').textContent = 'Distance';
+    $('stat2').textContent = `${((player.distance - game.runStartDist) / 1000).toFixed(2)} km`;
+    $('stat3-label').textContent = 'Best';
+    $('stat3').textContent = Math.max(game.best, score());
+  }
+  $('progress').classList.toggle('hidden', !game.level);
   let st = '';
   if (player.slideMode) st = 'SLIDE';
   else if (player.sliding) st = 'DRIFT';
@@ -352,6 +632,14 @@ function updateResolution(dt) {
   }
 }
 
+// Past the finish: hold the lane and footbrake to a stop.
+const _f = {};
+function runOut() {
+  const f = road.sample(player.s, _f);
+  const travel = Math.atan2(player.vel.x, -player.vel.y) - f.heading;
+  return { steer: Math.max(-1, Math.min(1, -0.25 * (player.d - 1.75) - 1.5 * travel)), down: player.speed > 1 };
+}
+
 // ---------------------------------------------------------------- loop
 const wheelPos = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 const trafficEvents = [];
@@ -383,16 +671,11 @@ function frame(now) {
   }
   if (input.wasPressed('KeyC') || (pad(3) && game.mode === 'play')) game.camMode = (game.camMode + 1) % 3;
   if ((input.wasPressed('KeyP') || input.wasPressed('Escape') || pad(9)) && (game.mode === 'play' || game.mode === 'paused')) {
-    game.mode = game.mode === 'play' ? 'paused' : 'play';
-    $('pause').classList.toggle('hidden', game.mode !== 'paused');
-    if (audio.ctx) game.mode === 'paused' ? audio.ctx.suspend() : audio.ctx.resume();
-  } else if (game.mode === 'title') {
-    if (input.wasPressed('Enter') || input.wasPressed('NumpadEnter') || pad(0) || pad(9)) startRun();
-    else if (pad(2)) setDifficulty(game.difficulty === 'pro' ? 'cruiser' : 'pro');
-    else if (pad(3)) setQuality(QUALITY_ORDER[(QUALITY_ORDER.indexOf(settings.qualityChoice) + 1) % QUALITY_ORDER.length]);
-  } else if (game.mode === 'crashed' && player.crashTime > 1) {
-    if (input.wasPressed('Enter') || input.wasPressed('NumpadEnter') || pad(0) || pad(9)) startRun();
-    else if (input.wasPressed('Escape') || pad(1)) toTitle();
+    togglePause();
+  } else if (game.mode === 'title' && pad(3)) {
+    setQuality(QUALITY_ORDER[(QUALITY_ORDER.indexOf(settings.qualityChoice) + 1) % QUALITY_ORDER.length]);
+  } else if (game.mode !== 'play' && !(game.mode === 'crashed' && player.crashTime < 1)) {
+    menuInput(dt);
   }
 
   if (game.mode === 'paused') {
@@ -402,9 +685,12 @@ function frame(now) {
   }
   time += dt;
 
-  if (game.mode === 'play' || game.mode === 'crashed') {
+  if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') {
     const wasCrashed = player.crashed;
-    player.update(dt, game.mode === 'play' ? state : { steer: 0 });
+    player.update(dt, game.mode === 'play' ? state : game.mode === 'finished' ? runOut() : { steer: 0 });
+    if (game.mode === 'play' && !player.crashed) game.time += dt;
+    // Past the finish, coast to a stop.
+    if (game.mode === 'finished' && !player.crashed) player.vel.multiplyScalar(Math.exp(-dt * 0.8));
     for (const e of player.events) {
       if (e === 'rail') audio.rail();
       if (e === 'crash') audio.crash();
@@ -418,6 +704,16 @@ function frame(now) {
       game.combo = 0;
     }
     if (player.crashed && game.mode === 'play' && player.crashTime > 2.2) endRun();
+    if (game.level && game.mode === 'play' && !player.crashed) {
+      const cps = road.checkpoints;
+      if (game.cpNext < cps.length && player.s >= cps[game.cpNext]) {
+        game.checkpoint = { s: cps[game.cpNext], time: game.time, bonus: game.bonus };
+        game.cpNext++;
+        popup('CHECKPOINT', fmtTime(game.time));
+        audio.ding();
+      }
+      if (player.s >= road.finish) finishRun();
+    }
     trafficEvents.length = 0;
     traffic.update(dt, player, trafficEvents);
     for (const e of trafficEvents) {
@@ -463,7 +759,7 @@ function frame(now) {
       );
     }
   } else {
-    // Title: let the rider idle on the road.
+    // Menus: let the rider idle on the road.
     player.animate(dt);
     traffic.update(dt, player, trafficEvents);
   }
@@ -492,34 +788,23 @@ function frame(now) {
   updateResolution(dt);
   updateCamera(dt, time);
   audio.update(player, traffic.cars, camera);
-  if (game.mode !== 'title') updateHud(dt);
+  if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') updateHud(dt);
   input.endFrame();
   post.render();
 }
 
 // ---------------------------------------------------------------- boot
 async function boot() {
-  roadMesh.update(player.s);
-  let done = false;
-  let built = 0;
-  const total = terrain.tileCount;
-  while (!done) {
-    const before = terrain.near.size + terrain.far.size;
-    done = terrain.update(player.pos.x, player.pos.z, 30);
-    built += terrain.near.size + terrain.far.size - before;
-    $('load-pct').textContent = `${Math.min(100, Math.round((built / total) * 100))}%`;
-    await new Promise((r) => setTimeout(r, 0));
-  }
   await texturesReady();
-  forest.update(player.pos.x, player.pos.z);
-  boulders.update();
-  $('loading').classList.add('hidden');
-  $('controls').classList.remove('hidden');
-  game.mode = 'title';
+  const params = new URLSearchParams(location.search);
+  const wanted = params.get('level');
+  const level = wanted === 'endless' ? null : BIOMES.flatMap((b) => b.levels).find((l) => l.id === wanted) || nextLevel();
+  await loadWorld(level);
   // Warm up: settle the rider pose and a few cars.
-  for (let i = 0; i < 4; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
+  if (traffic.density > 0) for (let i = 0; i < 4; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
   player.animate(0.016);
-  $('best').textContent = game.best;
+  if (wanted) showIntro();
+  else toTitle();
 }
 
 requestAnimationFrame(frame);

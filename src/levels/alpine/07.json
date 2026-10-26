@@ -1,0 +1,115 @@
+{
+  "id": "alpine-07",
+  "name": "Hairpin Hollow",
+  "biome": "alpine",
+  "seed": 1707,
+  "hint": "Near-hairpins. Scrub most of your speed before you turn in, then carve out.",
+  "pieces": [
+    {
+      "straight": 200,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 22,
+      "length": 24
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 21,
+      "length": 39
+    },
+    {
+      "straight": 150,
+      "grade": 0.075
+    },
+    {
+      "bend": "right",
+      "radius": 24,
+      "length": 45
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 80
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "right",
+      "radius": 20,
+      "length": 28
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 39
+    },
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 23,
+      "length": 40
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 21,
+      "length": 37
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 90
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 26
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "right",
+      "radius": 24,
+      "length": 38
+    },
+    {
+      "straight": 264
+    }
+  ],
+  "features": [],
+  "checkpoints": [
+    1100
+  ],
+  "traffic": {
+    "density": 0.6,
+    "speed": 1
+  },
+  "targets": {
+    "time": 200,
+    "score": 3100
+  }
+}

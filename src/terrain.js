@@ -234,6 +234,17 @@ export class Terrain {
     return true;
   }
 
+  // Drop every tile and reseed the noise, for a new road.
+  reset(seed) {
+    for (const map of [this.near, this.far]) {
+      for (const g of map.values()) this.disposeGroup(g);
+      map.clear();
+    }
+    this.noise = createNoise2D(seed);
+    this.noise2 = createNoise2D(seed + 1);
+    this.noise3 = createNoise2D(seed + 2);
+  }
+
   get tileCount() {
     return (this.nearRadius * 2 + 1) ** 2 + (this.farRadius * 2 + 1) ** 2;
   }

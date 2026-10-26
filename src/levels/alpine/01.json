@@ -1,0 +1,48 @@
+{
+  "id": "alpine-01",
+  "name": "First Push",
+  "biome": "alpine",
+  "seed": 1101,
+  "hint": "Push to get going, then tuck for speed. Lean to carve the long sweepers.",
+  "pieces": [
+    {
+      "straight": 120,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 250,
+      "length": 150
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "left",
+      "radius": 200,
+      "length": 220
+    },
+    {
+      "straight": 100,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 220,
+      "length": 180
+    },
+    {
+      "straight": 150
+    }
+  ],
+  "features": [],
+  "checkpoints": [],
+  "traffic": {
+    "density": 0,
+    "speed": 1
+  },
+  "targets": {
+    "time": 115,
+    "score": 1150
+  }
+}

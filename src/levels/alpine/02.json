@@ -1,0 +1,66 @@
+{
+  "id": "alpine-02",
+  "name": "Meadow Sweepers",
+  "biome": "alpine",
+  "seed": 1202,
+  "hint": "Link the sweepers together. Keep to your side of the road.",
+  "pieces": [
+    {
+      "straight": 100,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 150,
+      "length": 120
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 150
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 110
+    },
+    {
+      "straight": 60,
+      "grade": 0.065
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 170
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 130
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 130,
+      "length": 80
+    },
+    {
+      "straight": 80
+    }
+  ],
+  "features": [],
+  "checkpoints": [],
+  "traffic": {
+    "density": 0,
+    "speed": 1
+  },
+  "targets": {
+    "time": 115,
+    "score": 1450
+  }
+}

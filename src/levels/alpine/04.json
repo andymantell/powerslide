@@ -1,0 +1,87 @@
+{
+  "id": "alpine-04",
+  "name": "Chalet Bends",
+  "biome": "alpine",
+  "seed": 1404,
+  "hint": "Tight bends ahead. Throw a powerslide on the way in to scrub off speed.",
+  "pieces": [
+    {
+      "straight": 140,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 85
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 38,
+      "length": 55
+    },
+    {
+      "straight": 90
+    },
+    {
+      "bend": "right",
+      "radius": 35,
+      "length": 50
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 100
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "right",
+      "radius": 32,
+      "length": 40
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "left",
+      "radius": 36,
+      "length": 60
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 80
+    },
+    {
+      "straight": 90
+    },
+    {
+      "bend": "left",
+      "radius": 34,
+      "length": 50
+    },
+    {
+      "straight": 110
+    }
+  ],
+  "features": [],
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 1
+  },
+  "targets": {
+    "time": 135,
+    "score": 2000
+  }
+}

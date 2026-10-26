@@ -1,0 +1,126 @@
+{
+  "id": "alpine-08",
+  "name": "Dairy Run",
+  "biome": "alpine",
+  "seed": 1808,
+  "hint": "Oncoming cars on the hairpins. Hold your lane, and pass close for bonus points.",
+  "pieces": [
+    {
+      "straight": 180,
+      "grade": 0.075
+    },
+    {
+      "bend": "right",
+      "radius": 35,
+      "length": 33
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 40
+    },
+    {
+      "straight": 150
+    },
+    {
+      "bend": "right",
+      "radius": 21,
+      "length": 38
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 130
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "left",
+      "radius": 24,
+      "length": 25
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 20,
+      "length": 37
+    },
+    {
+      "straight": 160
+    },
+    {
+      "bend": "left",
+      "radius": 30,
+      "length": 55
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "right",
+      "radius": 22,
+      "length": 40
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "left",
+      "radius": 23,
+      "length": 42
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 100
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 21,
+      "length": 27
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "right",
+      "radius": 26,
+      "length": 45
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 38
+    },
+    {
+      "straight": 260
+    }
+  ],
+  "features": [],
+  "checkpoints": [
+    1250
+  ],
+  "traffic": {
+    "density": 0.9,
+    "speed": 1
+  },
+  "targets": {
+    "time": 225,
+    "score": 3800
+  }
+}

@@ -1,4 +1,4 @@
-// Quality presets, difficulty modes, device detection and persistence.
+// Quality presets, rider tuning, device detection and persistence.
 
 const store = {
   get(k, d) {
@@ -47,32 +47,21 @@ export const QUALITY = {
 };
 export const QUALITY_ORDER = ['auto', 'low', 'medium', 'high', 'ultra'];
 
-// muStatic/muKinetic: wheel grip before and after breaking away. carveLimit:
-// how close full lock carves to the grip limit. leanRate: how quickly the
-// rider can lean into a turn (rad/s natural frequency). recover: how hard the
-// rider straightens out an unintended drift.
-export const DIFFICULTY = {
-  cruiser: {
-    label: 'Cruiser',
-    blurb: 'Forgiving grip, gentle traffic',
-    muStatic: 1.05, muKinetic: 0.65, carveLimit: 0.93,
-    leanRate: 7, recover: 16,
-    wobble: false, highside: false,
-    dirtGrip: 0.8,
-    trafficDensity: 1, trafficSpeed: 1,
-    railCrashSpeed: 6,
-  },
-  pro: {
-    label: 'Pro',
-    blurb: 'Less grip, speed wobbles, highsides, faster traffic',
-    muStatic: 0.95, muKinetic: 0.6, carveLimit: 0.9,
-    leanRate: 5.5, recover: 9,
-    wobble: true, wobbleSpeed: 20, highside: true, highsideSlip: 1.05, highsideSpeed: 13,
-    dirtGrip: 0.55,
-    trafficDensity: 1.4, trafficSpeed: 1.2,
-    railCrashSpeed: 4.5,
-  },
+// Rider tuning. muStatic/muKinetic: wheel grip before and after breaking
+// away. carveLimit: how close full lock carves to the grip limit. leanRate:
+// how quickly the rider can lean into a turn (rad/s natural frequency).
+// recover: how hard the rider straightens out an unintended drift. Speed
+// wobbles, highsides and grit are always on; levels set how hard a run is.
+export const TUNING = {
+  muStatic: 0.95, muKinetic: 0.6, carveLimit: 0.9,
+  leanRate: 5.5, recover: 9,
+  wobble: true, wobbleSpeed: 20, highside: true, highsideSlip: 1.05, highsideSpeed: 13,
+  dirtGrip: 0.55,
+  railCrashSpeed: 4.5,
 };
+
+// Traffic for endless mode; levels set their own.
+export const ENDLESS_TRAFFIC = { density: 1.4, speed: 1.2 };
 
 export function detectDevice() {
   const ua = navigator.userAgent || '';
@@ -101,11 +90,9 @@ export function loadSettings() {
   const device = detectDevice();
   const qualityChoice = store.get('powerslide.quality', 'auto');
   const quality = qualityChoice === 'auto' ? autoQuality(device) : qualityChoice;
-  const difficulty = store.get('powerslide.difficulty', 'cruiser');
   return {
     device,
     qualityChoice: QUALITY_ORDER.includes(qualityChoice) ? qualityChoice : 'auto',
     quality: QUALITY[quality] ? quality : 'high',
-    difficulty: DIFFICULTY[difficulty] ? difficulty : 'cruiser',
   };
 }

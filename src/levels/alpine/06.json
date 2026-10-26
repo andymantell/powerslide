@@ -1,0 +1,110 @@
+{
+  "id": "alpine-06",
+  "name": "Pine Gate",
+  "biome": "alpine",
+  "seed": 1606,
+  "hint": "Longer run with a checkpoint halfway. Crash after it and you restart from there.",
+  "pieces": [
+    {
+      "straight": 180,
+      "grade": 0.075
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 37
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "left",
+      "radius": 26,
+      "length": 48
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 55
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 110
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 26,
+      "length": 26
+    },
+    {
+      "straight": 90
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 60
+    },
+    {
+      "straight": 150
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 120
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "left",
+      "radius": 25,
+      "length": 33
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 55
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 28,
+      "length": 50
+    },
+    {
+      "straight": 90
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 80
+    },
+    {
+      "straight": 106
+    }
+  ],
+  "features": [],
+  "checkpoints": [
+    1000
+  ],
+  "traffic": {
+    "density": 0.5,
+    "speed": 1
+  },
+  "targets": {
+    "time": 180,
+    "score": 2800
+  }
+}

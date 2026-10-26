@@ -54,15 +54,23 @@ function carMesh(rand) {
 }
 
 export class Traffic {
-  constructor(scene, road, diff = {}) {
+  // opts: density (spawn rate scale) and speed (car speed scale).
+  constructor(scene, road, opts = {}) {
     this.scene = scene;
     this.road = road;
     this.cars = [];
-    this.rand = mulberry32(2024);
     this.frame = {};
+    this.configure(opts);
+  }
+
+  // Clears the road and restarts the spawn sequence, so a level's traffic
+  // plays out the same way on every attempt.
+  configure(opts = {}, seed = 2024) {
+    this.clear();
+    this.rand = mulberry32(seed);
     this.spawnTimer = 0;
-    this.density = diff.trafficDensity ?? 1;
-    this.speedScale = diff.trafficSpeed ?? 1;
+    this.density = opts.density ?? 1;
+    this.speedScale = opts.speed ?? 1;
   }
 
   clear() {

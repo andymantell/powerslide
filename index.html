@@ -21,9 +21,10 @@
       <div id="speed"><span id="speed-val">0</span><small id="speed-unit">km/h</small></div>
       <div id="stats">
         <div><label>Score</label><span id="score">0</span></div>
-        <div><label>Distance</label><span id="dist">0.00 km</span></div>
-        <div><label>Best</label><span id="best">0</span></div>
+        <div><label id="stat2-label">Distance</label><span id="stat2">0.00 km</span></div>
+        <div><label id="stat3-label">Best</label><span id="stat3">0</span></div>
       </div>
+      <div id="progress" class="hidden"><div id="progress-bar"></div></div>
       <div id="state"></div>
       <div id="popups"></div>
       <div id="hint"></div>
@@ -32,46 +33,68 @@
 
     <div id="toast"></div>
 
-    <div id="title" class="panel">
+    <div id="loading" class="panel">
       <h1>POWERSLIDE</h1>
-      <p class="tag">Downhill longboarding on an endless mountain pass</p>
-      <div id="loading">Generating mountains… <span id="load-pct">0%</span></div>
-      <div id="controls" class="hidden">
-        <table class="kb">
-          <tr><td><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></td><td>Lean / carve</td></tr>
-          <tr><td><kbd>W</kbd> / <kbd>↑</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
-          <tr><td><kbd>S</kbd> / <kbd>↓</kbd></td><td>Air brake (fast) · Footbrake (slow)</td></tr>
-          <tr><td><kbd>Space</kbd> / <kbd>Shift</kbd></td><td>Hold to powerslide: steer to guide it, brake to scrub hard</td></tr>
-          <tr><td><kbd>C</kbd></td><td>Camera</td></tr>
-          <tr><td><kbd>M</kbd> <kbd>U</kbd> <kbd>P</kbd> <kbd>F</kbd></td><td>Mute · km/h/mph · Pause · FPS</td></tr>
-        </table>
-        <table class="pad">
-          <tr><td>Left stick</td><td>Lean / carve</td></tr>
-          <tr><td><kbd>RT</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
-          <tr><td><kbd>LT</kbd></td><td>Air brake (fast, analogue) · Footbrake (slow)</td></tr>
-          <tr><td><kbd>A</kbd> / <kbd>LB</kbd> / <kbd>RB</kbd></td><td>Hold to powerslide: steer to guide it, brake to scrub hard</td></tr>
-          <tr><td><kbd>Y</kbd> · <kbd>☰</kbd></td><td>Camera · Pause</td></tr>
-        </table>
-        <table class="touchctl">
-          <tr><td>Tap</td><td>Push</td></tr>
-          <tr><td>Touch, slide left / right</td><td>Lean / carve</td></tr>
-          <tr><td>Touch, slide forward</td><td>Tuck down (further = lower)</td></tr>
-          <tr><td>Touch, slide back</td><td>Air brake (stand up, arms out)</td></tr>
-          <tr><td>Flick back, keep holding</td><td>Powerslide (lean picks the side). Slide forward or lift to end it</td></tr>
-        </table>
-        <p class="small">Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
-        <div class="opts">
-          <div class="opt-row"><label>Difficulty</label><div id="opt-diff" class="seg"></div></div>
-          <p id="diff-blurb" class="small"></p>
-          <div class="opt-row"><label>Graphics</label><div id="opt-quality" class="seg"></div></div>
-        </div>
-        <div id="xbox-tip" class="tip hidden">
-          <b>On Xbox:</b> if the controller moves a cursor instead of the rider, press and hold the
-          Menu button <kbd>☰</kbd> (or select the controller icon in Edge's address bar) and choose
-          <i>Use game controls</i>.
-        </div>
+      <p>Building the mountain… <span id="load-pct">0%</span></p>
+    </div>
+
+    <div id="title" class="panel wide hidden">
+      <h1>POWERSLIDE</h1>
+      <p class="tag">Downhill longboarding</p>
+      <div id="biomes"></div>
+      <div class="btns">
+        <button id="endless" class="secondary">ENDLESS</button>
+        <button id="howto" class="secondary">CONTROLS</button>
+      </div>
+      <div class="opts">
+        <div class="opt-row"><label>Graphics</label><div id="opt-quality" class="seg"></div></div>
+      </div>
+      <div id="xbox-tip" class="tip hidden">
+        <b>On Xbox:</b> if the controller moves a cursor instead of the rider, press and hold the
+        Menu button <kbd>☰</kbd> (or select the controller icon in Edge's address bar) and choose
+        <i>Use game controls</i>.
+      </div>
+      <p id="pad-hint" class="small hidden">Controller: <kbd>D-pad</kbd> choose · <kbd>A</kbd> select · <kbd>Y</kbd> graphics</p>
+    </div>
+
+    <div id="help" class="panel hidden">
+      <h2>CONTROLS</h2>
+      <table class="kb">
+        <tr><td><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></td><td>Lean / carve</td></tr>
+        <tr><td><kbd>W</kbd> / <kbd>↑</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
+        <tr><td><kbd>S</kbd> / <kbd>↓</kbd></td><td>Air brake (fast) · Footbrake (slow)</td></tr>
+        <tr><td><kbd>Space</kbd> / <kbd>Shift</kbd></td><td>Hold to powerslide: steer to guide it, brake to scrub hard</td></tr>
+        <tr><td><kbd>C</kbd></td><td>Camera</td></tr>
+        <tr><td><kbd>M</kbd> <kbd>U</kbd> <kbd>P</kbd> <kbd>F</kbd></td><td>Mute · km/h/mph · Pause · FPS</td></tr>
+      </table>
+      <table class="pad">
+        <tr><td>Left stick</td><td>Lean / carve</td></tr>
+        <tr><td><kbd>RT</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
+        <tr><td><kbd>LT</kbd></td><td>Air brake (fast, analogue) · Footbrake (slow)</td></tr>
+        <tr><td><kbd>A</kbd> / <kbd>LB</kbd> / <kbd>RB</kbd></td><td>Hold to powerslide: steer to guide it, brake to scrub hard</td></tr>
+        <tr><td><kbd>Y</kbd> · <kbd>☰</kbd></td><td>Camera · Pause</td></tr>
+      </table>
+      <table class="touchctl">
+        <tr><td>Tap</td><td>Push</td></tr>
+        <tr><td>Touch, slide left / right</td><td>Lean / carve</td></tr>
+        <tr><td>Touch, slide forward</td><td>Tuck down (further = lower)</td></tr>
+        <tr><td>Touch, slide back</td><td>Air brake (stand up, arms out)</td></tr>
+        <tr><td>Flick back, keep holding</td><td>Powerslide (lean picks the side). Slide forward or lift to end it</td></tr>
+      </table>
+      <p class="small">Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
+      <p class="small">Above about 72 km/h the board can get speed wobbles: tuck, stay smooth or throw a slide. Steer out of a slide to close it before you let go, or the wheels hook up and throw you.</p>
+      <button id="help-back" class="secondary">BACK</button>
+    </div>
+
+    <div id="intro" class="panel hidden">
+      <p id="intro-where" class="tag"></p>
+      <h2 id="intro-name"></h2>
+      <p id="intro-hint"></p>
+      <div id="intro-targets"></div>
+      <p id="intro-best" class="small"></p>
+      <div class="btns">
         <button id="start">RIDE</button>
-        <p id="pad-hint" class="small hidden">Controller: <kbd>A</kbd> ride · <kbd>X</kbd> difficulty · <kbd>Y</kbd> graphics</p>
+        <button id="intro-back" class="secondary">BACK</button>
       </div>
     </div>
 
@@ -80,14 +103,29 @@
       <p id="crash-reason"></p>
       <div id="crash-stats"></div>
       <div class="btns">
+        <button id="from-cp" class="hidden">CHECKPOINT</button>
         <button id="again">RIDE AGAIN</button>
         <button id="menu" class="secondary">MENU</button>
       </div>
-      <p class="small"><kbd>Enter</kbd> / <kbd>A</kbd> ride again · <kbd>Esc</kbd> / <kbd>B</kbd> menu</p>
+    </div>
+
+    <div id="finish" class="panel hidden">
+      <h2>FINISHED!</h2>
+      <div id="finish-stars" class="stars big"></div>
+      <div id="finish-stats"></div>
+      <div class="btns">
+        <button id="next">NEXT</button>
+        <button id="retry" class="secondary">RETRY</button>
+        <button id="finish-menu" class="secondary">MENU</button>
+      </div>
     </div>
 
     <div id="pause" class="panel hidden">
       <h2>PAUSED</h2>
+      <div class="btns">
+        <button id="resume">RESUME</button>
+        <button id="quit" class="secondary">MENU</button>
+      </div>
       <p class="small">Press <kbd>P</kbd> / <kbd>Esc</kbd> / <kbd>☰</kbd> to continue</p>
     </div>
 

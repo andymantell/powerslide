@@ -52,8 +52,8 @@ html, body {
   100% { opacity: 0; transform: translateY(-30px); }
 }
 #hint {
-  position: absolute; left: 50%; top: 14px; transform: translateX(-50%);
-  font-size: 14px; opacity: 0.9; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  position: absolute; left: 50%; top: 96px; transform: translateX(-50%); width: max-content; max-width: min(640px, 80vw);
+  text-align: center; font-size: 15px; line-height: 1.4; opacity: 0.95; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
 }
 
 .panel {
@@ -100,12 +100,12 @@ button:hover { filter: brightness(1.1); }
   background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .seg button.on { background: var(--accent); color: #1a1208; border-color: var(--accent); }
-#diff-blurb { margin: 0 0 6px 96px; text-align: left; }
 .tip {
   margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5;
   background: rgba(16, 124, 16, 0.25); border: 1px solid rgba(80, 200, 80, 0.4); text-align: left;
 }
-.btns { display: flex; gap: 10px; justify-content: center; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.btns button { padding: 12px 26px; }
 button.secondary { background: rgba(255, 255, 255, 0.15); color: #fff; }
 #state.warn { color: #ff4d4d; animation: blink 0.25s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0.4; } }
@@ -122,7 +122,6 @@ button.secondary { background: rgba(255, 255, 255, 0.15); color: #fff; }
   animation: pop 2.6s ease-out forwards;
 }
 @media (max-width: 700px) {
-  #diff-blurb { margin-left: 0; }
   .opt-row { flex-direction: column; align-items: flex-start; gap: 4px; }
   #fps { top: 70px; }
 }
@@ -134,3 +133,44 @@ body.is-xbox table.kb, body.is-touch table.kb, body.has-pad table.kb { display: 
 body.is-xbox table.pad, body.has-pad table.pad { display: table; }
 body.is-touch:not(.has-pad) table.touchctl { display: table; }
 body.is-xbox .tag { display: none; }
+
+/* Level select, intro and results. */
+.panel.wide { max-width: min(780px, calc(100vw - 32px)); }
+.biome { margin: 10px 0 4px; text-align: left; }
+.biome h3 { margin: 0; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; }
+.biome h3 small { font-size: 14px; color: var(--accent); letter-spacing: 0; }
+.biome p { margin: 2px 0 8px; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+button.tile {
+  margin: 0; padding: 10px 6px 8px; min-height: 84px; letter-spacing: 0; font-size: 13px; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; line-height: 1.15;
+  background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.15);
+}
+button.tile b { font-size: 22px; font-weight: 800; color: var(--accent); }
+button.tile.next { border-color: var(--accent); }
+button.tile:disabled { opacity: 0.35; cursor: default; filter: none; }
+.stars { color: rgba(255, 255, 255, 0.3); letter-spacing: 2px; font-style: normal; }
+.stars .on { color: var(--accent); }
+.stars.big { font-size: 44px; margin: 4px 0 6px; }
+.coming { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.coming span {
+  font-size: 12px; padding: 4px 10px; border-radius: 12px; opacity: 0.6;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+#intro-hint { max-width: 420px; margin: 8px auto; line-height: 1.45; }
+#intro-targets, #finish-stats { margin: 10px 0; font-size: 16px; line-height: 1.8; }
+#intro-targets b, #finish-stats b { color: var(--accent); }
+#finish-stats .miss { opacity: 0.6; }
+button:focus { outline: none; }
+button:focus-visible, button.focus { outline: 3px solid #fff; outline-offset: 2px; }
+#progress {
+  position: absolute; left: 22px; top: 78px; width: 220px; height: 5px; border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25); overflow: hidden;
+}
+#progress-bar { height: 100%; width: 0; background: var(--accent); }
+@media (max-width: 700px) {
+  .grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  button.tile { min-height: 66px; font-size: 10px; padding: 6px 2px; }
+  button.tile b { font-size: 18px; }
+  #progress { left: 12px; top: 58px; width: 160px; }
+}

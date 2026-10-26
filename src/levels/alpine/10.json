@@ -1,0 +1,154 @@
+{
+  "id": "alpine-10",
+  "name": "Meadow Descent",
+  "biome": "alpine",
+  "seed": 2010,
+  "hint": "The full descent: sweepers, slides, hairpins and traffic. Two checkpoints on the way down.",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 220,
+      "length": 180
+    },
+    {
+      "bend": "left",
+      "radius": 180,
+      "length": 200
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 73
+    },
+    {
+      "straight": 100
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 55
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 47
+    },
+    {
+      "straight": 120,
+      "grade": 0.075
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 110
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "right",
+      "radius": 24,
+      "length": 29
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 41
+    },
+    {
+      "straight": 180,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 150,
+      "length": 120
+    },
+    {
+      "straight": 200
+    },
+    {
+      "bend": "right",
+      "radius": 22,
+      "length": 26
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "left",
+      "radius": 26,
+      "length": 45
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 21,
+      "length": 36
+    },
+    {
+      "straight": 150
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 110
+    },
+    {
+      "straight": 160
+    },
+    {
+      "bend": "right",
+      "radius": 24,
+      "length": 27
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 22,
+      "length": 40
+    },
+    {
+      "straight": 150
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 80
+    }
+  ],
+  "features": [],
+  "checkpoints": [
+    1100,
+    2200
+  ],
+  "traffic": {
+    "density": 1.0,
+    "speed": 1
+  },
+  "targets": {
+    "time": 285,
+    "score": 5200
+  }
+}

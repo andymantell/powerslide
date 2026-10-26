@@ -5,7 +5,7 @@
 globalThis.document = { createElement: () => ({ getContext: () => null }) };
 const { Player } = await import('../src/player.js');
 const { Road } = await import('../src/road.js');
-const { DIFFICULTY } = await import('../src/settings.js');
+const { TUNING } = await import('../src/settings.js');
 const THREE = await import('three');
 
 // Straight road down -Z at a fixed grade.
@@ -35,8 +35,8 @@ const terrain = { heightAt: () => -1e9 };
 const DT = 1 / 60;
 const fmt = (v) => (v * 3.6).toFixed(1).padStart(5) + ' km/h';
 
-function make(grade, diff = 'cruiser', speed = 6) {
-  const p = new Player(scene, new TestRoad(grade), terrain, DIFFICULTY[diff]);
+function make(grade, speed = 6) {
+  const p = new Player(scene, new TestRoad(grade), terrain, TUNING);
   p.reset(100);
   p.d = 0;
   p.pos.x = 0;
@@ -58,11 +58,11 @@ const keepLane = (p) => {
   return Math.max(-1, Math.min(1, -0.25 * p.d - 1.5 * travel));
 };
 
-console.log('== Straight-line speed (Cruiser, 60 s from 20 km/h)');
+console.log('== Straight-line speed (60 s from 20 km/h)');
 for (const grade of [0.05, 0.08, 0.12]) {
   const row = [];
   for (const [name, inp] of [['upright', {}], ['tuck', { tuck: 1 }], ['air', { air: 1 }]]) {
-    const p = make(grade, 'cruiser', 5.5);
+    const p = make(grade, 5.5);
     run(p, 60, (pp) => ({ ...inp, steer: keepLane(pp) }));
     row.push(`${name} ${fmt(p.speed)}`);
   }
@@ -71,7 +71,7 @@ for (const grade of [0.05, 0.08, 0.12]) {
 
 console.log('\n== Braking from 70 km/h on 8%');
 for (const [name, inp] of [['air brake', { air: 1 }], ['footbrake', { down: true }], ['slide', { slide: true }]]) {
-  const p = make(0.08, 'cruiser', 70 / 3.6);
+  const p = make(0.08, 70 / 3.6);
   let t30 = null;
   run(p, 12, (pp) => ({ ...inp, steer: inp.slide ? 0 : keepLane(pp) }), (pp, t) => {
     if (t30 === null && pp.speed < 30 / 3.6) t30 = t;
@@ -79,10 +79,10 @@ for (const [name, inp] of [['air brake', { air: 1 }], ['footbrake', { down: true
   console.log(`${name.padEnd(10)} to 30 km/h: ${t30 === null ? 'never' : t30.toFixed(1) + ' s'}  (after 12 s ${fmt(p.speed)})`);
 }
 
-console.log('\n== Carving, full lock on a flat road (Cruiser / Pro)');
-for (const diff of ['cruiser', 'pro']) {
+console.log('\n== Carving, full lock on a flat road');
+{
   for (const kmh of [10, 30, 50, 70]) {
-    const p = make(0, diff, kmh / 3.6);
+    const p = make(0, kmh / 3.6);
     let t90 = null;
     let steady = 0;
     const samples = [];
@@ -90,13 +90,13 @@ for (const diff of ['cruiser', 'pro']) {
     steady = samples[samples.length - 1][1];
     for (const [t, r] of samples) if (t90 === null && r > 0.9 * steady) t90 = t;
     const radius = p.speed / Math.max(1e-6, steady);
-    console.log(`${diff.padEnd(8)} ${String(kmh).padStart(3)} km/h: radius ${radius.toFixed(1).padStart(5)} m, lat ${(p.speed * steady / 9.81).toFixed(2)} g, turn-in ${t90?.toFixed(2)} s, lean ${(p.lean * 57.3).toFixed(0)}°, roll ${(p.roll * 57.3).toFixed(1)}°, sliding ${p.sliding}`);
+    console.log(`${String(kmh).padStart(3)} km/h: radius ${radius.toFixed(1).padStart(5)} m, lat ${(p.speed * steady / 9.81).toFixed(2)} g, turn-in ${t90?.toFixed(2)} s, lean ${(p.lean * 57.3).toFixed(0)}°, roll ${(p.roll * 57.3).toFixed(1)}°, sliding ${p.sliding}`);
   }
 }
 
 console.log('\n== Powerslide from 60 km/h on 8%');
-for (const diff of ['cruiser', 'pro']) {
-  const p = make(0.08, diff, 60 / 3.6);
+{
+  const p = make(0.08, 60 / 3.6);
   let maxSlip = 0;
   run(p, 1.5, { slide: true, steer: 0 }, (pp) => (maxSlip = Math.max(maxSlip, Math.abs(pp.slip))));
   const after = p.speed;
@@ -104,30 +104,30 @@ for (const diff of ['cruiser', 'pro']) {
   run(p, 0.6, { slide: true, steer: -1 * p.slideDir });
   const closed = p.slip;
   const crash = run(p, 0.8, { steer: 0 });
-  console.log(`${diff.padEnd(8)} 1.5 s slide: ${fmt(after)}, max slip ${(maxSlip * 57.3).toFixed(0)}°, closed to ${(closed * 57.3).toFixed(0)}°, 0.8 s after release ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°, ${crash !== null ? 'CRASH: ' + p.crashReason : 'rode away'}`);
+  console.log(`1.5 s slide: ${fmt(after)}, max slip ${(maxSlip * 57.3).toFixed(0)}°, closed to ${(closed * 57.3).toFixed(0)}°, 0.8 s after release ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°, ${crash !== null ? 'CRASH: ' + p.crashReason : 'rode away'}`);
   // Letting go while fully sideways (brake held to throw it wide) instead.
-  const q = make(0.08, diff, 60 / 3.6);
+  const q = make(0.08, 60 / 3.6);
   run(q, 0.5, { slide: true, steer: 0, down: true });
   const at = q.speed;
   const c2 = run(q, 1, { steer: 0 });
-  console.log(`${''.padEnd(8)} let go fully sideways at ${fmt(at)}: ${c2 !== null ? 'CRASH: ' + q.crashReason : 'rode away'}`);
+  console.log(`let go fully sideways at ${fmt(at)}: ${c2 !== null ? 'CRASH: ' + q.crashReason : 'rode away'}`);
 }
 
-console.log('\n== Steering mid-slide (Cruiser, 50 km/h on 6%, 1.2 s): sideways travel');
+console.log('\n== Steering mid-slide (50 km/h on 6%, 1.2 s): sideways travel');
 for (const steer of [-1, 0, 1]) {
-  const p = make(0.06, 'cruiser', 50 / 3.6);
+  const p = make(0.06, 50 / 3.6);
   run(p, 1.2, { slide: true, steer });
   console.log(`steer ${String(steer).padStart(2)}: moved ${p.pos.x.toFixed(2).padStart(6)} m across, ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
 }
 {
-  const p = make(0.06, 'cruiser', 50 / 3.6);
+  const p = make(0.06, 50 / 3.6);
   run(p, 1.2, { slide: true, steer: 0, down: true });
   console.log(`brake held (full scrub): ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
 }
 
-console.log('\n== 180 to fakie: open the slide wide, then let go (Cruiser, 30 km/h, flat)');
+console.log('\n== 180 to fakie: open the slide wide, then let go (30 km/h, flat)');
 {
-  const p = make(0.0, 'cruiser', 30 / 3.6);
+  const p = make(0.0, 30 / 3.6);
   let fakie = false;
   run(p, 0.8, { slide: true, steer: 1, down: true }, (pp) => (fakie ||= pp.events.includes('fakie')));
   // Let go past sideways: the rider carries it round instead of back.
@@ -140,21 +140,21 @@ console.log('\n== 180 to fakie: open the slide wide, then let go (Cruiser, 30 km
 
 console.log('\n== Pushing from a standstill on the flat (one tap per second)');
 {
-  const p = make(0, 'cruiser', 0);
+  const p = make(0, 0);
   const out = [];
   let n = 0;
   run(p, 10, (pp, t) => ({ push: t % 1 < 0.1 }), (pp) => {
     if (++n % 120 === 0) out.push(fmt(pp.speed));
   });
   console.log(`every 2 s: ${out.join(' | ')}`);
-  const q = make(0, 'cruiser', 0);
+  const q = make(0, 0);
   run(q, 10, { up: true });
   console.log(`holding W for 10 s: ${fmt(q.speed)}`);
 }
 
-console.log('\n== A strong speed wobble at 85 km/h (Pro, flat, held for 1 s)');
+console.log('\n== A strong speed wobble at 85 km/h (flat, held for 1 s)');
 {
-  const p = make(0, 'pro', 85 / 3.6);
+  const p = make(0, 85 / 3.6);
   let minYaw = 0, maxYaw = 0, slid = 0;
   run(p, 1, () => {
     p.wobble = 0.8;
@@ -167,18 +167,18 @@ console.log('\n== A strong speed wobble at 85 km/h (Pro, flat, held for 1 s)');
   console.log(`yaw swing ±${(((maxYaw - minYaw) / 2) * 57.3).toFixed(1)}°, sliding frames ${slid}/60, lateral drift ${p.pos.x.toFixed(2)} m`);
 }
 
-console.log('\n== Pro speed wobbles on 12% upright vs tucked');
+console.log('\n== Speed wobbles on 12% upright vs tucked');
 for (const [name, inp] of [['upright', {}], ['tucked', { tuck: 1 }]]) {
-  const p = make(0.12, 'pro', 15);
+  const p = make(0.12, 15);
   const crash = run(p, 40, (pp) => ({ ...inp, steer: keepLane(pp) }));
   console.log(`${name}: ${crash !== null ? `crashed at ${crash.toFixed(1)} s (${p.crashReason}) at ${fmt(p.speed)}` : `fine, ${fmt(p.speed)}, wobble ${p.wobble.toFixed(2)}`}`);
 }
 
-console.log('\n== A crude autopilot down a generated road (Cruiser), plus step cost');
+console.log('\n== A crude autopilot down a generated road, plus step cost');
 {
   const road = new Road(42);
   road.ensure(9000);
-  const p = new Player(scene, road, terrain, DIFFICULTY.cruiser);
+  const p = new Player(scene, road, terrain, TUNING);
   p.reset(400);
   const f = {};
   let maxLat = 0;

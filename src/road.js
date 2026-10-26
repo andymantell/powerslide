@@ -2,6 +2,10 @@
 // on demand. Heading is measured from -Z (the overall downhill direction) and is
 // kept within +/-MAX_HEADING so the road never doubles back on itself; that keeps
 // sample z strictly decreasing, which lets terrain do fast nearest-road lookups.
+//
+// A level (see src/levels/) replaces the random segment and grade rolls with
+// its own list of pieces. The road then runs on as a straight run-out past the
+// finish before going back to random rolls, so there is always road ahead.
 
 import { createNoise2D, mulberry32, clamp, smoothstep } from './noise.js';
 
@@ -10,29 +14,53 @@ export const LANE_WIDTH = 3.5;
 export const HALF_WIDTH = 4.25; // asphalt half width (two lanes + thin shoulder)
 export const GRAVEL_EDGE = 6.2; // where the gravel shoulder ends
 export const RAIL_OFFSET = 4.9; // guardrail lateral offset
-const MAX_HEADING = 1.15; // ~66 degrees
+export const MAX_HEADING = 1.15; // ~66 degrees
+export const START_S = 400; // where a run starts; the road behind is the approach
+const RUNOUT = 600; // straight past a level's finish
 
 export class Road {
-  constructor(seed = 1337) {
+  constructor(seed = 1337, level = null) {
+    this.reset(seed, level);
+  }
+
+  reset(seed = 1337, level = null) {
     this.rand = mulberry32(seed);
     this.noise = createNoise2D(seed + 7);
-    const cap = 1 << 16;
-    this.cap = cap;
-    this.x = new Float64Array(cap);
-    this.y = new Float64Array(cap);
-    this.z = new Float64Array(cap);
-    this.h = new Float64Array(cap); // heading
-    this.k = new Float64Array(cap); // curvature (1/m), + = turning right
-    this.g = new Float64Array(cap); // grade, + = downhill
-    this.c = new Float64Array(cap); // cliff side: + = mountain on the right
+    if (!this.x) {
+      this.cap = 1 << 16;
+      for (const key of ['x', 'y', 'z', 'h', 'k', 'g', 'c']) this[key] = new Float64Array(this.cap);
+    }
+    // x, y, z: position. h: heading. k: curvature (1/m), + = turning right.
+    // g: grade, + = downhill. c: cliff side, + = mountain on the right.
     this.count = 0;
     // Patches of gravel/sand washed onto the asphalt, sorted by s.
     this.patches = [];
+    this.level = level;
+    this.start = START_S;
+    this.finish = null;
+    this.checkpoints = [];
+    this.queue = null;
+    this.headingOver = 0; // furthest |heading| past MAX_HEADING, for the level checker
 
+    const grade = level ? level.pieces.find((p) => p.grade !== undefined)?.grade ?? 0.06 : 0.06;
     this.state = {
       x: 0, y: 0, z: 0, heading: 0, kappa: 0, kappaTarget: 0, segLeft: 120,
-      grade: 0.06, gradeTarget: 0.07, gradeLeft: 200,
+      grade, gradeTarget: level ? grade : 0.07, gradeLeft: 200,
     };
+    if (level) {
+      let len = 0;
+      for (const p of level.pieces) len += pieceLength(p);
+      this.finish = this.start + len;
+      this.checkpoints = (level.checkpoints || []).map((at) => this.start + at);
+      this.queue = [{ straight: this.start }, ...level.pieces, { straight: RUNOUT, grade: 0.02 }];
+      for (const f of level.features || []) {
+        if (f.type === 'grit') {
+          this.patches.push({ s: this.start + f.at, d: f.d ?? 0, len: f.len ?? 6, width: f.width ?? 1.5 });
+        }
+      }
+      this.patches.sort((a, b) => a.s - b.s);
+      this.pickSegment();
+    }
     this.push();
   }
 
@@ -61,6 +89,17 @@ export class Road {
 
   pickSegment() {
     const s = this.state;
+    if (this.queue) {
+      const p = this.queue.shift();
+      if (!this.queue.length) this.queue = null;
+      s.kappaTarget = p.bend ? (p.bend === 'right' ? 1 : -1) / p.radius : 0;
+      s.segLeft = pieceLength(p);
+      if (p.grade !== undefined) s.gradeTarget = p.grade;
+      // Hold this grade until the queue runs out.
+      s.gradeLeft = Infinity;
+      return;
+    }
+    if (s.gradeLeft === Infinity) s.gradeLeft = 0;
     const r = this.rand();
     let radius = Infinity;
     let len;
@@ -102,7 +141,10 @@ export class Road {
     }
     // Clothoid-style transition: curvature changes linearly with distance.
     let target = s.kappaTarget;
-    if (Math.abs(s.heading) > MAX_HEADING) target = -Math.sign(s.heading) / 120;
+    if (Math.abs(s.heading) > MAX_HEADING) {
+      target = -Math.sign(s.heading) / 120;
+      if (this.queue) this.headingOver = Math.max(this.headingOver, Math.abs(s.heading) - MAX_HEADING);
+    }
     const dk = 0.0016 * DS;
     s.kappa += clamp(target - s.kappa, -dk, dk);
     s.grade += clamp(s.gradeTarget - s.grade, -0.0004 * DS, 0.0004 * DS);
@@ -113,8 +155,9 @@ export class Road {
     s.y -= s.grade * DS;
     this.push();
     // Grit collects on the inside of tight bends more than on straights.
+    // Levels place their own grit.
     const chance = Math.abs(s.kappa) > 1 / 70 ? 0.006 : 0.0007;
-    if (this.count > 500 && this.rand() < chance * DS) {
+    if (!this.level && this.count > 500 && this.rand() < chance * DS) {
       const inside = Math.sign(s.kappa) || (this.rand() < 0.5 ? -1 : 1);
       this.patches.push({
         s: (this.count - 1) * DS,
@@ -297,4 +340,8 @@ export class Road {
     out.uphill = out.cliff * out.side * smoothstep(0, 4, dist);
     return out;
   }
+}
+
+export function pieceLength(p) {
+  return p.straight ?? p.length;
 }

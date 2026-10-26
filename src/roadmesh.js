@@ -42,6 +42,23 @@ export class RoadMesh {
     fl2.translate(0.1, 0, 0);
     this.postGeo = mergeGeometries([web, fl1, fl2]);
     this.postGeo.translate(0, 0.2, 0);
+
+    // Finish and checkpoint gantries.
+    const span = RAIL_OFFSET + 0.6;
+    this.gantryPostGeo = new THREE.BoxGeometry(0.22, 7, 0.22);
+    this.bannerGeo = new THREE.BoxGeometry(span * 2 + 0.22, 1.1, 0.12);
+    this.lineGeo = new THREE.PlaneGeometry(HALF_WIDTH * 2, 0.8);
+    this.gantryMat = new THREE.MeshStandardMaterial({ color: '#2b2f36', metalness: 0.6, roughness: 0.5 });
+    const checker = makeChecker();
+    this.finishMat = new THREE.MeshStandardMaterial({ map: checker, roughness: 0.7 });
+    this.checkpointMat = new THREE.MeshStandardMaterial({ color: '#1d6fd1', roughness: 0.6 });
+    this.lineMat = new THREE.MeshStandardMaterial({
+      map: checker,
+      roughness: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
   }
 
   // Lateral position of the guardrail at sample i (0 when none).
@@ -119,7 +136,53 @@ export class RoadMesh {
     group.add(mesh, skirt);
     this.buildRails(group, i0, i1);
     this.buildGrit(group, i0, i1);
+    for (const s of road.checkpoints) {
+      if (s >= i0 * DS && s < i1 * DS) group.add(this.gantry(s, this.checkpointMat));
+    }
+    if (road.finish !== null && road.finish >= i0 * DS && road.finish < i1 * DS) {
+      group.add(this.gantry(road.finish, this.finishMat));
+    }
     return group;
+  }
+
+  // An arch over the road with a banner and a painted line, at distance s.
+  gantry(s, bannerMat) {
+    const f = this.road.sample(s, {});
+    const g = new THREE.Group();
+    const span = RAIL_OFFSET + 0.6;
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(this.gantryPostGeo, this.gantryMat);
+      post.position.set(side * span, 1.5, 0);
+      post.castShadow = true;
+      g.add(post);
+    }
+    const banner = new THREE.Mesh(this.bannerGeo, bannerMat);
+    banner.position.set(0, 5.1, 0);
+    banner.castShadow = true;
+    g.add(banner);
+    const line = new THREE.Mesh(this.lineGeo, this.lineMat);
+    line.rotation.x = -Math.PI / 2;
+    line.position.set(0, 0.06, 0);
+    g.add(line);
+    g.position.set(f.x, f.y, f.z);
+    g.rotation.y = -f.heading;
+    return g;
+  }
+
+  // Drop every chunk, for a new road.
+  clear() {
+    for (const g of this.chunks.values()) this.disposeChunk(g);
+    this.chunks.clear();
+  }
+
+  disposeChunk(g) {
+    this.scene.remove(g);
+    g.traverse((o) => {
+      if (o.isInstancedMesh) o.dispose();
+      else if (o.isMesh && o.geometry !== this.gantryPostGeo && o.geometry !== this.bannerGeo && o.geometry !== this.lineGeo) {
+        o.geometry.dispose();
+      }
+    });
   }
 
   buildRails(group, i0, i1) {
@@ -225,11 +288,7 @@ export class RoadMesh {
     const last = Math.floor((playerS + AHEAD) / DS / CHUNK);
     for (const [ci, g] of this.chunks) {
       if (ci < first || ci > last) {
-        this.scene.remove(g);
-        g.traverse((o) => {
-          if (o.isInstancedMesh) o.dispose();
-          else if (o.isMesh) o.geometry.dispose();
-        });
+        this.disposeChunk(g);
         this.chunks.delete(ci);
       }
     }
@@ -241,4 +300,21 @@ export class RoadMesh {
       this.chunks.set(ci, g);
     }
   }
+}
+
+function makeChecker() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 32;
+  const g = c.getContext('2d');
+  for (let x = 0; x < 16; x++) {
+    for (let y = 0; y < 2; y++) {
+      g.fillStyle = (x + y) % 2 ? '#111' : '#f4f4f4';
+      g.fillRect(x * 16, y * 16, 16, 16);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
 }
