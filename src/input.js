@@ -32,7 +32,8 @@ export class Input {
   // Touch: the whole screen is one invisible analogue area. Wherever a finger
   // lands becomes the centre; dragging left/right steers, forward tucks down
   // progressively and back stands the rider up into an air brake. A quick tap
-  // is one push. A second finger held down throws a powerslide.
+  // is one push. A sudden flick back throws a powerslide, held until the finger
+  // lifts or comes forward again; a second finger held down does the same.
   setupTouch() {
     const el = document.getElementById('game');
     if (!el || !('ontouchstart' in window)) return;
@@ -40,41 +41,50 @@ export class Input {
     t.tuck = 0;
     t.air = 0;
     t.pushTime = 0;
-    let main = null; // { id, ox, oy, x, y, start, moved }
+    let main = null; // { id, ox, oy, x, y, start, moved, hist, slide }
     const others = new Set();
     // Full deflection in px, scaled to the screen so an iPad and a phone feel alike.
     const range = () => Math.max(50, Math.min(innerWidth, innerHeight) * 0.11);
     const DEAD = 0.12; // fraction of range ignored around the centre
+    // Steering gets twice the travel and an expo curve, so small finger
+    // movements make small corrections instead of zig-zagging.
+    const STEER_RANGE = 2;
+    const STEER_EXPO = 1.8;
+    const FLICK_MS = 120; // a flick covers FLICK_DIST of range within this time
+    const FLICK_DIST = 0.6;
     const shape = (v) => Math.sign(v) * Math.max(0, Math.min(1, (Math.abs(v) - DEAD) / (1 - DEAD)));
     const apply = () => {
       if (!main) {
         t.steer = 0;
         t.tuck = 0;
         t.air = 0;
+        t.slide = others.size > 0;
         return;
       }
       const r = range();
       // Overshooting drags the centre along, so reversing direction responds at once.
       const clampOrigin = (p, o) => Math.max(p - r, Math.min(p + r, o));
-      main.ox = clampOrigin(main.x, main.ox);
+      main.ox = Math.max(main.x - r * STEER_RANGE, Math.min(main.x + r * STEER_RANGE, main.ox));
       main.oy = clampOrigin(main.y, main.oy);
-      const dx = (main.x - main.ox) / r;
+      const dx = (main.x - main.ox) / (r * STEER_RANGE);
       const dy = (main.y - main.oy) / r; // screen down = towards the rider = back
-      t.steer = shape(dx);
+      t.steer = Math.sign(dx) * Math.pow(Math.abs(shape(dx)), STEER_EXPO);
       t.tuck = Math.max(0, shape(-dy));
       t.air = Math.max(0, shape(dy));
+      if (main.slide && dy < 0) main.slide = false;
+      t.slide = main.slide || others.size > 0;
     };
     const start = (e) => {
       e.preventDefault();
       for (const c of e.changedTouches) {
         if (!main) {
-          main = { id: c.identifier, ox: c.clientX, oy: c.clientY, x: c.clientX, y: c.clientY, start: performance.now(), moved: false };
+          const now = performance.now();
+          main = { id: c.identifier, ox: c.clientX, oy: c.clientY, x: c.clientX, y: c.clientY, start: now, moved: false, hist: [[now, c.clientY]], slide: false };
         } else {
           others.add(c.identifier);
           this.pressed.add('Space');
         }
       }
-      t.slide = others.size > 0;
       apply();
     };
     const move = (e) => {
@@ -85,6 +95,14 @@ export class Input {
         main.x = c.clientX;
         main.y = c.clientY;
         if (Math.hypot(main.x - main.ox, main.y - main.oy) > range() * DEAD) main.moved = true;
+        // Flick detection: how far back the finger has travelled in the last moment.
+        const now = performance.now();
+        main.hist.push([now, main.y]);
+        while (main.hist.length > 2 && now - main.hist[0][0] > FLICK_MS) main.hist.shift();
+        if (!main.slide && main.y - main.hist[0][1] > range() * FLICK_DIST) {
+          main.slide = true;
+          this.pressed.add('Space');
+        }
       }
       apply();
     };
@@ -100,7 +118,6 @@ export class Input {
           others.delete(c.identifier);
         }
       }
-      t.slide = others.size > 0;
       apply();
     };
     el.addEventListener('touchstart', start, { passive: false });

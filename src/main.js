@@ -458,7 +458,7 @@ function frame(now) {
       game.hintShown = true;
       hint(
         document.body.classList.contains('is-touch') && !document.body.classList.contains('has-pad')
-          ? 'Getting fast! Slide back to air brake, or hold a second finger to powerslide'
+          ? 'Getting fast! Ease back to air brake, or flick back to powerslide'
           : 'Getting fast! Hold SPACE to powerslide and scrub speed before bends',
       );
     }
