@@ -49,7 +49,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         float ru = vRoad.x;
         float rs = vRoad.y;
         float au = abs(ru);
-        vec4 asp = texture2D(tAspA, vec2(ru, rs) * 0.4);
+        vec4 asp = texture2D(tAspA, vec2(ru, rs) * 0.75);
         // Large-scale tone: resurfaced patches and general wear.
         float tone = texture2D(tAspA, vec2(ru * 0.03 + 0.5, rs * 0.011)).r;
         float patchy = smoothstep(0.3, 0.32, rNoise(rs * 0.025 + 3.0)) * smoothstep(0.55, 0.5, rNoise(rs * 0.05 + floor(ru * 0.3) * 7.0));
@@ -83,7 +83,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
       .replace(
         '#include <normal_fragment_maps>',
         `{
-          vec3 tn = texture2D(tAspN, vec2(ru, rs) * 0.4).xyz * 2.0 - 1.0;
+          vec3 tn = texture2D(tAspN, vec2(ru, rs) * 0.75).xyz * 2.0 - 1.0;
           tn.xy *= (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7);
           // Tangent frame from screen-space derivatives of the road UVs.
           vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition);

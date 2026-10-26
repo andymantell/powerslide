@@ -4,11 +4,72 @@
 // direction the (regular-footed) rider faces, i.e. the toe side.
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { trackLoad } from './ground.js';
 import { RiderPose, DECK_HEIGHT, THIGH, SHIN, UPPER_ARM, FOREARM } from './riderpose.js';
 
 export { DECK_HEIGHT };
 export const WHEEL_R = 0.036;
 export const TRUCK_Z = 0.36; // visual truck positions (front at -Z)
+
+const BOARD_URL = new URL('./assets/models/board.glb', import.meta.url).href;
+const tex = (n) => {
+  const t = new THREE.TextureLoader().load(new URL(`./assets/textures/${n}.webp`, import.meta.url).href);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+};
+
+// Real materials for the named placeholder materials in board.glb.
+function boardMaterial(name) {
+  switch (name) {
+    case 'grip':
+      return new THREE.MeshStandardMaterial({ map: tex('deck_grip'), roughness: 1 });
+    case 'graphic':
+      return new THREE.MeshStandardMaterial({ map: tex('deck_graphic'), roughness: 0.45 });
+    case 'wood':
+      return new THREE.MeshStandardMaterial({ color: '#c8a070', roughness: 0.7 });
+    case 'metal':
+      return new THREE.MeshStandardMaterial({ color: '#c9ccd0', metalness: 1, roughness: 0.32 });
+    case 'bushing':
+      return new THREE.MeshStandardMaterial({ color: '#e8742a', roughness: 0.6 });
+    case 'urethane':
+      // Translucent-looking orange urethane with a slightly worn, matte contact patch.
+      return new THREE.MeshPhysicalMaterial({ color: '#f39a2e', roughness: 0.5, sheen: 0.4, sheenColor: '#ffd8a0', clearcoat: 0.3, clearcoatRoughness: 0.5 });
+    case 'core':
+      return new THREE.MeshStandardMaterial({ color: '#f2f2f2', roughness: 0.4 });
+    default:
+      return new THREE.MeshStandardMaterial({ color: '#888' });
+  }
+}
+
+// Loads once; every RiderModel shares the geometry and materials.
+const boardParts = new GLTFLoader().loadAsync(BOARD_URL).then((gltf) => {
+  const parts = {};
+  const mats = new Map();
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh && !o.isGroup) return;
+    const name = o.name.replace(/_\d+$/, '');
+    if (!['deck', 'truck', 'wheel'].includes(name) || parts[name]) return;
+    // Multi-material meshes import as a group of primitives: merge them back.
+    const meshes = o.isMesh ? [o] : o.children.filter((c) => c.isMesh);
+    const geos = meshes.map((m) => m.geometry);
+    // Merging needs matching attributes; parts without UVs don't need any.
+    for (const k of ['uv', 'uv1', 'tangent']) {
+      if (!geos.every((g) => g.attributes[k])) geos.forEach((g) => g.deleteAttribute(k));
+    }
+    const geometry = geos.length > 1 ? mergeGeometries(geos, true) : geos[0];
+    const material = meshes.map((m) => {
+      const n = m.material.name;
+      if (!mats.has(n)) mats.set(n, boardMaterial(n));
+      return mats.get(n);
+    });
+    parts[name] = { geometry, material: material.length > 1 ? material : material[0] };
+  });
+  return parts;
+});
+trackLoad(boardParts);
 
 const _a = new THREE.Vector3();
 const _c = new THREE.Vector3();
@@ -40,47 +101,40 @@ export class RiderModel {
     this.pose({});
   }
 
+  // The board model comes from tools/blender/board.py. The groups exist from
+  // the start (physics steers trucks and spins wheels); meshes arrive once
+  // the model has loaded.
   buildBoard() {
-    const deckMat = new THREE.MeshStandardMaterial({ color: '#2b1d14', roughness: 0.7 });
-    const gripMat = new THREE.MeshStandardMaterial({ color: '#151515', roughness: 1 });
-    const truckMat = new THREE.MeshStandardMaterial({ color: '#b8bcc2', metalness: 0.8, roughness: 0.35 });
-    const wheelMat = new THREE.MeshStandardMaterial({ color: '#f2a03a', roughness: 0.55 });
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.014, 0.98), deckMat);
-    deck.position.y = DECK_HEIGHT - 0.007;
-    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.232, 0.002, 0.96), gripMat);
-    grip.position.y = DECK_HEIGHT + 0.001;
-    deck.castShadow = true;
-    this.deck.add(deck, grip);
-    // Rounded nose/tail.
-    for (const z of [-0.49, 0.49]) {
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.014, 16, 1, false, 0, Math.PI), deckMat);
-      cap.position.set(0, DECK_HEIGHT - 0.007, z);
-      cap.rotation.y = z < 0 ? Math.PI / 2 : -Math.PI / 2;
-      this.deck.add(cap);
-    }
-    const wheelGeo = new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 0.052, 18);
-    wheelGeo.rotateZ(Math.PI / 2);
-    const hubGeo = new THREE.CylinderGeometry(0.016, 0.016, 0.054, 10);
-    hubGeo.rotateZ(Math.PI / 2);
-    const hubMat = new THREE.MeshStandardMaterial({ color: '#333', metalness: 0.5 });
     for (const z of [-TRUCK_Z, TRUCK_Z]) {
       const truck = new THREE.Group();
       truck.position.set(0, WHEEL_R, z);
       this.trucks.push(truck);
-      const hanger = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.03), truckMat);
-      const base = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.07), truckMat);
-      base.position.y = 0.035;
-      truck.add(hanger, base);
       for (const x of [-0.125, 0.125]) {
-        const w = new THREE.Mesh(wheelGeo, wheelMat);
+        const w = new THREE.Group();
         w.position.x = x;
-        w.castShadow = true;
-        w.add(new THREE.Mesh(hubGeo, hubMat));
         truck.add(w);
         this.wheels.push(w);
       }
       this.board.add(truck);
     }
+    boardParts.then((parts) => {
+      const deck = new THREE.Mesh(parts.deck.geometry, parts.deck.material);
+      deck.castShadow = true;
+      deck.receiveShadow = true;
+      this.deck.add(deck);
+      this.trucks.forEach((truck, i) => {
+        const t = new THREE.Mesh(parts.truck.geometry, parts.truck.material);
+        // Reverse-kingpin: both kingpins face the middle of the board.
+        if (i === 0) t.rotation.y = Math.PI;
+        t.castShadow = true;
+        truck.add(t);
+      });
+      for (const w of this.wheels) {
+        const m = new THREE.Mesh(parts.wheel.geometry, parts.wheel.material);
+        m.castShadow = true;
+        w.add(m);
+      }
+    });
   }
 
   buildRider() {

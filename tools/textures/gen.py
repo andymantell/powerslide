@@ -289,7 +289,48 @@ def bark(name='bark', pal=None, seed=61):
     globals()['N'] = old
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark)
+def deck(name='deck', seed=71):
+    """Board textures: bottom graphic (UV: u across, v nose to tail) and grip tape."""
+    from PIL import ImageFont
+    w, h = 256, 1024
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:h, 0:w]
+    # Maple veneer: fine grain running along the board.
+    grain = norm01(perlin(h, 8, seed)[:, :w] * 0.4 + fbm(h, 64, 3, seed + 1)[:, :w] * 0.6)
+    grain = warp(np.tile(grain[:, :1], (1, w)) * 0.5 + grain * 0.5, fbm(h, 4, 3, seed + 2)[:, :w] * 6, 0)
+    wood = lerp(hexcol('#c89a62'), hexcol('#e2bd8a'), grain)
+    # Graphic: a bold diagonal band in red with cream pinstripes.
+    t = (xx / w * 0.6 + yy / h * 2.2)
+    band = smoothstep(0.02, 0.0, np.abs(((t + 0.25) % 1.0) - 0.5) - 0.18)
+    pin = smoothstep(0.012, 0.0, np.abs(np.abs(((t + 0.25) % 1.0) - 0.5) - 0.2))
+    col = lerp(wood, hexcol('#b3202a'), band * 0.95)
+    col = lerp(col, hexcol('#f1e6cf'), pin)
+    img = Image.fromarray((np.clip(col, 0, 1) * 255).astype(np.uint8))
+    # Word mark along the length.
+    try:
+        font = ImageFont.truetype('/usr/share/fonts/opentype/inter/Inter-BlackItalic.otf', 120)
+    except OSError:
+        font = ImageFont.load_default()
+    txt = Image.new('RGBA', (h, w), (0, 0, 0, 0))
+    d = ImageDraw.Draw(txt)
+    box = d.textbbox((0, 0), 'POWERSLIDE', font=font)
+    d.text(((h - box[2]) / 2, (w - box[3]) / 2 - box[1] / 2), 'POWERSLIDE', font=font, fill=(20, 20, 22, 235))
+    img = img.convert('RGBA')
+    img.alpha_composite(txt.rotate(90, expand=True))
+    col = np.asarray(img.convert('RGB')) / 255.0
+    # Scuffs from slides and kerbs, mostly at the nose and tail.
+    scuff = (fbm(h, 32, 3, seed + 5)[:, :w] > 0.35) * smoothstep(0.25, 0.0, np.minimum(yy / h, 1 - yy / h))
+    col = lerp(col, wood * 0.9, scuff * 0.8)
+    os.makedirs(OUT, exist_ok=True)
+    Image.fromarray((np.clip(col, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, f'{name}_graphic.webp'), quality=85)
+    # Grip tape: dark silicon-carbide grit.
+    g = 0.05 + rng.random((h, w)) * 0.05 + (rng.random((h, w)) > 0.97) * 0.08
+    g = blur(g, 0) if False else g
+    Image.fromarray((np.clip(np.dstack([g, g, g * 1.05]), 0, 1) * 255).astype(np.uint8)).save(os.path.join(OUT, f'{name}_grip.webp'), quality=80)
+    print('wrote', name)
+
+
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:
