@@ -108,3 +108,21 @@ preset.
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every
 push to `main`. To turn it on, go to **Settings → Pages** and set the source to
 **GitHub Actions**.
+
+## Installing as an app
+
+The deployed game is a Progressive Web App, so it can sit on the home screen and
+run fullscreen and offline.
+
+- **iPad / iPhone:** open the game in Safari, tap **Share → Add to Home Screen**.
+- **Android:** open it in Chrome, tap **⋮ → Install app** (or accept the install banner).
+- **Xbox / PC:** in Edge, open the **⋯** menu → **Apps → Install Powerslide**.
+
+`pwa/plugin.js` writes `dist/sw.js` at build time. It precaches every built file
+under a cache named after a hash of the build, so each deploy gets a fresh
+cache and the old one is deleted. Page loads go network first, so an online
+player always gets the latest build; an open app picks up a new build when it
+returns to the title or crash screen, never mid-run. The service worker is
+only registered in production builds, not under `npm run dev`.
+
+The icons are rendered from `public/icons/icon.svg` with `npm run icons`.
