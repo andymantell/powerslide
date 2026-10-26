@@ -73,12 +73,35 @@ const boardParts = new GLTFLoader().loadAsync(BOARD_URL).then((gltf) => {
 });
 trackLoad(boardParts);
 
+// Crisp, antialiased panel edges from the distance fields in the vertex
+// colours: base colour, then panel colour a where R > 0.5, b where G > 0.5.
+function panels(mat, base, a, b) {
+  const u = {
+    uBase: { value: new THREE.Color(base) },
+    uPanelA: { value: new THREE.Color(a) },
+    uPanelB: { value: new THREE.Color(b) },
+  };
+  mat.onBeforeCompile = (s) => {
+    Object.assign(s.uniforms, u);
+    s.fragmentShader = s.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uBase, uPanelA, uPanelB;')
+      .replace(
+        '#include <color_fragment>',
+        `vec2 pw = max(fwidth(vColor.rg), vec2(1e-4));
+        vec2 pm = smoothstep(0.5 - pw, 0.5 + pw, vColor.rg);
+        diffuseColor.rgb *= mix(mix(uBase, uPanelA, pm.x), uPanelB, pm.y);`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'panels';
+  return mat;
+}
+
 const RIDER_URL = new URL('./assets/models/rider.glb', import.meta.url).href;
 const riderParts = new GLTFLoader().loadAsync(RIDER_URL).then((gltf) => {
   const materials = {
-    // One-piece race leathers: the design is in the vertex colours.
-    leather: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.4 }),
-    helmetShell: new THREE.MeshPhysicalMaterial({ color: '#f2f2f0', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }),
+    // One-piece race leathers: red with white (R) and black (G) panels.
+    leather: panels(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.4 }), '#9e0a0c', '#dcdcd6', '#08080a'),
+    helmetShell: panels(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }), '#f2f2f0', '#b00d10', '#0a0a0c'),
     visor: new THREE.MeshPhysicalMaterial({ color: '#0b0d12', metalness: 0.9, roughness: 0.06, clearcoat: 1 }),
     shoeUpper: new THREE.MeshStandardMaterial({ color: '#16161a', roughness: 0.75 }),
     shoeSole: new THREE.MeshStandardMaterial({ color: '#e8e4da', roughness: 0.85 }),

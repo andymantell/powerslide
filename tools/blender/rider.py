@@ -138,26 +138,28 @@ def body():
 
     # Legs: thigh tapers to the knee, calf bulges then narrows to the ankle.
     for s in 'FR':
-        taper(J['hip' + s], J['knee' + s], 0.082, 0.056)
+        taper(J['hip' + s], J['knee' + s], 0.092, 0.062)
         k, f = J['knee' + s], J['foot' + s]
-        taper(k, k.lerp(f, 0.35), 0.056, 0.058, 3)
-        taper(k.lerp(f, 0.35), f, 0.058, 0.04, 3)
+        taper(k, k.lerp(f, 0.35), 0.062, 0.064, 3)
+        taper(k.lerp(f, 0.35), f, 0.064, 0.044, 3)
         sh, el, ha = J['sh' + s], J['el' + s], J['ha' + s]
-        taper(sh, el, 0.05, 0.042, 3)
-        taper(el, ha, 0.042, 0.032, 3)
-        # Deltoid.
-        ellip(sh + Vector((0, 0, -0.01)), 0.055, 0.06, 0.055)
+        taper(sh, el, 0.058, 0.048, 3)
+        taper(el, ha, 0.048, 0.036, 3)
+        # Deltoid with its armour cup.
+        ellip(sh + Vector((0, 0, -0.01)), 0.064, 0.068, 0.062)
     hip, neck = J['hip'], J['neck']
     up = (neck - hip).normalized()
     # Pelvis and seat, waist, rib cage, upper chest (wider across than deep).
     # Overlapping elements fuse and swell, so the torso parts are trimmed a bit.
-    k = 0.95
+    k = 1.04
     # Half-extents: (front-back, side to side, height).
     ellip(hip + up * 0.03 + Vector((-0.01, 0, 0)), 0.1 * k, 0.16 * k, 0.12 * k)
     ellip(hip + up * 0.2, 0.095 * k, 0.135 * k, 0.14 * k)
     ellip(hip + up * 0.36 + Vector((0.01, 0, 0)), 0.11 * k, 0.16 * k, 0.15 * k)
     ellip(hip + up * 0.49, 0.09 * k, 0.19 * k, 0.08 * k)
-    capsule(neck - up * 0.06, neck + up * 0.08, 0.05)
+    # Aero hump on the upper back.
+    ellip(hip + up * 0.47 + Vector((-0.1, 0, 0)), 0.06, 0.1, 0.13)
+    capsule(neck - up * 0.06, neck + up * 0.08, 0.058)
     bpy.context.view_layer.objects.active = ob
     ob.select_set(True)
     bpy.ops.object.convert(target='MESH')
@@ -176,7 +178,7 @@ def body():
     bm.to_mesh(o.data)
     bm.free()
     dec = o.modifiers.new('dec', 'DECIMATE')
-    dec.ratio = 0.5
+    dec.ratio = 0.8
     bpy.ops.object.modifier_apply(modifier='dec')
     sm = o.modifiers.new('smooth', 'SMOOTH')
     sm.factor = 0.4
@@ -190,49 +192,54 @@ def body():
 
 
 def paint_leathers(o):
-    """Race-leather design as vertex colours: red suit, white shoulders,
-    arm and leg stripes, black hips, knee sliders and lower legs."""
+    """Race-leather design: red suit, white shoulders, arm and leg stripes,
+    black hips, collar, knee sliders and lower legs.
+
+    Rather than colours, each vertex stores signed distances (metres, scaled
+    and offset to 0..1) to the edge of the white (R) and black (G) panels.
+    Distances interpolate linearly across triangles, so the game's shader can
+    threshold them at 0.5 for crisp panel edges on a coarse mesh."""
     me = o.data
     attr = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
+    K = 8.0  # 1 / metres of distance range either side of an edge
+
+    def enc(d):
+        return max(0.0, min(1.0, 0.5 + d * K))
+
     for v in me.vertices:
         p = v.co
-        c = COL['red']
-        # Distance to each limb segment decides the region.
+        white = black = -1.0
         dl = {}
         for k, (a, b, _) in BONES.items():
             if b:
                 dl[k] = seg_dist(p, J[a], J[b])
         limb = min(dl, key=lambda k: dl[k][0])
         t = dl[limb][1]
-        if limb.startswith('shin'):
-            s = limb[-1]
-            c = COL['black'] if t > 0.5 else COL['red']
-            # Knee slider on the front of the knee.
+        a, b, _ = BONES[limb]
+        ln = (J[b] - J[a]).length
+        s = limb[-1]
+        if limb.startswith(('shin', 'thigh')):
             kv = p - J['knee' + s]
-            if kv.length < 0.09 and kv.x > 0.01:
-                c = COL['black']
+            # Knee slider: a disc on the front of the knee.
+            black = max(black, min(0.085 - kv.length, kv.x - 0.005))
+        if limb.startswith('shin'):
+            black = max(black, (t - 0.5) * ln)
         elif limb.startswith('thigh'):
             # White stripe down the outside of each thigh.
-            side = p - (J['hip' + limb[-1]].lerp(J['knee' + limb[-1]], t))
-            outward = 1 if limb[-1] == 'F' else -1  # front leg's outside is Blender +Y
-            c = COL['white'] if side.y * outward > 0.045 and abs(side.x) < 0.035 else COL['red']
-            kv = p - J['knee' + limb[-1]]
-            if kv.length < 0.09 and kv.x > 0.01:
-                c = COL['black']
+            side = p - J['hip' + s].lerp(J['knee' + s], t)
+            outward = 1 if s == 'F' else -1  # front leg's outside is Blender +Y
+            white = min(side.y * outward - 0.045, 0.035 - abs(side.x))
         elif limb.startswith('upperArm'):
-            c = COL['white'] if t < 0.45 else COL['red']
+            white = (0.45 - t) * ln
         elif limb.startswith('forearm'):
-            c = COL['black'] if t > 0.75 else COL['red']
+            black = (t - 0.75) * ln
         else:  # torso
             h = (p - J['hip']).dot((J['neck'] - J['hip']).normalized())
-            if h < 0.12:
-                c = COL['black']
-            elif h > 0.42:
-                c = COL['white']
+            black = max(0.12 - h, h - 0.56)
+            white = min(h - 0.42, 0.56 - h)
             # Hump stripe down the back.
-            if p.x < -0.06 and abs(p.y) < 0.035 and h > 0.15:
-                c = COL['black']
-        attr.data[v.index].color = (*c, 1)
+            black = max(black, min(-0.06 - p.x, 0.035 - abs(p.y), h - 0.15))
+        attr.data[v.index].color = (enc(white), enc(black), 0, 1)
 
 
 def armature(body_obj):
@@ -291,6 +298,14 @@ def helmet():
     bpy.ops.object.modifier_apply(modifier='dec')
     for p in shell.data.polygons:
         p.use_smooth = True
+    # Design as distance fields like the leathers (R red stripe, G black):
+    # white shell, red centre stripe front to back, black lower rim.
+    col = shell.data.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
+    for v in shell.data.vertices:
+        d = v.co - head
+        red = min(0.03 - abs(d.y), d.z + 0.02)
+        black = max(-0.1 - d.z, min(-0.06 - d.z, 0.02 - d.x))
+        col.data[v.index].color = (max(0.0, min(1.0, 0.5 + red * 8)), max(0.0, min(1.0, 0.5 + black * 8)), 0, 1)
     shell.data.materials.append(mat('helmetShell', (0.9, 0.9, 0.9), 0.25))
     shell.data.materials.append(mat('visor', (0.05, 0.06, 0.08), 0.05, 0.6))
     # Visor: a smooth curved patch just proud of the shell's front.
