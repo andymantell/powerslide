@@ -41,17 +41,38 @@ const views = {
   road: { back: 2, up: 1.6, ahead: 30, lookUp: 0, side: -1.5 },
   vista: { back: 14, up: 7, ahead: 120, lookUp: 0, side: 3 },
   trees: { back: 2, up: 1.7, ahead: 25, lookUp: 2.5, side: -7 },
+  forest: { back: -10, up: 3, ahead: 0, lookUp: 3, side: 25 },
+  boulder: { target: 'boulder', back: 4, up: 1.5, ahead: 0, lookUp: 0.5, side: 1 },
 };
 for (const [name, v] of Object.entries(views)) {
   if (only && !only.includes(name)) continue;
-  await page.evaluate(async (v) => {
+  await page.evaluate(async (v0) => {
+    let v = v0;
     const P = window.__powerslide;
     P.freeze = true;
     for (const id of ['title', 'controls', 'hud', 'fps']) document.getElementById(id)?.classList.add('hidden');
     const { player, camera, renderer, scene, terrain } = P;
     const fx = Math.sin(player.yaw), fz = -Math.cos(player.yaw);
     const rx = -fz, rz = fx;
-    const p = player.pos;
+    let p = player.pos;
+    if (v.target === 'boulder') {
+      // Frame the biggest boulder near the rider.
+      let best = null;
+      const m = new P.camera.matrix.constructor();
+      const pos = p.clone(), q = P.camera.quaternion.clone(), sc = p.clone();
+      for (const mesh of P.boulders.meshes) {
+        for (let i = 0; i < mesh.count; i++) {
+          mesh.getMatrixAt(i, m);
+          m.decompose(pos, q, sc);
+          const d = pos.distanceTo(p);
+          if (d < 120 && (!best || sc.x / (d + 20) > best.s / (best.d + 20))) best = { p: pos.clone(), s: sc.x, d };
+        }
+      }
+      if (best) {
+        p = best.p;
+        v = { ...v, back: best.s * 4, up: best.s * 1.5, lookUp: best.s * 0.5, side: best.s * 1.5 };
+      }
+    }
     camera.position.set(p.x - fx * v.back + rx * v.side, p.y + v.up, p.z - fz * v.back + rz * v.side);
     camera.lookAt(p.x + fx * v.ahead, p.y + v.lookUp, p.z + fz * v.ahead);
     camera.fov = 60;

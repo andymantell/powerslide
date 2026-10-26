@@ -5,7 +5,6 @@
 // circular cut in the fragment shader so they never overlap visibly.
 
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createNoise2D, fbm, ridged, smoothstep, lerp, mulberry32 } from './noise.js';
 import { createGroundMaterial } from './ground.js';
 
@@ -59,10 +58,8 @@ export class Terrain {
     this.nearMat = createGroundMaterial(renderer, { simple: !q.groundDetail, patch: patch(true) });
     this.farMat = createGroundMaterial(renderer, { far: true, patch: patch(false) });
 
-    this.treeGeo = makeTreeGeometry();
-    this.treeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
-    this.rockGeo = new THREE.DodecahedronGeometry(1, 0);
-    this.rockMat = new THREE.MeshLambertMaterial({ color: '#7b756d', flatShading: true });
+    this.forest = null; // set by the owner; receives each tile's tree list
+    this.boulders = null;
   }
 
   heightAt(x, z, coarse = false) {
@@ -149,11 +146,6 @@ export class Terrain {
     const rand = mulberry32(((cx * 73856093) ^ (cz * 19349663)) >>> 0);
     const trees = [];
     const rocks = [];
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const s = new THREE.Vector3();
-    const p = new THREE.Vector3();
-    const up = new THREE.Vector3(0, 1, 0);
     const spacing = this.treeSpacing;
     for (let gx = 0; gx < size / spacing; gx++) {
       for (let gz = 0; gz < size / spacing; gz++) {
@@ -171,34 +163,31 @@ export class Terrain {
         const hz = this.heightAt(x, z + 2);
         const slope = Math.hypot(hx - h, hz - h) / 2;
         if (r <= 0.04 && slope < 1.2) {
-          const sc = 0.4 + rand() * 1.6;
-          q.setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
-          m.compose(p.set(x, h + sc * 0.3, z), q, s.set(sc, sc * 0.7, sc));
-          rocks.push(m.clone());
+          // A boulder, sometimes with a few smaller ones tumbled around it.
+          const sc = 0.35 + rand() ** 2 * 1.8;
+          rocks.push(x, h - sc * 0.25, z, sc, rand() * 6.28, (rand() - 0.5) * 0.4, Math.floor(rand() * 8));
+          for (let k = rand() < 0.5 ? Math.floor(rand() * 4) : 0; k > 0; k--) {
+            const a = rand() * 6.28;
+            const d = sc * (1.3 + rand() * 1.5);
+            const x2 = x + Math.cos(a) * d, z2 = z + Math.sin(a) * d;
+            const s2 = sc * (0.2 + rand() * 0.35);
+            rocks.push(x2, this.heightAt(x2, z2) - s2 * 0.2, z2, s2, rand() * 6.28, (rand() - 0.5) * 0.8, Math.floor(rand() * 8));
+          }
           continue;
         }
         if (slope > 0.75 || rel > 200 + forest * 40) continue;
-        const sc = 0.7 + rand() * 0.7;
-        q.setFromAxisAngle(up, rand() * Math.PI * 2);
-        m.compose(p.set(x, h - 0.2, z), q, s.set(sc, sc * (0.85 + rand() * 0.4), sc));
-        trees.push(m.clone());
+        // x, y, z, scale, yaw, variant, tint. Trees thin out and shrink towards the treeline.
+        const sc = (0.55 + rand() * 0.55) * (1 - smoothstep(150, 240, rel) * 0.4);
+        trees.push(x, h - 0.15, z, sc, rand() * Math.PI * 2, Math.floor(rand() * 8), rand());
       }
     }
-    if (trees.length) {
-      const im = new THREE.InstancedMesh(this.treeGeo, this.treeMat, trees.length);
-      trees.forEach((mm, i) => im.setMatrixAt(i, mm));
-      im.castShadow = true;
-      im.receiveShadow = true;
-      im.computeBoundingSphere();
-      group.add(im);
+    if (trees.length && this.forest) {
+      group.userData.trees = new Float32Array(trees);
+      this.forest.add(group.userData.trees);
     }
-    if (rocks.length) {
-      const im = new THREE.InstancedMesh(this.rockGeo, this.rockMat, rocks.length);
-      rocks.forEach((mm, i) => im.setMatrixAt(i, mm));
-      im.castShadow = true;
-      im.receiveShadow = true;
-      im.computeBoundingSphere();
-      group.add(im);
+    if (rocks.length && this.boulders) {
+      group.userData.rocks = new Float32Array(rocks);
+      this.boulders.add(group.userData.rocks);
     }
   }
 
@@ -251,41 +240,11 @@ export class Terrain {
 
   disposeGroup(g) {
     this.scene.remove(g);
+    if (g.userData.trees) this.forest?.remove(g.userData.trees);
+    if (g.userData.rocks) this.boulders?.remove(g.userData.rocks);
     g.traverse((o) => {
       if (o.isInstancedMesh) o.dispose();
       else if (o.isMesh) o.geometry.dispose();
     });
   }
 }
-
-function makeTreeGeometry() {
-  const parts = [];
-  const paint = (geo, hex) => {
-    const c = new THREE.Color(hex);
-    const arr = new Float32Array(geo.attributes.position.count * 3);
-    for (let i = 0; i < arr.length; i += 3) {
-      arr[i] = c.r;
-      arr[i + 1] = c.g;
-      arr[i + 2] = c.b;
-    }
-    geo.setAttribute('color', new THREE.BufferAttribute(arr, 3));
-    return geo;
-  };
-  const trunk = new THREE.CylinderGeometry(0.18, 0.28, 2.4, 5);
-  trunk.translate(0, 1.2, 0);
-  parts.push(paint(trunk, '#4b3424'));
-  const layers = [
-    [2.6, 4.2, 3.4, '#2f4a26'],
-    [2.0, 3.4, 5.4, '#36552b'],
-    [1.3, 2.8, 7.3, '#3d5f30'],
-  ];
-  for (const [r, hgt, y, c] of layers) {
-    const cone = new THREE.ConeGeometry(r, hgt, 7);
-    cone.translate(0, y, 0);
-    parts.push(paint(cone, c));
-  }
-  const merged = mergeGeometries(parts.map((p) => p.toNonIndexed()));
-  merged.computeVertexNormals();
-  return merged;
-}
-

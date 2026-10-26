@@ -22,7 +22,12 @@ export function groundTexture(name, kind, renderer) {
   return tex;
 }
 
-// Resolves once every ground texture requested so far has loaded (or failed).
+// Lets other asset loaders join the start-up wait.
+export function trackLoad(promise) {
+  pending.push(promise.catch((e) => console.error(e)));
+}
+
+// Resolves once every asset requested so far has loaded (or failed).
 export function texturesReady() {
   return Promise.all(pending);
 }
@@ -106,14 +111,18 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vec4 aGrav = texture2D(tGravA, gp.xz * 0.05);
         vec4 aSnow = texture2D(tSnowA, gp.xz * 0.02);
         ` : `
-        vec4 aBase = texture2D(tBaseA, gp.xz * 0.33);
-        // Macro variation breaks up tiling: the same texture at a much larger scale.
-        vec4 aMacro = texture2D(tBaseA, gp.xz * 0.031 + 0.37);
-        aBase.rgb *= 0.7 + 1.5 * dot(aMacro.rgb, vec3(0.2, 0.25, 0.1));
+        // Two differently rotated grass samples, blended by low-frequency
+        // noise, hide the tile repeat.
+        float gN1 = texture2D(tSnowA, gp.xz * 0.011).a;
+        vec2 gUv2 = mat2(0.8, -0.6, 0.6, 0.8) * gp.xz * 0.27 + 0.31;
+        vec4 aBase = mix(texture2D(tBaseA, gp.xz * 0.33), texture2D(tBaseA, gUv2), smoothstep(0.35, 0.65, gN1));
         vec4 aRock = vSplat.x > 0.01 ? triA(tRockA, gp, tw, 0.16) : vec4(0.5);
         vec4 aGrav = vSplat.y > 0.01 ? texture2D(tGravA, gp.xz * 0.45) : vec4(0.5);
         vec4 aSnow = vSplat.z > 0.01 ? texture2D(tSnowA, gp.xz * 0.12) : vec4(0.5);
         `}
+        // Large patches of lusher and drier grass.
+        float gN2 = texture2D(tSnowA, gp.xz * 0.0031 + 0.5).a;
+        aBase.rgb *= mix(vec3(0.74, 0.84, 0.68), vec3(1.15, 1.08, 0.86), smoothstep(0.2, 0.8, gN2));
         // Height blend: each layer's weight is lifted by its own height map.
         vec4 sw = vSplat;
         float wB = max(1.0 - sw.x - sw.y - sw.z, 0.0);
@@ -145,5 +154,59 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     patch?.(shader);
   };
   mat.customProgramCacheKey = () => `ground-${far}-${simple}`;
+  return mat;
+}
+
+// Boulders and other props: world-space triplanar rock with moss and grass
+// settling on the upward-facing parts. Works on instanced meshes.
+export function createRockMaterial(renderer, set = GROUND_SETS.alpine) {
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0 });
+  const T = (n, k) => groundTexture(n, k, renderer);
+  const uniforms = {
+    tBaseA: { value: T(set.base, 'albedo') },
+    tRockA: { value: T(set.rock, 'albedo') },
+    tRockN: { value: T(set.rock, 'normal') },
+  };
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vRW;\nvarying vec3 vRN;')
+      .replace(
+        '#include <worldpos_vertex>',
+        `#include <worldpos_vertex>
+        mat4 rM = modelMatrix;
+        #ifdef USE_INSTANCING
+          rM = modelMatrix * instanceMatrix;
+        #endif
+        vRW = (rM * vec4(transformed, 1.0)).xyz;
+        vRN = normalize(mat3(rM) * objectNormal);`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        uniform sampler2D tBaseA, tRockA, tRockN;
+        varying vec3 vRW;
+        varying vec3 vRN;
+        ${SHARED.replace(/uniform sampler2D[^;]*;/, '').replace(/varying[^;]*;/g, '')}`,
+      )
+      .replace(
+        '#include <map_fragment>',
+        `vec3 rn = normalize(vRN);
+        vec3 rw = pow(abs(rn), vec3(4.0)); rw /= rw.x + rw.y + rw.z;
+        vec4 ra = triA(tRockA, vRW, rw, 0.35);
+        // Moss and grass collect on top, broken up by the rock's own height.
+        float moss = smoothstep(0.55, 0.85, rn.y + (ra.a - 0.5) * 0.6);
+        vec3 grass = texture2D(tBaseA, vRW.xz * 0.5).rgb;
+        diffuseColor.rgb *= mix(ra.rgb, grass * 0.9, moss);
+        float rRough = mix(0.86, 0.97, moss);`,
+      )
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = rRough;')
+      .replace(
+        '#include <normal_fragment_maps>',
+        `normal = normalize((viewMatrix * vec4(triN(tRockN, vRW, rw, rn, 0.35), 0.0)).xyz);`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'rock-prop';
   return mat;
 }

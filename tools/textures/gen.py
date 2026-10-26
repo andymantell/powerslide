@@ -201,7 +201,95 @@ def snow(name='snow', seed=41):
     save(name, col, h, normal_from_height(h, 2.5))
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow)
+def bleed(rgb, alpha, passes=24):
+    """Spreads opaque colours into transparent pixels so mipmaps don't fringe."""
+    rgb = rgb.copy()
+    known = alpha > 0.5
+    for _ in range(passes):
+        acc = np.zeros_like(rgb)
+        cnt = np.zeros(alpha.shape)
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            k = np.roll(known, (dy, dx), (0, 1))
+            acc += np.roll(rgb, (dy, dx), (0, 1)) * k[..., None]
+            cnt += k
+        fill = (~known) & (cnt > 0)
+        rgb[fill] = acc[fill] / cnt[fill][:, None]
+        known = known | fill
+    rgb[~known] = rgb[known].mean(0)
+    return rgb
+
+
+def twig(name='spruce_twig', pal=None, seed=51, size=512):
+    """Alpha-tested branch card: a spruce shoot seen from above, stem at the bottom centre."""
+    pal = pal or dict(dark='#16281a', light='#3d5a30', tip='#6c8a40', stem='#4a3426')
+    dark, light, tip, stem = (hexcol(pal[k]) for k in ('dark', 'light', 'tip', 'stem'))
+    S = size * 4
+    rng = np.random.default_rng(seed)
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    def c8(c, a=255):
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)) + (a,)
+
+    def shoot(x0, y0, ang, length, width, depth):
+        # Needles first (behind), then the stem on top.
+        n = int(length / (S * 0.006))
+        pts = []
+        x, y = x0, y0
+        for i in range(n + 1):
+            t = i / n
+            a = ang + rng.normal(0, 0.03)
+            pts.append((x, y, t, a))
+            x += np.cos(a) * length / n
+            y += np.sin(a) * length / n
+        for x, y, t, a in pts:
+            for side in (-1, 1):
+                for _ in range(1 if rng.random() < 0.6 else 2):
+                    na = a + side * rng.uniform(0.5, 1.3)
+                    nl = S * rng.uniform(0.022, 0.032) * (1 - t * 0.35) * (width / 1.0)
+                    shade = rng.random()
+                    col = lerp(dark, light, shade)
+                    col = lerp(col, tip, smoothstep(0.75, 1.0, t) * 0.7)
+                    d.line([(x, y), (x + np.cos(na) * nl, y + np.sin(na) * nl)], fill=c8(col), width=max(2, int(S * 0.0035)))
+        d.line([(p[0], p[1]) for p in pts], fill=c8(stem * 0.9), width=max(2, int(S * 0.004 * width)))
+        if depth > 0:
+            for i in range(3, n - 3, 3):
+                x, y, t, a = pts[i]
+                side = 1 if (i // 2) % 2 else -1
+                shoot(x, y, a + side * rng.uniform(0.8, 1.15), length * (1 - t * 0.8) * rng.uniform(0.3, 0.45), width * 0.75, depth - 1)
+
+    shoot(S * 0.5, S * 0.98, -np.pi / 2, S * 0.9, 1.0, 2)
+    img = img.resize((size, size), Image.LANCZOS)
+    arr = np.asarray(img) / 255.0
+    rgb, alpha = arr[..., :3], arr[..., 3]
+    rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
+    rgb = bleed(rgb, alpha)
+    os.makedirs(OUT, exist_ok=True)
+    rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
+    Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(os.path.join(OUT, f'{name}.png'), optimize=True)
+    print('wrote', name)
+
+
+def bark(name='bark', pal=None, seed=61):
+    pal = pal or dict(dark='#2e231c', mid='#5a4636', light='#7d6a58')
+    dark, mid, light = (hexcol(pal[k]) for k in ('dark', 'mid', 'light'))
+    n = 512
+    # Vertical plates separated by fissures.
+    row = perlin(n, 10, seed)[0] * 0.6 + perlin(n, 24, seed + 1)[0] * 0.4
+    xs = (np.arange(n)[None, :] + fbm(n, 3, 4, seed + 2) * 18).astype(int) % n
+    plates = norm01(row[xs])
+    horiz = norm01(fbm(n, 16, 3, seed + 3))
+    fiss = smoothstep(0.45, 0.25, plates)
+    h = norm01(plates * 0.7 + horiz * 0.2 + fbm(n, 64, 2, seed + 4) * 0.1 - fiss * 0.4)
+    col = lerp(dark, mid, smoothstep(0.2, 0.6, h))
+    col = lerp(col, light, smoothstep(0.65, 0.95, h) * horiz)
+    old = N
+    globals()['N'] = n
+    save(name, col, h, normal_from_height(h, 6.0))
+    globals()['N'] = old
+
+
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

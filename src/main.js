@@ -10,6 +10,8 @@ import { SlideMarks } from './marks.js';
 import { createSky, SUN_DIR } from './sky.js';
 import { Post } from './post.js';
 import { texturesReady } from './ground.js';
+import { Forest } from './forest.js';
+import { Boulders } from './boulders.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, DIFFICULTY, autoQuality } from './settings.js';
@@ -38,6 +40,10 @@ const seed = Math.floor(Math.random() * 1e9);
 const road = new Road(seed);
 road.ensure(7000);
 const terrain = new Terrain(scene, road, seed + 11, Q, renderer);
+const forest = new Forest(scene, renderer, Q);
+terrain.forest = forest;
+const boulders = new Boulders(scene, renderer);
+terrain.boulders = boulders;
 const roadMesh = new RoadMesh(scene, road, renderer);
 const player = new Player(scene, road, terrain, DIFFICULTY[settings.difficulty]);
 const traffic = new Traffic(scene, road, DIFFICULTY[settings.difficulty]);
@@ -475,6 +481,8 @@ function frame(now) {
   road.ensure(player.s + 7000);
   roadMesh.update(player.s);
   terrain.update(player.pos.x, player.pos.z, 4);
+  forest.update(player.pos.x, player.pos.z);
+  boulders.update();
 
   // Sun & shadows follow the rider.
   sun.position.copy(player.pos).addScaledVector(SUN_DIR, 150);
@@ -503,6 +511,8 @@ async function boot() {
     await new Promise((r) => setTimeout(r, 0));
   }
   await texturesReady();
+  forest.update(player.pos.x, player.pos.z);
+  boulders.update();
   $('loading').classList.add('hidden');
   $('controls').classList.remove('hidden');
   game.mode = 'title';
@@ -517,4 +527,4 @@ boot();
 
 // Exposed for debugging in the console.
 const debug = { freeze: false };
-window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, renderFrame: () => post.render() });
