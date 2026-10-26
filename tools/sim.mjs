@@ -3,6 +3,13 @@
 // prints the numbers that matter for feel (top speeds, turn-in, slides).
 
 globalThis.document = { createElement: () => ({ getContext: () => null }) };
+// Models and textures can't load in Node, and the physics doesn't need them.
+const offline = (e) => /fetch failed/.test(String(e?.stack ?? e));
+process.on('unhandledRejection', (e) => {
+  if (!offline(e)) throw e;
+});
+const logError = console.error;
+console.error = (...a) => a.some(offline) || logError(...a);
 const { Player } = await import('../src/player.js');
 const { Road } = await import('../src/road.js');
 const { TUNING } = await import('../src/settings.js');
@@ -70,7 +77,7 @@ for (const grade of [0.05, 0.08, 0.12]) {
 }
 
 console.log('\n== Braking from 70 km/h on 8%');
-for (const [name, inp] of [['air brake', { air: 1 }], ['footbrake', { down: true }], ['slide', { slide: true }]]) {
+for (const [name, inp] of [['air brake', { air: 1 }], ['brake btn', { down: true }], ['slide', { slide: true }]]) {
   const p = make(0.08, 70 / 3.6);
   let t30 = null;
   run(p, 12, (pp) => ({ ...inp, steer: inp.slide ? 0 : keepLane(pp) }), (pp, t) => {
