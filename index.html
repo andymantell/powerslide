@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Powerslide</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div id="speed"><span id="speed-val">0</span><small id="speed-unit">km/h</small></div>
+      <div id="stats">
+        <div><label>Score</label><span id="score">0</span></div>
+        <div><label>Distance</label><span id="dist">0.00 km</span></div>
+        <div><label>Best</label><span id="best">0</span></div>
+      </div>
+      <div id="state"></div>
+      <div id="popups"></div>
+      <div id="hint"></div>
+    </div>
+
+    <div id="title" class="panel">
+      <h1>POWERSLIDE</h1>
+      <p class="tag">Downhill longboarding on an endless mountain pass</p>
+      <div id="loading">Generating mountains… <span id="load-pct">0%</span></div>
+      <div id="controls" class="hidden">
+        <table>
+          <tr><td><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></td><td>Lean / carve</td></tr>
+          <tr><td><kbd>W</kbd> / <kbd>↑</kbd></td><td>Push (slow) · Tuck (fast)</td></tr>
+          <tr><td><kbd>S</kbd> / <kbd>↓</kbd></td><td>Footbrake</td></tr>
+          <tr><td><kbd>Space</kbd> / <kbd>Shift</kbd></td><td>Hold to powerslide (steer picks the side)</td></tr>
+          <tr><td><kbd>C</kbd></td><td>Camera</td></tr>
+          <tr><td><kbd>M</kbd> · <kbd>U</kbd> · <kbd>P</kbd></td><td>Mute · km/h/mph · Pause</td></tr>
+        </table>
+        <p class="small">Gamepad supported. Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
+        <button id="start">RIDE</button>
+      </div>
+    </div>
+
+    <div id="crash" class="panel hidden">
+      <h2>BAIL!</h2>
+      <p id="crash-reason"></p>
+      <div id="crash-stats"></div>
+      <button id="again">RIDE AGAIN</button>
+      <p class="small">Press <kbd>Enter</kbd></p>
+    </div>
+
+    <div id="pause" class="panel hidden">
+      <h2>PAUSED</h2>
+      <p class="small">Press <kbd>P</kbd> or <kbd>Esc</kbd> to continue</p>
+    </div>
+
+    <div id="touch">
+      <div id="t-steer"><div class="knob"></div></div>
+      <div id="t-buttons">
+        <div id="t-slide" class="tbtn">SLIDE</div>
+        <div id="t-up" class="tbtn">TUCK</div>
+        <div id="t-down" class="tbtn">BRAKE</div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
