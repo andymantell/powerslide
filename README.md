@@ -20,13 +20,17 @@ Then open the URL Vite prints (usually http://localhost:5173).
 
 | Keyboard | Xbox controller | Touch | Action |
 | --- | --- | --- | --- |
-| `A` / `D` or `←` / `→` | Left stick | Left pad | Lean and carve |
-| `W` / `↑` | RT | TUCK | Push (slow) or tuck (fast) |
-| `S` / `↓` | LT | BRAKE | Footbrake |
-| `Space` / `Shift` (hold) | A, LB or RB (hold) | SLIDE | Powerslide. Steer into it to open it up, steer out to close it |
+| `A` / `D` or `←` / `→` | Left stick | Drag left / right | Lean and carve |
+| `W` / `↑` | RT | Tap / drag forward | Push (slow) or tuck (fast). On touch, a tap is one push and dragging further forward tucks lower |
+| | | Drag back | Air brake: stand tall with arms out to catch the wind |
+| `S` / `↓` | LT | | Footbrake |
+| `Space` / `Shift` (hold) | A, LB or RB (hold) | Hold a second finger | Powerslide. Steer into it to open it up, steer out to close it |
 | `C` | Y | | Cycle camera (chase, low, helmet) |
 | `P` / `Esc` | ☰ Menu | | Pause |
 | `M` / `U` / `F` | | | Mute, km/h or mph, FPS counter |
+
+Touch has no buttons: the whole screen is one invisible analogue stick, centred
+wherever your finger lands.
 
 In menus, use A to ride, B to go back, X to switch difficulty and Y to cycle the
 graphics setting.

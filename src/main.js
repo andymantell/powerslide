@@ -299,6 +299,7 @@ function updateHud(dt) {
   if (player.slideMode) st = 'SLIDE';
   else if (player.sliding) st = 'DRIFT';
   else if (player.tuck > 0.6) st = 'TUCK';
+  else if (player.airbrake > 0.6) st = 'AIR BRAKE';
   else if (player.brake > 0.5) st = 'FOOTBRAKE';
   if (player.fakie) st = (st ? st + ' · ' : '') + 'FAKIE';
   if (game.combo > 1) st += `  x${game.combo}`;
@@ -444,7 +445,11 @@ function frame(now) {
 
     if (!game.hintShown && player.speed > 16 && game.mode === 'play') {
       game.hintShown = true;
-      hint('Getting fast! Hold SPACE to powerslide and scrub speed before bends');
+      hint(
+        document.body.classList.contains('is-touch') && !document.body.classList.contains('has-pad')
+          ? 'Getting fast! Slide back to air brake, or hold a second finger to powerslide'
+          : 'Getting fast! Hold SPACE to powerslide and scrub speed before bends',
+      );
     }
   } else {
     // Title: let the rider idle on the road.

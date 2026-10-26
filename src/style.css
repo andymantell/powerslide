@@ -83,21 +83,6 @@ button:hover { filter: brightness(1.1); }
 #crash-stats { margin: 12px 0; font-size: 16px; line-height: 1.7; }
 #crash-stats b { color: var(--accent); }
 
-#touch { display: none; }
-#touch.on { display: block; position: fixed; inset: auto 0 0 0; height: 160px; pointer-events: none; }
-#t-steer {
-  position: absolute; left: 16px; bottom: 20px; width: 220px; height: 90px;
-  border-radius: 45px; background: rgba(255, 255, 255, 0.12); pointer-events: auto;
-}
-#t-steer .knob {
-  position: absolute; left: calc(50% - 35px); top: 10px; width: 70px; height: 70px;
-  border-radius: 50%; background: rgba(255, 255, 255, 0.35);
-}
-#t-buttons { position: absolute; right: 16px; bottom: 120px; display: flex; gap: 10px; pointer-events: auto; }
-.tbtn {
-  width: 74px; height: 74px; border-radius: 50%; background: rgba(255, 255, 255, 0.18);
-  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
-}
 @media (max-width: 700px) {
   #speed { font-size: 48px; right: 16px; bottom: auto; top: 12px; }
   #stats { gap: 12px; left: 12px; top: 12px; }

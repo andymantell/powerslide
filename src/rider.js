@@ -161,10 +161,11 @@ export class RiderModel {
   }
 
   // p: { crouch 0..1, tuck 0..1, leanX, leanZ (rad), slideHand -1/0/1,
-  //      handTargetLocal (Vector3|null), brake 0..1, push 0..1, pushPhase, limp 0..1, lookYaw }
+  //      handTargetLocal (Vector3|null), spread 0..1 (air brake), brake 0..1, push 0..1, pushPhase, limp 0..1, lookYaw }
   pose(p) {
     const crouch = p.crouch ?? 0.15;
     const tuck = p.tuck ?? 0;
+    const spread = p.spread ?? 0;
     const J = this.joints;
     // Riding fakie is handled by rotating the whole rig; only the head differs.
     const fakie = 1;
@@ -198,6 +199,8 @@ export class RiderModel {
     // Torso: upright, folding forward over the front knee when tucked.
     const tdir = _d.set(0.15 + bend * 0.25, 1, 0);
     tdir.lerp(_a.set(0.32, 0.38, -0.86 * fakie), tuck);
+    // Air brake: stand tall and lean back a touch into the wind.
+    tdir.lerp(_a.set(0.04, 1, 0.18 * fakie), spread);
     if (p.limp) tdir.lerp(_a.set(0.9, 0.2, 0.2), p.limp);
     tdir.normalize();
     J.chest.copy(J.hip).addScaledVector(tdir, 0.5);
@@ -215,6 +218,11 @@ export class RiderModel {
       // Hands tucked behind the back.
       handF.lerp(_a.copy(J.hip).add(_d.set(-0.2, 0.12, 0.05 * fakie)), tuck);
       handR.lerp(_a.copy(J.hip).add(_d.set(-0.2, 0.08, 0.15 * fakie)), tuck);
+    }
+    if (spread > 0) {
+      // Arms flung wide, across the wind, to catch as much air as possible.
+      handF.lerp(_a.copy(J.shF).add(_d.set(0.52, 0.12, -0.12 * fakie)), spread);
+      handR.lerp(_a.copy(J.shR).add(_d.set(-0.48, 0.12, 0.12 * fakie)), spread);
     }
     if (p.handTargetLocal && p.slideHand) {
       // The hand on the leaning side goes to the ground (puck down).

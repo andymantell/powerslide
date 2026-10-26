@@ -16,6 +16,7 @@ const MASS = 82; // rider + board, kg
 const RHO = 1.2;
 const CDA_UPRIGHT = 0.5;
 const CDA_TUCK = 0.23;
+const CDA_AIRBRAKE = 0.95; // stood tall, chest open, arms spread
 const CRR = 0.012; // urethane on asphalt
 const MAX_CURVATURE = 0.38; // tightest carve at walking pace (~2.6 m radius)
 const STEP = 1 / 120;
@@ -54,6 +55,7 @@ export class Player {
     this.slideDir = 1;
     this.slip = 0; // angle between deck and travel
     this.tuck = 0;
+    this.airbrake = 0;
     this.crouch = 0.3;
     this.brake = 0;
     this.push = 0;
@@ -111,10 +113,13 @@ export class Player {
 
     // Rider inputs, smoothed so the board responds like a body would.
     this.steer += clamp(input.steer - this.steer, -dt * 4.5, dt * 4.5);
-    const wantTuck = input.up && speed > 6 && !this.slideMode ? 1 : 0;
+    // Touch gives analogue tuck and air brake; keys and triggers are all-or-nothing.
+    const wantTuck = this.slideMode ? 0 : Math.max(input.tuck || 0, input.up && speed > 6 ? 1 : 0);
     this.tuck += clamp(wantTuck - this.tuck, -dt * 3, dt * 2.5);
+    const wantAir = this.slideMode ? 0 : input.air || 0;
+    this.airbrake += clamp(wantAir - this.airbrake, -dt * 3, dt * 3);
     this.brake += clamp((input.down && !this.slideMode && speed > 0.3 ? 1 : 0) - this.brake, -dt * 5, dt * 5);
-    const wantPush = input.up && speed < 7 && !this.slideMode && !input.down;
+    const wantPush = (input.up || input.push) && speed < 7 && !this.slideMode && !input.down;
     this.push += clamp((wantPush ? 1 : 0) - this.push, -dt * 4, dt * 4);
 
     // Slide initiation / release.
@@ -136,7 +141,7 @@ export class Player {
     const gAlong = (G * f.grade) / Math.sqrt(1 + f.grade * f.grade);
     let ax = f.dirX * gAlong;
     let az = f.dirZ * gAlong;
-    const cda = lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck) + (this.slideMode ? 0.08 : 0);
+    const cda = lerp(lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck), CDA_AIRBRAKE, this.airbrake) + (this.slideMode ? 0.08 : 0);
     const dragK = (0.5 * RHO * cda) / MASS;
     ax -= dragK * speed * this.vel.x;
     az -= dragK * speed * this.vel.y;
@@ -357,7 +362,8 @@ export class Player {
     const leanZ = Math.atan2(-this.accLocal.y, G) * 0.6;
     this.lean = lerp(this.lean, leanX, 1 - Math.exp(-dt * 10));
     this.leanZ = lerp(this.leanZ ?? 0, leanZ, 1 - Math.exp(-dt * 8));
-    const wantCrouch = this.slideMode ? 0.75 : this.brake > 0.1 ? 0.45 : 0.3 + Math.abs(this.steer) * 0.25;
+    let wantCrouch = this.slideMode ? 0.75 : this.brake > 0.1 ? 0.45 : 0.3 + Math.abs(this.steer) * 0.25;
+    wantCrouch = lerp(wantCrouch, 0.05, this.airbrake);
     this.crouch = lerp(this.crouch, wantCrouch, 1 - Math.exp(-dt * 6));
     this.pushPhase += dt * 7 * this.push;
     const wantHand = this.slideMode && Math.abs(this.lean) > 0.25 ? 1 : 0;
@@ -377,6 +383,7 @@ export class Player {
     m.pose({
       crouch: this.crouch,
       tuck: this.tuck,
+      spread: this.airbrake,
       brake: this.brake,
       push: this.push,
       pushPhase: this.pushPhase,

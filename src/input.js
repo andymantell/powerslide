@@ -4,7 +4,7 @@ export class Input {
   constructor() {
     this.keys = new Set();
     this.pressed = new Set();
-    this.touch = { steer: 0, up: false, down: false, slide: false };
+    this.touch = { steer: 0, tuck: 0, air: 0, pushTime: 0, slide: false };
     addEventListener('keydown', (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
       if (!this.keys.has(e.code)) this.pressed.add(e.code);
@@ -12,7 +12,8 @@ export class Input {
     });
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
-    this.state = { steer: 0, up: false, down: false, slide: false };
+    // tuck/air are analogue 0..1 (touch); push is a timed stroke from a tap.
+    this.state = { steer: 0, up: false, down: false, slide: false, tuck: 0, air: 0, push: false };
     this.kbSteer = 0;
     this.padPrev = [];
     this.padConnected = false;
@@ -28,48 +29,84 @@ export class Input {
     this.setupTouch();
   }
 
+  // Touch: the whole screen is one invisible analogue area. Wherever a finger
+  // lands becomes the centre; dragging left/right steers, forward tucks down
+  // progressively and back stands the rider up into an air brake. A quick tap
+  // is one push. A second finger held down throws a powerslide.
   setupTouch() {
-    const el = document.getElementById('touch');
-    if (!el) return;
-    if (!('ontouchstart' in window)) return;
-    el.classList.add('on');
-    const bind = (id, key) => {
-      const b = document.getElementById(id);
-      const on = (e) => {
-        e.preventDefault();
-        this.touch[key] = true;
-        if (key === 'slide' || key === 'up') this.pressed.add(key === 'slide' ? 'Space' : 'KeyW');
-      };
-      const off = (e) => {
-        e.preventDefault();
-        this.touch[key] = false;
-      };
-      b.addEventListener('touchstart', on, { passive: false });
-      b.addEventListener('touchend', off, { passive: false });
-      b.addEventListener('touchcancel', off, { passive: false });
+    const el = document.getElementById('game');
+    if (!el || !('ontouchstart' in window)) return;
+    const t = this.touch;
+    t.tuck = 0;
+    t.air = 0;
+    t.pushTime = 0;
+    let main = null; // { id, ox, oy, x, y, start, moved }
+    const others = new Set();
+    // Full deflection in px, scaled to the screen so an iPad and a phone feel alike.
+    const range = () => Math.max(50, Math.min(innerWidth, innerHeight) * 0.11);
+    const DEAD = 0.12; // fraction of range ignored around the centre
+    const shape = (v) => Math.sign(v) * Math.max(0, Math.min(1, (Math.abs(v) - DEAD) / (1 - DEAD)));
+    const apply = () => {
+      if (!main) {
+        t.steer = 0;
+        t.tuck = 0;
+        t.air = 0;
+        return;
+      }
+      const r = range();
+      // Overshooting drags the centre along, so reversing direction responds at once.
+      const clampOrigin = (p, o) => Math.max(p - r, Math.min(p + r, o));
+      main.ox = clampOrigin(main.x, main.ox);
+      main.oy = clampOrigin(main.y, main.oy);
+      const dx = (main.x - main.ox) / r;
+      const dy = (main.y - main.oy) / r; // screen down = towards the rider = back
+      t.steer = shape(dx);
+      t.tuck = Math.max(0, shape(-dy));
+      t.air = Math.max(0, shape(dy));
     };
-    bind('t-up', 'up');
-    bind('t-down', 'down');
-    bind('t-slide', 'slide');
-    const pad = document.getElementById('t-steer');
-    const knob = pad.querySelector('.knob');
+    const start = (e) => {
+      e.preventDefault();
+      for (const c of e.changedTouches) {
+        if (!main) {
+          main = { id: c.identifier, ox: c.clientX, oy: c.clientY, x: c.clientX, y: c.clientY, start: performance.now(), moved: false };
+        } else {
+          others.add(c.identifier);
+          this.pressed.add('Space');
+        }
+      }
+      t.slide = others.size > 0;
+      apply();
+    };
     const move = (e) => {
       e.preventDefault();
-      const t = e.targetTouches[0];
-      if (!t) return;
-      const r = pad.getBoundingClientRect();
-      const x = ((t.clientX - r.left) / r.width) * 2 - 1;
-      this.touch.steer = Math.max(-1, Math.min(1, x * 1.2));
-      knob.style.transform = `translateX(${this.touch.steer * r.width * 0.38}px)`;
+      if (!main) return;
+      for (const c of e.changedTouches) {
+        if (c.identifier !== main.id) continue;
+        main.x = c.clientX;
+        main.y = c.clientY;
+        if (Math.hypot(main.x - main.ox, main.y - main.oy) > range() * DEAD) main.moved = true;
+      }
+      apply();
     };
     const end = (e) => {
       e.preventDefault();
-      this.touch.steer = 0;
-      knob.style.transform = '';
+      for (const c of e.changedTouches) {
+        if (main && c.identifier === main.id) {
+          if (!main.moved && performance.now() - main.start < 300) {
+            t.pushTime = 0.9; // about one stroke
+          }
+          main = null;
+        } else {
+          others.delete(c.identifier);
+        }
+      }
+      t.slide = others.size > 0;
+      apply();
     };
-    pad.addEventListener('touchstart', move, { passive: false });
-    pad.addEventListener('touchmove', move, { passive: false });
-    pad.addEventListener('touchend', end, { passive: false });
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end, { passive: false });
+    el.addEventListener('touchcancel', end, { passive: false });
   }
 
   wasPressed(code) {
@@ -107,15 +144,18 @@ export class Input {
         prev[i] = btn.pressed;
       });
     }
-    if (this.touch.steer) steer = this.touch.steer;
-    up = up || this.touch.up;
-    down = down || this.touch.down;
-    slide = slide || this.touch.slide;
+    const t = this.touch;
+    if (t.steer) steer = t.steer;
+    slide = slide || t.slide;
+    t.pushTime = Math.max(0, t.pushTime - dt);
 
     this.state.steer = Math.max(-1, Math.min(1, steer));
     this.state.up = up;
     this.state.down = down;
     this.state.slide = slide;
+    this.state.tuck = t.tuck;
+    this.state.air = t.air;
+    this.state.push = t.pushTime > 0;
     return this.state;
   }
 
