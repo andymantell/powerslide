@@ -2,8 +2,13 @@
 // centreline, streaming them in ahead of the player and dropping them behind.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { DS, HALF_WIDTH, RAIL_OFFSET } from './road.js';
-import { ROAD_TEX_LENGTH, makeAsphaltTexture, makeGritTexture } from './textures.js';
+import { makeGritTexture } from './textures.js';
+import { createRoadMaterial } from './roadmat.js';
+import { groundTexture } from './ground.js';
+
+const VERGE = HALF_WIDTH + 0.75; // road mesh carries on past the asphalt as a gravel verge
 
 const CHUNK = 160; // samples per chunk
 const AHEAD = 1600; // metres
@@ -15,14 +20,12 @@ export class RoadMesh {
     this.scene = scene;
     this.road = road;
     this.chunks = new Map();
-    this.roadMat = new THREE.MeshStandardMaterial({
-      map: makeAsphaltTexture(renderer),
-      roughness: 0.92,
-      metalness: 0,
-    });
-    this.skirtMat = new THREE.MeshLambertMaterial({ color: '#5b5550' });
-    this.railMat = new THREE.MeshStandardMaterial({ color: '#c9cdd1', metalness: 0.6, roughness: 0.4 });
-    this.postMat = new THREE.MeshLambertMaterial({ color: '#6b5a48' });
+    this.roadMat = createRoadMaterial(renderer);
+    const gravel = groundTexture('gravel', 'albedo', renderer);
+    this.skirtMat = new THREE.MeshStandardMaterial({ map: gravel, color: '#c9c2b8', roughness: 1, side: THREE.DoubleSide });
+    // Galvanised steel W-beam on steel posts.
+    this.railMat = new THREE.MeshStandardMaterial({ color: '#b4b9bf', metalness: 0.85, roughness: 0.55, side: THREE.DoubleSide });
+    this.postMat = new THREE.MeshStandardMaterial({ color: '#a3a8ad', metalness: 0.8, roughness: 0.5 });
     this.gritMat = new THREE.MeshLambertMaterial({
       map: makeGritTexture(),
       transparent: true,
@@ -31,8 +34,14 @@ export class RoadMesh {
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2,
     });
-    this.postGeo = new THREE.BoxGeometry(0.14, 0.9, 0.14);
-    this.postGeo.translate(0, 0.25, 0);
+    // C-section post: web plus two flanges, sunk into the verge.
+    const web = new THREE.BoxGeometry(0.1, 1.1, 0.006);
+    const fl1 = new THREE.BoxGeometry(0.006, 1.1, 0.05);
+    fl1.translate(-0.05, 0, 0.025);
+    const fl2 = fl1.clone();
+    fl2.translate(0.1, 0, 0);
+    this.postGeo = mergeGeometries([web, fl1, fl2]);
+    this.postGeo.translate(0, 0.2, 0);
   }
 
   // Lateral position of the guardrail at sample i (0 when none).
@@ -47,8 +56,10 @@ export class RoadMesh {
     const i0 = ci * CHUNK;
     const i1 = Math.min(i0 + CHUNK, road.count - 1);
     const n = i1 - i0 + 1;
-    const across = [-HALF_WIDTH, -HALF_WIDTH * 0.5, 0, HALF_WIDTH * 0.5, HALF_WIDTH];
-    const crown = (u) => -0.04 * (u / HALF_WIDTH) ** 2; // slight camber for drainage
+    const across = [-VERGE, -HALF_WIDTH, -HALF_WIDTH * 0.5, 0, HALF_WIDTH * 0.5, HALF_WIDTH, VERGE];
+    // Slight camber for drainage, then the verge falls away past the asphalt.
+    const crown = (u) => -0.04 * (Math.min(Math.abs(u), HALF_WIDTH) / HALF_WIDTH) ** 2 - Math.max(0, Math.abs(u) - HALF_WIDTH) * 0.12;
+    const skirtUv = [];
     const pos = [];
     const uv = [];
     const idx = [];
@@ -61,13 +72,14 @@ export class RoadMesh {
       for (let b = 0; b < across.length; b++) {
         const u = across[b];
         pos.push(f.x + f.rightX * u, f.y + crown(u), f.z + f.rightZ * u);
-        uv.push((u + HALF_WIDTH) / (HALF_WIDTH * 2), s / ROAD_TEX_LENGTH);
+        uv.push(u, s);
       }
       for (const side of [-1, 1]) {
-        const u = side * HALF_WIDTH;
-        const u2 = side * (HALF_WIDTH + 0.6);
-        skirtPos.push(f.x + f.rightX * u, f.y + crown(u), f.z + f.rightZ * u);
+        const u = side * VERGE;
+        const u2 = side * (VERGE + 0.6);
+        skirtPos.push(f.x + f.rightX * u, f.y + crown(u) + 0.02, f.z + f.rightZ * u);
         skirtPos.push(f.x + f.rightX * u2, f.y - 1.6, f.z + f.rightZ * u2);
+        skirtUv.push(0, s * 0.5, 0.8, s * 0.5);
       }
     }
     const w = across.length;
@@ -97,10 +109,10 @@ export class RoadMesh {
 
     const sgeo = new THREE.BufferGeometry();
     sgeo.setAttribute('position', new THREE.Float32BufferAttribute(skirtPos, 3));
+    sgeo.setAttribute('uv', new THREE.Float32BufferAttribute(skirtUv, 2));
     sgeo.setIndex(skirtIdx);
     sgeo.computeVertexNormals();
     const skirt = new THREE.Mesh(sgeo, this.skirtMat);
-    skirt.material.side = THREE.DoubleSide;
     skirt.receiveShadow = true;
 
     const group = new THREE.Group();
@@ -120,8 +132,9 @@ export class RoadMesh {
     const q = new THREE.Quaternion();
     const up = new THREE.Vector3(0, 1, 0);
     let run = -1;
+    // W-beam cross-section: (outward offset, height).
     const profile = [
-      [0, 0.55], [0.08, 0.6], [0.08, 0.75], [0, 0.8],
+      [0, 0.52], [0.06, 0.545], [0.075, 0.59], [0.03, 0.64], [0.03, 0.69], [0.075, 0.74], [0.06, 0.785], [0, 0.81],
     ];
     for (let i = i0; i <= i1; i++) {
       road.sample(i * DS, f);
@@ -154,9 +167,7 @@ export class RoadMesh {
       geo.setAttribute('position', new THREE.Float32BufferAttribute(railPos, 3));
       geo.setIndex(railIdx);
       geo.computeVertexNormals();
-      const mat = this.railMat;
-      mat.side = THREE.DoubleSide;
-      const rail = new THREE.Mesh(geo, mat);
+      const rail = new THREE.Mesh(geo, this.railMat);
       rail.castShadow = true;
       group.add(rail);
     }

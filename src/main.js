@@ -8,6 +8,8 @@ import { Input } from './input.js';
 import { Audio } from './audio.js';
 import { SlideMarks } from './marks.js';
 import { createSky, SUN_DIR } from './sky.js';
+import { Post } from './post.js';
+import { texturesReady } from './ground.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, DIFFICULTY, autoQuality } from './settings.js';
@@ -29,12 +31,13 @@ renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12000);
-const { sky, sun } = createSky(scene, Q);
+const { sky, sun } = createSky(scene, renderer, Q);
+const post = new Post(renderer, scene, camera, Q);
 
 const seed = Math.floor(Math.random() * 1e9);
 const road = new Road(seed);
 road.ensure(7000);
-const terrain = new Terrain(scene, road, seed + 11, Q);
+const terrain = new Terrain(scene, road, seed + 11, Q, renderer);
 const roadMesh = new RoadMesh(scene, road, renderer);
 const player = new Player(scene, road, terrain, DIFFICULTY[settings.difficulty]);
 const traffic = new Traffic(scene, road, DIFFICULTY[settings.difficulty]);
@@ -44,6 +47,7 @@ const marks = new SlideMarks(scene);
 
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
+  post.setSize(innerWidth, innerHeight);
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
 });
@@ -338,6 +342,7 @@ function updateResolution(dt) {
   if (Math.abs(next - res.ratio) > 0.01) {
     res.ratio = next;
     renderer.setPixelRatio(next);
+    post.setPixelRatio(next);
   }
 }
 
@@ -351,7 +356,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (game.mode === 'loading') return;
+  if (game.mode === 'loading' || debug.freeze) return;
 
   const state = input.update(dt);
   const pad = (i) => input.wasPressed(`Pad${i}`);
@@ -386,7 +391,7 @@ function frame(now) {
 
   if (game.mode === 'paused') {
     input.endFrame();
-    renderer.render(scene, camera);
+    post.render();
     return;
   }
   time += dt;
@@ -481,7 +486,7 @@ function frame(now) {
   audio.update(player, traffic.cars, camera);
   if (game.mode !== 'title') updateHud(dt);
   input.endFrame();
-  renderer.render(scene, camera);
+  post.render();
 }
 
 // ---------------------------------------------------------------- boot
@@ -497,6 +502,7 @@ async function boot() {
     $('load-pct').textContent = `${Math.min(100, Math.round((built / total) * 100))}%`;
     await new Promise((r) => setTimeout(r, 0));
   }
+  await texturesReady();
   $('loading').classList.add('hidden');
   $('controls').classList.remove('hidden');
   game.mode = 'title';
@@ -510,4 +516,5 @@ requestAnimationFrame(frame);
 boot();
 
 // Exposed for debugging in the console.
-window.__powerslide = { game, player, road, terrain, traffic, camera, renderer, scene, settings };
+const debug = { freeze: false };
+window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, renderFrame: () => post.render() });

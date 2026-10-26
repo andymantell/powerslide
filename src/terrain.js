@@ -7,26 +7,17 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createNoise2D, fbm, ridged, smoothstep, lerp, mulberry32 } from './noise.js';
+import { createGroundMaterial } from './ground.js';
 
 const NEAR_SIZE = 160;
 const FAR_SIZE = 1280;
 const FAR_SEGS = 32;
 const SHOULDER = 6.5;
 
-const col = new THREE.Color();
-const COLORS = {
-  gravel: new THREE.Color('#8a8172'),
-  grassA: new THREE.Color('#5d7a37'),
-  grassB: new THREE.Color('#3f5f2a'),
-  dry: new THREE.Color('#8f8a55'),
-  rock: new THREE.Color('#77716a'),
-  rockDark: new THREE.Color('#57524d'),
-  snow: new THREE.Color('#eef1f5'),
-};
 
 export class Terrain {
   // q: quality preset (nearRadius, nearSegs, farRadius, treeSpacing).
-  constructor(scene, road, seed = 99, q = {}) {
+  constructor(scene, road, seed = 99, q = {}, renderer) {
     this.scene = scene;
     this.nearRadius = q.nearRadius ?? 4;
     this.nearSegs = q.nearSegs ?? 64;
@@ -65,15 +56,11 @@ export class Terrain {
         );
     };
 
-    this.nearMat = new THREE.MeshLambertMaterial({ vertexColors: true });
-    this.nearMat.onBeforeCompile = patch(true);
-    this.nearMat.customProgramCacheKey = () => 'terrain-near';
-    this.farMat = new THREE.MeshLambertMaterial({ vertexColors: true });
-    this.farMat.onBeforeCompile = patch(false);
-    this.farMat.customProgramCacheKey = () => 'terrain-far';
+    this.nearMat = createGroundMaterial(renderer, { simple: !q.groundDetail, patch: patch(true) });
+    this.farMat = createGroundMaterial(renderer, { far: true, patch: patch(false) });
 
     this.treeGeo = makeTreeGeometry();
-    this.treeMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    this.treeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
     this.rockGeo = new THREE.DodecahedronGeometry(1, 0);
     this.rockMat = new THREE.MeshLambertMaterial({ color: '#7b756d', flatShading: true });
   }
@@ -119,25 +106,34 @@ export class Terrain {
     // Skirts are unnecessary: near/far are split by the shader cut.
     geo.computeVertexNormals();
     const nor = geo.attributes.normal;
+    // Per-vertex tint (subtle brightness/hue drift) and splat weights for the
+    // ground shader: x rock, y gravel, z snow, w dry grass.
     const colors = new Float32Array(pos.count * 3);
+    const splat = new Float32Array(pos.count * 4);
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
       const ny = nor.getY(i);
       const v = this.noise3(x / 40, z / 40) * 0.5 + 0.5;
       const v2 = this.noise3(x / 300 + 50, z / 300) * 0.5 + 0.5;
-      col.copy(COLORS.grassA).lerp(COLORS.grassB, v).lerp(COLORS.dry, v2 * 0.45);
-      const steep = 1 - smoothstep(0.6, 0.82, ny);
-      col.lerp(v > 0.5 ? COLORS.rock : COLORS.rockDark, steep);
+      const outcrop = smoothstep(0.62, 0.8, this.noise2(x / 90 + 7, z / 90)) * smoothstep(8, 30, dist[i]);
+      // Road cuts: the uphill bank right beside the road is blasted rock.
+      const cut = smoothstep(1.5, 4, rel[i]) * (1 - smoothstep(14, 30, dist[i])) * (1 - smoothstep(0.8, 0.95, ny)) * smoothstep(0.3, 0.6, v + v2 * 0.5);
+      const rock = Math.min(1, 1 - smoothstep(0.62, 0.84, ny) + outcrop * 0.8 + cut);
       const snowLine = 240 + this.noise3(x / 150, z / 150) * 50;
       const snow = smoothstep(snowLine, snowLine + 40, rel[i]) * smoothstep(0.55, 0.75, ny);
-      col.lerp(COLORS.snow, snow);
-      if (dist[i] < 7.5) col.lerp(COLORS.gravel, 1 - smoothstep(5.5, 7.5, dist[i]));
-      colors[i * 3] = col.r;
-      colors[i * 3 + 1] = col.g;
-      colors[i * 3 + 2] = col.b;
+      const gravel = 1 - smoothstep(5.6, 7.6 + v * 1.5, dist[i]);
+      const b = 0.88 + v * 0.24;
+      colors[i * 3] = b * (1.0 + (v2 - 0.5) * 0.08);
+      colors[i * 3 + 1] = b;
+      colors[i * 3 + 2] = b * (1.0 - (v2 - 0.5) * 0.1);
+      splat[i * 4] = rock * (1 - gravel);
+      splat[i * 4 + 1] = gravel;
+      splat[i * 4 + 2] = snow * (1 - gravel);
+      splat[i * 4 + 3] = smoothstep(0.35, 0.8, v2);
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('splat', new THREE.BufferAttribute(splat, 4));
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
     const mesh = new THREE.Mesh(geo, coarse ? this.farMat : this.nearMat);
