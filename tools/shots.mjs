@@ -42,6 +42,8 @@ const views = {
   vista: { back: 14, up: 7, ahead: 120, lookUp: 0, side: 3 },
   trees: { back: 2, up: 1.7, ahead: 25, lookUp: 2.5, side: -7 },
   forest: { back: -10, up: 3, ahead: 0, lookUp: 3, side: 25 },
+  verge: { back: 0, up: 0.9, ahead: 14, lookUp: 0.4, side: 3.5 },
+  cutting: { target: 'cutting' },
   boulder: { target: 'boulder', back: 4, up: 1.5, ahead: 0, lookUp: 0.5, side: 1 },
 };
 for (const [name, v] of Object.entries(views)) {
@@ -65,13 +67,42 @@ for (const [name, v] of Object.entries(views)) {
           mesh.getMatrixAt(i, m);
           m.decompose(pos, q, sc);
           const d = pos.distanceTo(p);
-          if (d < 120 && (!best || sc.x / (d + 20) > best.s / (best.d + 20))) best = { p: pos.clone(), s: sc.x, d };
+          if (d < 120 && sc.x < 1.6 && (!best || sc.x / (d + 20) > best.s / (best.d + 20))) best = { p: pos.clone(), s: sc.x, d };
         }
       }
       if (best) {
         p = best.p;
         v = { ...v, back: best.s * 4, up: best.s * 1.5, lookUp: best.s * 0.5, side: best.s * 1.5 };
       }
+    }
+    if (v.target === 'cutting') {
+      // Find the rockiest road cut ahead and look at it from the far lane.
+      const { road } = P;
+      const f = {}, fd = {};
+      let best = null;
+      for (let s = player.s - 400; s < player.s + 450; s += 6) {
+        road.sample(s, f);
+        for (const side of [-1, 1]) {
+          const x = f.x + f.rightX * side * 10, z = f.z + f.rightZ * side * 10;
+          road.field(x, z, fd);
+          const h = terrain.heightFromField(x, z, fd, false);
+          const hx = terrain.heightAt(x + 1, z), hz = terrain.heightAt(x, z + 1);
+          const ny = 1 / Math.hypot(hx - h, 1, hz - h);
+          const sf = terrain.surface(x, z, h - fd.roadY, fd.dist, ny);
+          const score = sf.rock * (1 - sf.gravel) + Math.min(h - fd.roadY, 8) * 0.05;
+          if (!best || score > best.score) best = { score, s, side, x, y: h, z };
+        }
+      }
+      console.warn('cutting', JSON.stringify(best));
+      road.sample(best.s - 14, f);
+      const ex = f.x - f.rightX * best.side * 2.5, ez = f.z - f.rightZ * best.side * 2.5;
+      camera.position.set(ex, f.y + 1.6, ez);
+      camera.lookAt(best.x, best.y + 1.5, best.z);
+      camera.fov = 60;
+      camera.updateProjectionMatrix();
+      P.grass.fill(ex, ez);
+      P.renderFrame();
+      return;
     }
     camera.position.set(p.x - fx * v.back + rx * v.side, p.y + v.up, p.z - fz * v.back + rz * v.side);
     camera.lookAt(p.x + fx * v.ahead, p.y + v.lookUp, p.z + fz * v.ahead);

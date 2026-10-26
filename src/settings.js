@@ -24,25 +24,25 @@ export const QUALITY = {
     label: 'Low', antialias: false, maxPixelRatio: 1, minPixelRatio: 0.6,
     shadows: true, shadowMap: 1024, shadowExtent: 30,
     nearRadius: 3, nearSegs: 40, farRadius: 2, treeSpacing: 11, fog: 0.0007,
-    shadowRadius: 1, skySize: 256, treeLodRadius: 50,
+    shadowRadius: 1, skySize: 256, treeLodRadius: 50, grassRadius: 18, grassDensity: 0.7,
   },
   medium: {
     label: 'Medium', antialias: false, maxPixelRatio: 1.5, minPixelRatio: 0.75,
     shadows: true, shadowMap: 1024, shadowExtent: 38,
     nearRadius: 3, nearSegs: 56, farRadius: 3, treeSpacing: 8.5, fog: 0.00045,
-    shadowRadius: 2, skySize: 512, groundDetail: true, treeLodRadius: 75,
+    shadowRadius: 2, skySize: 512, groundDetail: true, treeLodRadius: 75, grassRadius: 32, grassDensity: 1.1,
   },
   high: {
     label: 'High', antialias: true, maxPixelRatio: 2, minPixelRatio: 0.8,
     shadows: true, shadowMap: 2048, shadowExtent: 45,
     nearRadius: 4, nearSegs: 64, farRadius: 4, treeSpacing: 7, fog: 0.00032,
-    shadowRadius: 3, skySize: 512, groundDetail: true, bloom: true, treeLodRadius: 110,
+    shadowRadius: 3, skySize: 512, groundDetail: true, bloom: true, treeLodRadius: 110, grassRadius: 48, grassDensity: 1.5,
   },
   ultra: {
     label: 'Ultra', antialias: true, maxPixelRatio: 2.5, minPixelRatio: 1,
     shadows: true, shadowMap: 4096, shadowExtent: 55,
     nearRadius: 5, nearSegs: 80, farRadius: 5, treeSpacing: 5.5, fog: 0.00026,
-    shadowRadius: 3, skySize: 1024, groundDetail: true, bloom: true, ao: true, treeLodRadius: 170,
+    shadowRadius: 3, skySize: 1024, groundDetail: true, bloom: true, ao: true, treeLodRadius: 170, grassRadius: 70, grassDensity: 1.9,
   },
 };
 export const QUALITY_ORDER = ['auto', 'low', 'medium', 'high', 'ultra'];

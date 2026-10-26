@@ -16,7 +16,7 @@ const IMP_H = 512;
 
 // Mipmapping averages alpha away, so distant cards would thin out and
 // vanish under alpha testing; scale alpha back up with the mip level.
-function boostAlpha(shader, size = 512) {
+export function boostAlpha(shader, size = 512) {
   shader.fragmentShader = shader.fragmentShader.replace(
     '#include <alphatest_fragment>',
     `{

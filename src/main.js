@@ -12,6 +12,7 @@ import { Post } from './post.js';
 import { texturesReady } from './ground.js';
 import { Forest } from './forest.js';
 import { Boulders } from './boulders.js';
+import { Grass } from './grass.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, ENDLESS_TRAFFIC, autoQuality } from './settings.js';
@@ -45,6 +46,7 @@ const forest = new Forest(scene, renderer, Q);
 terrain.forest = forest;
 const boulders = new Boulders(scene, renderer);
 terrain.boulders = boulders;
+const grass = new Grass(scene, renderer, terrain, Q);
 const roadMesh = new RoadMesh(scene, road, renderer);
 const player = new Player(scene, road, terrain);
 const traffic = new Traffic(scene, road);
@@ -112,6 +114,7 @@ async function buildTiles() {
   }
   forest.update(player.pos.x, player.pos.z);
   boulders.update();
+  grass.fill(player.pos.x, player.pos.z);
   game.mode = prevMode;
 }
 
@@ -122,6 +125,7 @@ async function loadWorld(level) {
   road.reset(game.seed, level);
   road.ensure(START_S + 7000);
   terrain.reset(game.seed + 11);
+  grass.clear();
   roadMesh.clear();
   marks.clear();
   traffic.configure(level ? level.traffic : ENDLESS_TRAFFIC, game.seed);
@@ -779,6 +783,7 @@ function frame(now) {
   terrain.update(player.pos.x, player.pos.z, 4);
   forest.update(player.pos.x, player.pos.z);
   boulders.update();
+  grass.update(player.pos.x, player.pos.z, now / 1000);
 
   // Sun & shadows follow the rider.
   sun.position.copy(player.pos).addScaledVector(SUN_DIR, 150);
@@ -812,4 +817,4 @@ boot();
 
 // Exposed for debugging in the console.
 const debug = { freeze: false };
-window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, renderFrame: () => post.render() });

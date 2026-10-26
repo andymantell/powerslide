@@ -84,6 +84,25 @@ export class Terrain {
     return h;
   }
 
+  // Ground cover at a point: rock, gravel and snow weights (0..1) plus the
+  // noise values the tint uses. rel is height above the road, dist distance
+  // from its centre line, ny the up component of the ground normal.
+  surface(x, z, rel, dist, ny, out = {}) {
+    const v = this.noise3(x / 40, z / 40) * 0.5 + 0.5;
+    const v2 = this.noise3(x / 300 + 50, z / 300) * 0.5 + 0.5;
+    const outcrop = smoothstep(0.62, 0.8, this.noise2(x / 90 + 7, z / 90)) * smoothstep(8, 30, dist);
+    // Road cuts: the uphill bank right beside the road is blasted rock.
+    const cut = smoothstep(1.5, 4, rel) * (1 - smoothstep(14, 30, dist)) * (1 - smoothstep(0.8, 0.95, ny)) * smoothstep(0.3, 0.6, v + v2 * 0.5);
+    const rock = Math.min(1, 1 - smoothstep(0.62, 0.84, ny) + outcrop * 0.8 + cut);
+    const snowLine = 240 + this.noise3(x / 150, z / 150) * 50;
+    out.v = v;
+    out.v2 = v2;
+    out.snow = smoothstep(snowLine, snowLine + 40, rel) * smoothstep(0.55, 0.75, ny);
+    out.gravel = 1 - smoothstep(5.6, 7.6 + v * 1.5, dist);
+    out.rock = rock;
+    return out;
+  }
+
   buildTile(cx, cz, size, segs, coarse) {
     const n = segs + 1;
     const geo = new THREE.PlaneGeometry(size, size, segs, segs);
@@ -107,19 +126,11 @@ export class Terrain {
     // ground shader: x rock, y gravel, z snow, w dry grass.
     const colors = new Float32Array(pos.count * 3);
     const splat = new Float32Array(pos.count * 4);
+    const sf = {};
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
-      const ny = nor.getY(i);
-      const v = this.noise3(x / 40, z / 40) * 0.5 + 0.5;
-      const v2 = this.noise3(x / 300 + 50, z / 300) * 0.5 + 0.5;
-      const outcrop = smoothstep(0.62, 0.8, this.noise2(x / 90 + 7, z / 90)) * smoothstep(8, 30, dist[i]);
-      // Road cuts: the uphill bank right beside the road is blasted rock.
-      const cut = smoothstep(1.5, 4, rel[i]) * (1 - smoothstep(14, 30, dist[i])) * (1 - smoothstep(0.8, 0.95, ny)) * smoothstep(0.3, 0.6, v + v2 * 0.5);
-      const rock = Math.min(1, 1 - smoothstep(0.62, 0.84, ny) + outcrop * 0.8 + cut);
-      const snowLine = 240 + this.noise3(x / 150, z / 150) * 50;
-      const snow = smoothstep(snowLine, snowLine + 40, rel[i]) * smoothstep(0.55, 0.75, ny);
-      const gravel = 1 - smoothstep(5.6, 7.6 + v * 1.5, dist[i]);
+      const { v, v2, rock, snow, gravel } = this.surface(x, z, rel[i], dist[i], nor.getY(i), sf);
       const b = 0.88 + v * 0.24;
       colors[i * 3] = b * (1.0 + (v2 - 0.5) * 0.08);
       colors[i * 3 + 1] = b;
@@ -146,6 +157,7 @@ export class Terrain {
     const rand = mulberry32(((cx * 73856093) ^ (cz * 19349663)) >>> 0);
     const trees = [];
     const rocks = [];
+    const sf = {};
     const spacing = this.treeSpacing;
     for (let gx = 0; gx < size / spacing; gx++) {
       for (let gz = 0; gz < size / spacing; gz++) {
@@ -153,15 +165,29 @@ export class Terrain {
         const z = cz - size / 2 + (gz + rand()) * spacing;
         const forest = this.noise2(x / 140, z / 140) * 0.5 + 0.5;
         const r = rand();
-        if (r > forest * 0.9 && r > 0.04) continue;
         const f = this.road.field(x, z, this.field);
-        if (f.dist < 9) continue;
+        if (f.dist < 7.5) continue;
         const h = this.heightFromField(x, z, f, false);
         const rel = h - f.roadY;
         // Estimate slope with a cheap finite difference.
         const hx = this.heightAt(x + 2, z);
         const hz = this.heightAt(x, z + 2);
         const slope = Math.hypot(hx - h, hz - h) / 2;
+        // Rock faces get large rocks half buried in them, so cuttings and
+        // crags have real relief rather than a flat textured slope. Only near
+        // the road, where they are seen up close.
+        if (slope > 0.5 && f.dist < 45 && this.surface(x, z, rel, f.dist, 1 / Math.hypot(1, slope), sf).rock > 0.55) {
+          for (let k = rand() < 0.6 ? 1 : 0; k > 0; k--) {
+            const x2 = x + (rand() - 0.5) * spacing, z2 = z + (rand() - 0.5) * spacing;
+            const f2 = this.road.field(x2, z2, this.field);
+            const sc = Math.min(1.4 + rand() * 2.2, (f2.dist - 5.5) * 0.6);
+            if (sc < 0.5) continue;
+            // Sunk deep so only a ledge or a buttress shows.
+            rocks.push(x2, this.heightFromField(x2, z2, f2, false) - sc * 0.62, z2, sc, rand() * 6.28, (rand() - 0.5) * 1.2, Math.floor(rand() * 8));
+          }
+          continue;
+        }
+        if (f.dist < 9 || (r > forest * 0.9 && r > 0.04)) continue;
         if (r <= 0.04 && slope < 1.2) {
           // A boulder, sometimes with a few smaller ones tumbled around it.
           const sc = 0.35 + rand() ** 2 * 1.8;

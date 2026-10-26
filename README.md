@@ -113,8 +113,9 @@ straight to a level (locked or not) while working on it.
 Auto picks Low on phones, Medium on iPad and Android tablets, and High on the
 Xbox and desktops. You can override this with Low, Medium, High or Ultra. The
 setting controls antialiasing, shadow resolution and softness, terrain detail
-and ground texturing, view distance, tree density and how far out trees are
-drawn as full models (beyond that they are impostors). High adds bloom and
+and ground texturing, view distance, tree density, how far out trees are
+drawn as full models (beyond that they are impostors) and how far and how
+densely grass tufts are scattered. High adds bloom and
 Ultra adds ambient occlusion. On top of the preset, dynamic resolution lowers the
 render scale when the frame rate drops below about 48 fps and raises it again
 when there is headroom. Press `F` to see the frame rate, render scale and
@@ -122,8 +123,8 @@ preset.
 
 ### Assets and visual tooling
 
-- `tools/textures/gen.py` generates the tileable ground, road, bark, twig and
-  deck textures in `src/assets/textures` (numpy, scipy and pillow).
+- `tools/textures/gen.py` generates the tileable ground, road, bark, twig,
+  grass tuft and deck textures in `src/assets/textures` (numpy, scipy and pillow).
 - `tools/blender/*.py` build the models in `src/assets/models` with Blender's
   Python module (`pip install bpy` on Python 3.13): `tree.py` (spruces from
   branch cards), `rocks.py` (boulders), `board.py` (deck, trucks, wheels) and
@@ -132,7 +133,7 @@ preset.
   Cycles previews of any exported model.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
-  vista, trees, forest, boulder) for before/after comparisons.
+  vista, trees, forest, verge, cutting, boulder) for before/after comparisons.
 
 ## How it works
 

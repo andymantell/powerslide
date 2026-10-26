@@ -106,40 +106,73 @@ def ridged(size, period, octaves, seed):
 
 
 def rock(name='rock', pal=None, seed=11):
-    pal = pal or dict(a='#6a655f', b='#8a847a', c='#46423e', stain='#7a5f45', lichen='#8a8a62', speck='#c9c3b8')
+    """Jointed rock as seen in a road cutting: bedding planes split into
+    blocks by vertical joints, each block a slightly tilted facet with
+    chamfered edges and dark open cracks between them."""
+    pal = pal or dict(a='#6e6962', b='#8f887d', c='#3e3a36', stain='#7d5a3c', lichen='#8c8c5e', speck='#cfc9bd')
     a, b, c, stain, lichen, speck = (hexcol(pal[k]) for k in ('a', 'b', 'c', 'stain', 'lichen', 'speck'))
-    wx = fbm(N, 3, 5, seed) * 60
-    wy = fbm(N, 3, 5, seed + 1) * 60
-    rid = warp(ridged(N, 4, 6, seed + 2), wx, wy)
-    facet = norm01(warp(fbm(N, 5, 6, seed + 4, gain=0.6), wx * 0.5, wy * 0.5))
-    detail = fbm(N, 64, 3, seed + 6)
-    f1, f2, cid = worley(N, 6, seed + 7)
-    f1, f2, cid = warp(f1, wx, wy), warp(f2, wx, wy), warp(cid, wx, wy)
-    mask = smoothstep(0.55, 0.7, norm01(fbm(N, 5, 3, seed + 3)))
-    crack = (1 - smoothstep(0.0, 0.03, f2 - f1)) * mask
-    # Faceted, blocky relief: terrace the facet noise a little.
-    terr = facet * 5
-    terr = (np.floor(terr) + smoothstep(0.0, 0.35, terr - np.floor(terr))) / 5
-    h = terr * 0.4 + rid * 0.45 + detail * 0.15 - crack * 0.4
-    h = norm01(blur(h, 1))
-    # Vertical streaks (water and iron staining) for the side projections.
-    row = perlin(N, 48, seed + 20)[0]
-    xs = (np.arange(N)[None, :] + fbm(N, 4, 3, seed + 21) * 25).astype(int) % N
-    streak = norm01(row[xs])
-    tone = norm01(fbm(N, 3, 4, seed + 5))
-    col = lerp(c, a, smoothstep(0.1, 0.5, h))
-    col = lerp(col, b, smoothstep(0.45, 0.85, h) * (0.3 + tone * 0.7))
-    col = col * (0.75 + tone[..., None] * 0.4) * (0.88 + detail[..., None] * 0.5)
-    col = lerp(col, stain, smoothstep(0.6, 0.9, streak) * 0.35 * tone)
-    col = col * (0.9 + streak[..., None] * 0.15)
-    sp = np.random.default_rng(seed).random((N, N))
-    col = lerp(col, speck, (sp > 0.994) * 0.3)
-    col = lerp(col, c * 0.4, crack * 0.9)
-    # Shadowed recesses.
-    col = col * (0.7 + 0.3 * smoothstep(0.05, 0.4, h))[..., None]
-    lich = smoothstep(0.65, 0.82, norm01(fbm(N, 12, 4, seed + 9))) * smoothstep(0.4, 0.65, h)
-    col = lerp(col, lichen, lich * 0.4)
-    save(name, col, h, normal_from_height(h, 9.0))
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
+    # Warp so beds undulate and joints wander.
+    Y = (yy + fbm(N, 2, 4, seed) * 70 + fbm(N, 8, 3, seed + 1) * 6) % N
+    X = (xx + fbm(N, 3, 4, seed + 2) * 40 + fbm(N, 6, 3, seed + 3) * 22 + (yy - N / 2) * 0.12 * fbm(N, 1, 1, seed + 4)) % N
+    # Bed thicknesses that sum exactly to N so the texture tiles.
+    th = rng.uniform(0.6, 1.6, 9)
+    bounds = np.concatenate([[0], np.cumsum(th / th.sum() * N)])
+    bed = np.clip(np.searchsorted(bounds, Y, 'right') - 1, 0, len(th) - 1)
+    y0, y1 = bounds[bed], bounds[bed + 1]
+    dy = np.minimum(Y - y0, y1 - Y)
+    v = (Y - y0) / (y1 - y0)
+    h = np.zeros((N, N), np.float32)
+    dx = np.zeros((N, N), np.float32)
+    u = np.zeros((N, N), np.float32)
+    blk = np.zeros((N, N), np.float32)
+    bedtone = np.zeros((N, N), np.float32)
+    for k in range(len(th)):
+        m = bed == k
+        n = rng.integers(3, 7)
+        jt = np.sort((rng.uniform(0, 1, n) * 0.6 + np.arange(n) / n) % 1.0 * N)
+        jt = np.sort(jt)
+        Xk = X[m]
+        Xs = np.where(Xk < jt[0], Xk + N, Xk)
+        edges = np.concatenate([jt, [jt[0] + N]])
+        j = np.clip(np.searchsorted(edges, Xs, 'right') - 1, 0, n - 1)
+        x0, x1 = edges[j], edges[j + 1]
+        dx[m] = np.minimum(Xs - x0, x1 - Xs)
+        u[m] = (Xs - x0) / (x1 - x0)
+        r = rng.random((n, 4))
+        blk[m] = r[j, 0]
+        # Each block is a gently tilted facet.
+        h[m] = 0.55 + (r[j, 0] - 0.5) * 0.3 + (r[j, 1] - 0.5) * 0.5 * (u[m] - 0.5) + (r[j, 2] - 0.5) * 0.4 * (v[m] - 0.5)
+        bedtone[m] = rng.uniform(0.85, 1.12)
+    # Ragged edges; some joints are tight and barely show.
+    rag = fbm(N, 32, 3, seed + 12) * 7
+    open_j = smoothstep(0.35, 0.65, norm01(fbm(N, 4, 3, seed + 13)))
+    open_b = smoothstep(0.2, 0.5, norm01(fbm(N, 3, 3, seed + 14)))
+    edge = np.minimum(dx + rag + (1 - open_j) * 30, dy + rag * 0.7 + (1 - open_b) * 30)
+    # Chamfered block edges and open cracks.
+    h = h * (0.6 + 0.4 * smoothstep(0, 18, edge))
+    crack = (1 - smoothstep(0.5, 3.5, edge))
+    detail = fbm(N, 48, 4, seed + 6)
+    grain = fbm(N, 12, 4, seed + 7)
+    f1, f2, _ = worley(N, 24, seed + 15)
+    chips = smoothstep(0.0, 0.25, f2 - f1)
+    h = h + detail * 0.1 + grain * 0.18 + chips * 0.06 + ridged(N, 8, 4, seed + 16) * 0.12
+    h = norm01(blur(h, 1)) * (1 - crack * 0.6)
+    tone = norm01(fbm(N, 4, 4, seed + 5))
+    col = lerp(c, a, smoothstep(0.15, 0.55, h))
+    col = lerp(col, b, smoothstep(0.55, 0.9, h) * (0.35 + tone * 0.65))
+    col = col * (0.88 + blk[..., None] * 0.2) * bedtone[..., None] * (0.85 + grain[..., None] * 0.45)
+    # Rust staining running down from the bedding cracks.
+    row = perlin(N, 64, seed + 20)[0]
+    streak = norm01(row[xx.astype(int)]) * np.exp(-(Y - y0) / 60)
+    col = lerp(col, stain, smoothstep(0.35, 0.8, streak) * 0.45)
+    sp = rng.random((N, N))
+    col = lerp(col, speck, (sp > 0.995) * 0.3)
+    col = lerp(col, c * 0.35, crack * 0.9)
+    lich = smoothstep(0.68, 0.82, norm01(fbm(N, 10, 4, seed + 9))) * smoothstep(0.5, 0.7, h)
+    col = lerp(col, lichen, lich * 0.45)
+    save(name, col, h, normal_from_height(h, 7.0))
 
 
 def stones(size, cells, seed, gap=0.06, round_=0.35, vary=0.0):
@@ -330,7 +363,79 @@ def deck(name='deck', seed=71):
     print('wrote', name)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck)
+def tuft(name='grass_tuft', pal=None, seed=81, size=512):
+    """Alpha-tested grass clump cards, side view, roots along the bottom edge.
+
+    Two tiles side by side: plain grass, and grass with meadow flowers.
+    """
+    pal = pal or dict(dark='#2c4219', mid='#4d6a26', light='#7f9a44', dry='#a29a5c',
+                      flowers=['#f2d23a', '#f4f1e6', '#b58fd8', '#e8a23a'])
+    dark, mid, light, dry = (hexcol(pal[k]) for k in ('dark', 'mid', 'light', 'dry'))
+    flowers = [hexcol(c) for c in pal['flowers']]
+    S = size * 4
+    rng = np.random.default_rng(seed)
+    img = Image.new('RGBA', (S * 2, S), (0, 0, 0, 0))
+
+    def c8(c, a=255):
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)) + (a,)
+
+    def blade(x0, h, lean, w):
+        # Tapered, curved blade drawn as a polygon from root to tip.
+        n = 12
+        left, right = [], []
+        for i in range(n + 1):
+            t = i / n
+            x = x0 + lean * t * t * h
+            y = S - 2 - t * h * (1 - 0.25 * abs(lean) * t)
+            ww = w * (1 - t) ** 0.8
+            left.append((x - ww, y))
+            right.append((x + ww, y))
+        shade = rng.random()
+        col = lerp(dark, mid, shade)
+        if rng.random() < 0.15:
+            col = lerp(col, dry, rng.uniform(0.3, 0.8))
+        d.polygon(left + right[::-1], fill=c8(col))
+        # Lighter upper half on the lit side.
+        d.line(right[n // 3:], fill=c8(lerp(col, light, 0.5)), width=max(1, int(w * 0.5)))
+        return left[-1]
+
+    for tile in (0, 1):
+        # Each tile is drawn on its own canvas so blades can't cross over.
+        ox = 0
+        part = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+        d = ImageDraw.Draw(part)
+        tips = []
+        for _ in range(170):
+            x0 = ox + S * 0.5 + rng.normal(0, S * 0.13)
+            h = S * rng.uniform(0.35, 0.95) * (1 - abs(x0 - ox - S * 0.5) / S)
+            lean = (x0 - ox - S * 0.5) / S * 1.1 + rng.normal(0, 0.18)
+            tips.append(blade(x0, h, lean, S * rng.uniform(0.006, 0.011)))
+        if tile == 1:
+            for _ in range(9):
+                x0 = ox + S * 0.5 + rng.normal(0, S * 0.12)
+                h = S * rng.uniform(0.6, 0.92)
+                lean = rng.normal(0, 0.15)
+                tx, ty = blade(x0, h, lean, S * 0.005)
+                fc = flowers[rng.integers(len(flowers))] * rng.uniform(0.85, 1.05)
+                r = S * rng.uniform(0.022, 0.034)
+                for k in range(6):
+                    a = k / 6 * 2 * np.pi + rng.uniform(0, 0.5)
+                    px, py = tx + np.cos(a) * r * 0.6, ty + np.sin(a) * r * 0.35
+                    d.ellipse([px - r * 0.5, py - r * 0.3, px + r * 0.5, py + r * 0.3], fill=c8(fc))
+                d.ellipse([tx - r * 0.25, ty - r * 0.2, tx + r * 0.25, ty + r * 0.2], fill=c8(hexcol('#c8901e')))
+        img.paste(part, (tile * S, 0))
+    img = img.resize((size * 2, size), Image.LANCZOS)
+    arr = np.asarray(img) / 255.0
+    rgb, alpha = arr[..., :3], arr[..., 3]
+    rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
+    rgb = bleed(rgb, alpha)
+    rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
+    Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(
+        os.path.join(OUT, f'{name}.webp'), quality=85, alpha_quality=80, method=6)
+    print('wrote', name)
+
+
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

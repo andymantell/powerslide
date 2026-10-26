@@ -22,7 +22,14 @@ export class RoadMesh {
     this.chunks = new Map();
     this.roadMat = createRoadMaterial(renderer);
     const gravel = groundTexture('gravel', 'albedo', renderer);
-    this.skirtMat = new THREE.MeshStandardMaterial({ map: gravel, color: '#c9c2b8', roughness: 1, side: THREE.DoubleSide });
+    this.skirtMat = new THREE.MeshStandardMaterial({ map: gravel, color: '#dcd6cc', roughness: 1, side: THREE.DoubleSide });
+    // Keep the up-facing normal on whichever face is seen.
+    this.skirtMat.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace(
+        '#include <normal_fragment_begin>',
+        '#include <normal_fragment_begin>\n  normal = normalize(vNormal);',
+      );
+    };
     // Galvanised steel W-beam on steel posts.
     this.railMat = new THREE.MeshStandardMaterial({ color: '#b4b9bf', metalness: 0.85, roughness: 0.55, side: THREE.DoubleSide });
     this.postMat = new THREE.MeshStandardMaterial({ color: '#a3a8ad', metalness: 0.8, roughness: 0.5 });
@@ -93,10 +100,11 @@ export class RoadMesh {
       }
       for (const side of [-1, 1]) {
         const u = side * VERGE;
-        const u2 = side * (VERGE + 0.6);
+        // A shallow bank down to below the terrain, so the edge never shows a dark wall.
+        const u2 = side * (VERGE + 2.2);
         skirtPos.push(f.x + f.rightX * u, f.y + crown(u) + 0.02, f.z + f.rightZ * u);
         skirtPos.push(f.x + f.rightX * u2, f.y - 1.6, f.z + f.rightZ * u2);
-        skirtUv.push(0, s * 0.5, 0.8, s * 0.5);
+        skirtUv.push(0, s * 0.45, 1.2, s * 0.45);
       }
     }
     const w = across.length;
@@ -128,7 +136,8 @@ export class RoadMesh {
     sgeo.setAttribute('position', new THREE.Float32BufferAttribute(skirtPos, 3));
     sgeo.setAttribute('uv', new THREE.Float32BufferAttribute(skirtUv, 2));
     sgeo.setIndex(skirtIdx);
-    sgeo.computeVertexNormals();
+    // Up-facing normals light the bank like the flat gravel beyond it.
+    sgeo.setAttribute('normal', new THREE.Float32BufferAttribute(skirtPos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
     const skirt = new THREE.Mesh(sgeo, this.skirtMat);
     skirt.receiveShadow = true;
 

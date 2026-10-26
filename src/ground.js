@@ -104,6 +104,10 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vec3 gn = normalize(vGNormal);
         vec3 tw = pow(abs(gn), vec3(4.0));
         tw /= tw.x + tw.y + tw.z;
+        // Rock favours the side projections so its bedding stays level on
+        // slopes; only near-flat rock uses the top-down one.
+        vec3 rw = pow(abs(gn) * vec3(1.0, 0.7, 1.0), vec3(4.0));
+        rw /= rw.x + rw.y + rw.z;
         ${far ? `
         // Far tiles: one coarse sample per layer is plenty.
         vec4 aBase = texture2D(tBaseA, gp.xz * 0.02);
@@ -116,7 +120,14 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         float gN1 = texture2D(tSnowA, gp.xz * 0.011).a;
         vec2 gUv2 = mat2(0.8, -0.6, 0.6, 0.8) * gp.xz * 0.27 + 0.31;
         vec4 aBase = mix(texture2D(tBaseA, gp.xz * 0.33), texture2D(tBaseA, gUv2), smoothstep(0.35, 0.65, gN1));
-        vec4 aRock = vSplat.x > 0.01 ? triA(tRockA, gp, tw, 0.16) : vec4(0.5);
+        vec4 aRock = vec4(0.5);
+        if (vSplat.x > 0.01) {
+          aRock = triA(tRockA, gp, rw, 0.16);
+          // A second, much larger sample breaks up the repeat on big faces.
+          vec4 aRockM = triA(tRockA, gp + 17.0, rw, 0.037);
+          aRock.rgb *= 0.55 + dot(aRockM.rgb, vec3(0.9));
+          aRock.a = mix(aRock.a, aRockM.a, 0.35);
+        }
         vec4 aGrav = vSplat.y > 0.01 ? texture2D(tGravA, gp.xz * 0.45) : vec4(0.5);
         vec4 aSnow = vSplat.z > 0.01 ? texture2D(tSnowA, gp.xz * 0.12) : vec4(0.5);
         `}
@@ -143,7 +154,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         detail
           ? `
         vec3 nBase = topN(tBaseN, gp.xz * 0.33, gn);
-        vec3 nRock = bw.y > 0.01 ? triN(tRockN, gp, tw, gn, 0.16) : gn;
+        vec3 nRock = bw.y > 0.01 ? triN(tRockN, gp, rw, gn, 0.16) : gn;
         vec3 nGrav = bw.z > 0.01 ? topN(tGravN, gp.xz * 0.45, gn) : gn;
         vec3 nSnow = bw.w > 0.01 ? topN(tSnowN, gp.xz * 0.12, gn) : gn;
         vec3 gN = normalize(nBase * bw.x + nRock * bw.y + nGrav * bw.z + nSnow * bw.w);
@@ -194,7 +205,9 @@ export function createRockMaterial(renderer, set = GROUND_SETS.alpine) {
         '#include <map_fragment>',
         `vec3 rn = normalize(vRN);
         vec3 rw = pow(abs(rn), vec3(4.0)); rw /= rw.x + rw.y + rw.z;
-        vec4 ra = triA(tRockA, vRW, rw, 0.35);
+        vec4 ra = triA(tRockA, vRW, rw, 0.22);
+        // Same large-scale tone as rock faces in the ground shader.
+        ra.rgb *= 0.7 + dot(triA(tRockA, vRW + 17.0, rw, 0.037).rgb, vec3(1.1));
         // Moss and grass collect on top, broken up by the rock's own height.
         float moss = smoothstep(0.55, 0.85, rn.y + (ra.a - 0.5) * 0.6);
         vec3 grass = texture2D(tBaseA, vRW.xz * 0.5).rgb;
@@ -204,7 +217,7 @@ export function createRockMaterial(renderer, set = GROUND_SETS.alpine) {
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = rRough;')
       .replace(
         '#include <normal_fragment_maps>',
-        `normal = normalize((viewMatrix * vec4(triN(tRockN, vRW, rw, rn, 0.35), 0.0)).xyz);`,
+        `normal = normalize((viewMatrix * vec4(triN(tRockN, vRW, rw, rn, 0.22), 0.0)).xyz);`,
       );
   };
   mat.customProgramCacheKey = () => 'rock-prop';
