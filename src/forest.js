@@ -16,11 +16,11 @@ const IMP_H = 512;
 
 // Mipmapping averages alpha away, so distant cards would thin out and
 // vanish under alpha testing; scale alpha back up with the mip level.
-function boostAlpha(shader) {
+function boostAlpha(shader, size = 512) {
   shader.fragmentShader = shader.fragmentShader.replace(
     '#include <alphatest_fragment>',
     `{
-      vec2 dt = max(abs(dFdx(vMapUv)), abs(dFdy(vMapUv))) * 512.0;
+      vec2 dt = max(abs(dFdx(vMapUv)), abs(dFdy(vMapUv))) * vec2(${size.toFixed(1)}, ${size.toFixed(1)});
       diffuseColor.a *= 1.0 + max(0.0, log2(max(dt.x, dt.y))) * 0.35;
     }
     #include <alphatest_fragment>`,
@@ -64,7 +64,9 @@ export class Forest {
     this.dirty = true;
     this.sources = new Set(); // Float32Arrays of [x, y, z, scale, yaw, variant, tint]
 
-    const twig = new THREE.TextureLoader().load(TWIG);
+    let twigLoaded;
+    const twig = new THREE.TextureLoader().load(TWIG, () => twigLoaded());
+    const twigReady = new Promise((res) => (twigLoaded = res));
     twig.colorSpace = THREE.SRGBColorSpace;
     twig.anisotropy = 4;
     this.foliageMat = new THREE.MeshStandardMaterial({
@@ -92,7 +94,8 @@ export class Forest {
     });
 
     trackLoad(
-      new GLTFLoader().loadAsync(MODEL).then((gltf) => this.build(gltf)),
+      // The impostor bake needs the twig texture, so wait for both.
+      Promise.all([new GLTFLoader().loadAsync(MODEL), twigReady]).then(([gltf]) => this.build(gltf)),
     );
   }
 
@@ -140,7 +143,7 @@ export class Forest {
     r.setClearColor('#2e4228', 0);
     r.clear();
     const basicF = new THREE.MeshBasicMaterial({ map: this.foliageMat.map, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide });
-    basicF.onBeforeCompile = boostAlpha;
+    basicF.onBeforeCompile = (s) => boostAlpha(s);
     const basicT = new THREE.MeshBasicMaterial({ map: this.barkMat.map });
     this.variants.forEach((v, i) => {
       scene.clear();
@@ -173,6 +176,7 @@ export class Forest {
       const mat = new THREE.MeshStandardMaterial({ map: rt.texture, alphaTest: 0.5, roughness: 0.9, alphaToCoverage: false });
       const halfW = (v.impW / 2).toFixed(3);
       mat.onBeforeCompile = (s) => {
+        boostAlpha(s, IMP_H);
         s.vertexShader = s.vertexShader
           .replace(
             '#include <defaultnormal_vertex>',

@@ -30,7 +30,7 @@ await page.addInitScript((q) => {
   Math.random = (() => { let a = 12345; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
 }, quality);
 await page.goto(url);
-await page.waitForFunction(() => window.__powerslide && window.__powerslide.game.mode === 'title', null, { timeout: 180000 });
+await page.waitForFunction(() => window.__powerslide && window.__powerslide.game.mode === 'title', null, { timeout: 590000 });
 await page.waitForTimeout(1500);
 
 const views = {
@@ -77,9 +77,9 @@ for (const [name, v] of Object.entries(views)) {
     camera.lookAt(p.x + fx * v.ahead, p.y + v.lookUp, p.z + fz * v.ahead);
     camera.fov = 60;
     camera.updateProjectionMatrix();
-    for (let i = 0; i < 3; i++) { P.renderFrame ? P.renderFrame() : renderer.render(scene, camera); await new Promise((r) => setTimeout(r, 50)); }
+    for (let i = 0; i < 1; i++) { P.renderFrame ? P.renderFrame() : renderer.render(scene, camera); await new Promise((r) => setTimeout(r, 50)); }
   }, v);
-  await page.screenshot({ path: `${out}/${name}.png`, timeout: 180000 });
+  await page.screenshot({ path: `${out}/${name}.png`, timeout: 590000 });
   console.log('shot', name);
 }
 await browser.close();

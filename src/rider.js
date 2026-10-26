@@ -6,7 +6,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { trackLoad } from './ground.js';
+import { SkeletonDriver } from './ik.js';
 import { RiderPose, DECK_HEIGHT, THIGH, SHIN, UPPER_ARM, FOREARM } from './riderpose.js';
 
 export { DECK_HEIGHT };
@@ -70,6 +72,39 @@ const boardParts = new GLTFLoader().loadAsync(BOARD_URL).then((gltf) => {
   return parts;
 });
 trackLoad(boardParts);
+
+const RIDER_URL = new URL('./assets/models/rider.glb', import.meta.url).href;
+const riderParts = new GLTFLoader().loadAsync(RIDER_URL).then((gltf) => {
+  const materials = {
+    // One-piece race leathers: the design is in the vertex colours.
+    leather: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.4 }),
+    helmetShell: new THREE.MeshPhysicalMaterial({ color: '#f2f2f0', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }),
+    visor: new THREE.MeshPhysicalMaterial({ color: '#0b0d12', metalness: 0.9, roughness: 0.06, clearcoat: 1 }),
+    shoeUpper: new THREE.MeshStandardMaterial({ color: '#16161a', roughness: 0.75 }),
+    shoeSole: new THREE.MeshStandardMaterial({ color: '#e8e4da', roughness: 0.85 }),
+    gloveLeather: new THREE.MeshStandardMaterial({ color: '#141416', roughness: 0.6 }),
+    puck: new THREE.MeshStandardMaterial({ color: '#1f5fd6', roughness: 0.35 }),
+  };
+  const parts = { scene: gltf.scene, materials };
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh || o.isSkinnedMesh) {
+      if (o.isGroup && ['helmet', 'shoe', 'glove'].includes(o.name)) {
+        // Multi-material parts import as a group of primitives.
+        const meshes = o.children.filter((c) => c.isMesh);
+        parts[o.name] = {
+          geometry: mergeGeometries(meshes.map((c) => c.geometry), true),
+          material: meshes.map((c) => materials[c.material.name] ?? c.material),
+        };
+      }
+      return;
+    }
+    if (['helmet', 'shoe', 'glove'].includes(o.name)) {
+      parts[o.name] = { geometry: o.geometry, material: materials[o.material.name] ?? o.material };
+    }
+  });
+  return parts;
+});
+trackLoad(riderParts);
 
 const _a = new THREE.Vector3();
 const _c = new THREE.Vector3();
@@ -219,6 +254,51 @@ export class RiderModel {
       this.rig.add(this.m[k]);
     }
     this.rig.add(this.head);
+    riderParts.then((parts) => this.useModel(parts));
+  }
+
+  // Swaps the capsule stand-in for the skinned model from tools/blender/rider.py.
+  useModel(parts) {
+    const scene = cloneSkinned(parts.scene);
+    const bones = {};
+    let body = null;
+    const rigid = {};
+    scene.traverse((o) => {
+      if (o.isBone) bones[o.name] = o;
+      if (o.isSkinnedMesh) body = o;
+      else if (o.isMesh) rigid[o.name] = o;
+    });
+    if (!body || !bones.hips) return;
+    body.material = parts.materials.leather;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    body.frustumCulled = false;
+    for (const k of Object.keys(rigid)) rigid[k].removeFromParent();
+    this.rig.add(scene);
+    this.driver = new SkeletonDriver(this.rig, bones.hips, bones);
+    // Blender bones point along their local +Y.
+    for (const it of this.driver.items) it.restDir.set(0, 1, 0);
+
+    for (const k of Object.keys(this.m)) if (!k.startsWith('bib')) this.m[k].visible = false;
+    this.head.clear();
+    const helmet = new THREE.Mesh(parts.helmet.geometry, parts.helmet.material);
+    helmet.rotation.y = Math.PI / 2; // modelled facing +X; the head group faces -Z
+    helmet.castShadow = true;
+    this.head.add(helmet);
+    const rigidPart = (part, rotY, offset) => {
+      const g = new THREE.Group();
+      const mesh = new THREE.Mesh(part.geometry, part.material);
+      mesh.rotation.y = rotY;
+      mesh.position.copy(offset);
+      mesh.castShadow = true;
+      g.add(mesh);
+      this.rig.add(g);
+      return g;
+    };
+    // Shoes: toe along +X in the model; the stance yaw expects +Z.
+    const shoeOff = new THREE.Vector3(0, 0.02, -0.045);
+    this.shoes = [rigidPart(parts.shoe, -Math.PI / 2, shoeOff), rigidPart(parts.shoe, -Math.PI / 2, shoeOff)];
+    this.gloves = [rigidPart(parts.glove, 0, new THREE.Vector3()), rigidPart(parts.glove, Math.PI, new THREE.Vector3())];
   }
 
   // Solve and show a pose; see RiderPose.solve for the parameters.
@@ -229,6 +309,34 @@ export class RiderModel {
   applyPose(pose) {
     const J = pose.joints;
     const m = this.m;
+    this.head.position.copy(J.head);
+    this.head.rotation.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
+    // Bibs sit on the torso surface, facing the way the chest points.
+    const up = pose.torsoDir;
+    _bz.copy(pose.chestFacing).addScaledVector(up, -pose.chestFacing.dot(up)).normalize();
+    _bx.crossVectors(up, _bz);
+    _bm.makeBasis(_bx, up, _bz);
+    const depth = this.driver ? 0.118 : 0.163;
+    for (const [bib, side] of [[m.bibFront, 1], [m.bibBack, -1]]) {
+      bib.quaternion.setFromRotationMatrix(_bm);
+      if (side < 0) bib.rotateY(Math.PI);
+      bib.position.copy(J.chest).addScaledVector(up, -0.06).addScaledVector(_bz, depth * side);
+    }
+    if (this.driver) {
+      this.driver.apply(pose);
+      const [sf, sr] = this.shoes;
+      sf.position.copy(J.footF);
+      sr.position.copy(J.footR);
+      sf.rotation.set(0, pose.footYawF, pose.footRollF, 'ZYX');
+      sr.rotation.set(0, pose.footYawR, pose.footRollR, 'ZYX');
+      // Gloves point down the forearm.
+      const [gf, gr] = this.gloves;
+      gf.position.copy(J.haF);
+      gr.position.copy(J.haR);
+      gf.quaternion.setFromUnitVectors(Y, _c.subVectors(J.haF, J.elF).normalize());
+      gr.quaternion.setFromUnitVectors(Y, _c.subVectors(J.haR, J.elR).normalize());
+      return;
+    }
     place(m.thighF, J.hipF, J.kneeF);
     place(m.thighR, J.hipR, J.kneeR);
     place(m.shinF, J.kneeF, J.footF);
@@ -245,18 +353,6 @@ export class RiderModel {
     m.shoeR.rotation.set(0, pose.footYawR, pose.footRollR, 'ZYX');
     m.handF.position.copy(J.haF);
     m.handR.position.copy(J.haR);
-    this.head.position.copy(J.head);
-    // Bibs sit on the torso surface, facing the way the chest points.
-    const up = pose.torsoDir;
-    _bz.copy(pose.chestFacing).addScaledVector(up, -pose.chestFacing.dot(up)).normalize();
-    _bx.crossVectors(up, _bz);
-    _bm.makeBasis(_bx, up, _bz);
-    for (const [bib, side] of [[m.bibFront, 1], [m.bibBack, -1]]) {
-      bib.quaternion.setFromRotationMatrix(_bm);
-      if (side < 0) bib.rotateY(Math.PI);
-      bib.position.copy(J.chest).addScaledVector(up, -0.06).addScaledVector(_bz, 0.163 * side);
-    }
-    this.head.rotation.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
   }
 
   spinWheels(dist) {

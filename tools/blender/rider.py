@@ -1,0 +1,419 @@
+"""Builds the downhill rider in Blender and exports src/assets/models/rider.glb.
+
+  body     skinned one-piece race leathers (metaball body, auto-weighted),
+           with the colour design baked into vertex colours
+  helmet   full-face aero helmet with visor (rigid, follows the head joint)
+  shoe     skate shoe (rigid, one per foot)
+  glove    glove with slide puck on the palm (rigid, one per hand)
+
+The skeleton matches HUMANOID_SEGMENTS in src/ik.js (bone names below), so
+SkeletonDriver can drive it from the RiderPose joints. The bind pose is built
+in RiderPose rig space: deck top at y = 0, facing +X, front (left) side at -Z.
+Blender is Z-up, so a rig point (x, y, z) is Blender (x, -z, y).
+
+  python tools/blender/rider.py
+"""
+import math
+import os
+
+import bpy  # noqa: I001
+import bmesh
+from mathutils import Vector
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+OUT = os.path.join(ROOT, 'src', 'assets', 'models')
+
+
+def R(x, y, z):
+    """Rig space -> Blender space."""
+    return Vector((x, -z, y))
+
+
+# Bind-pose joints in rig space (standing, arms in a relaxed A-pose).
+J = {
+    'hip': (0.0, 0.95, 0.0),
+    'hipF': (0.0, 0.95, -0.1), 'hipR': (0.0, 0.95, 0.1),
+    'kneeF': (0.02, 0.5, -0.11), 'kneeR': (0.02, 0.5, 0.11),
+    'footF': (0.0, 0.05, -0.12), 'footR': (0.0, 0.05, 0.12),
+    'chest': (0.0, 1.45, 0.0), 'neck': (0.0, 1.55, 0.0), 'head': (0.0, 1.73, 0.0),
+    'shF': (0.0, 1.42, -0.19), 'shR': (0.0, 1.42, 0.19),
+    'elF': (0.0, 1.14, -0.29), 'elR': (0.0, 1.14, 0.29),
+    'haF': (0.02, 0.87, -0.36), 'haR': (0.02, 0.87, 0.36),
+}
+J = {k: R(*v) for k, v in J.items()}
+
+# bone name: (head joint, tail joint, parent)
+BONES = {
+    'hips': ('hip', None, None),
+    'spine': ('hip', 'neck', 'hips'),
+    'head': ('neck', 'head', 'spine'),
+    'thighF': ('hipF', 'kneeF', 'hips'),
+    'shinF': ('kneeF', 'footF', 'thighF'),
+    'thighR': ('hipR', 'kneeR', 'hips'),
+    'shinR': ('kneeR', 'footR', 'thighR'),
+    'upperArmF': ('shF', 'elF', 'spine'),
+    'forearmF': ('elF', 'haF', 'upperArmF'),
+    'upperArmR': ('shR', 'elR', 'spine'),
+    'forearmR': ('elR', 'haR', 'upperArmR'),
+}
+
+COL = {
+    'red': (0.62, 0.035, 0.04),
+    'white': (0.86, 0.86, 0.84),
+    'black': (0.03, 0.03, 0.035),
+    'grey': (0.25, 0.26, 0.28),
+}
+
+
+def mat(name, colour=(0.8, 0.8, 0.8), rough=0.5, metal=0.0):
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    b = m.node_tree.nodes['Principled BSDF']
+    b.inputs['Base Color'].default_value = (*colour, 1)
+    b.inputs['Roughness'].default_value = rough
+    b.inputs['Metallic'].default_value = metal
+    return m
+
+
+# A lone metaball's surface sits at about 0.58 of its radius (field
+# (1 - (d/r)^2)^3 * stiffness 2 against threshold 0.6), so sizes below are
+# visible half-extents and get scaled up by this.
+MB = 1.72
+
+
+def ellipsoid(mb, c, sx, sy, sz):
+    """Metaball ellipsoid with the given visible half-extents."""
+    sx, sy, sz = sx * MB, sy * MB, sz * MB
+    m = max(sx, sy, sz)
+    e = mb.elements.new()
+    e.type = 'ELLIPSOID'
+    e.co = c
+    e.radius = m
+    e.size_x, e.size_y, e.size_z = sx / m, sy / m, sz / m
+    return e
+
+
+def seg_dist(p, a, b):
+    ab = b - a
+    t = max(0.0, min(1.0, (p - a).dot(ab) / ab.length_squared))
+    return (p - (a + ab * t)).length, t
+
+
+def body():
+    mb = bpy.data.metaballs.new('body')
+    mb.resolution = 0.018
+    mb.render_resolution = 0.018
+    mb.threshold = 0.6
+    ob = bpy.data.objects.new('bodyMB', mb)
+    bpy.context.scene.collection.objects.link(ob)
+
+    def capsule(a, b, r, stiff=2.0):
+        e = mb.elements.new()
+        e.type = 'CAPSULE'
+        mid = (a + b) / 2
+        d = b - a
+        e.co = mid
+        e.radius = r * MB
+        e.size_x = d.length / 2
+        e.rotation = Vector((1, 0, 0)).rotation_difference(d.normalized())
+        e.stiffness = stiff
+        return e
+
+    def ellip(c, sx, sy, sz, r=None, stiff=2.0):
+        # Ellipsoid sizes scale the radius, so pass half-extents and normalise.
+        sx, sy, sz = sx * MB, sy * MB, sz * MB
+        m = max(sx, sy, sz)
+        e = mb.elements.new()
+        e.type = 'ELLIPSOID'
+        e.co = c
+        e.radius = m
+        e.size_x, e.size_y, e.size_z = sx / m, sy / m, sz / m
+        e.stiffness = stiff
+        return e
+
+    def taper(a, b, r0, r1, n=6, stiff=2.0):
+        for i in range(n):
+            t0, t1 = i / n, (i + 1) / n
+            capsule(a.lerp(b, t0), a.lerp(b, t1), r0 + (r1 - r0) * (t0 + t1) / 2, stiff)
+
+    # Legs: thigh tapers to the knee, calf bulges then narrows to the ankle.
+    for s in 'FR':
+        taper(J['hip' + s], J['knee' + s], 0.082, 0.056)
+        k, f = J['knee' + s], J['foot' + s]
+        taper(k, k.lerp(f, 0.35), 0.056, 0.058, 3)
+        taper(k.lerp(f, 0.35), f, 0.058, 0.04, 3)
+        sh, el, ha = J['sh' + s], J['el' + s], J['ha' + s]
+        taper(sh, el, 0.05, 0.042, 3)
+        taper(el, ha, 0.042, 0.032, 3)
+        # Deltoid.
+        ellip(sh + Vector((0, 0, -0.01)), 0.055, 0.06, 0.055)
+    hip, neck = J['hip'], J['neck']
+    up = (neck - hip).normalized()
+    # Pelvis and seat, waist, rib cage, upper chest (wider across than deep).
+    # Overlapping elements fuse and swell, so the torso parts are trimmed a bit.
+    k = 0.95
+    # Half-extents: (front-back, side to side, height).
+    ellip(hip + up * 0.03 + Vector((-0.01, 0, 0)), 0.1 * k, 0.16 * k, 0.12 * k)
+    ellip(hip + up * 0.2, 0.095 * k, 0.135 * k, 0.14 * k)
+    ellip(hip + up * 0.36 + Vector((0.01, 0, 0)), 0.11 * k, 0.16 * k, 0.15 * k)
+    ellip(hip + up * 0.49, 0.09 * k, 0.19 * k, 0.08 * k)
+    capsule(neck - up * 0.06, neck + up * 0.08, 0.05)
+    bpy.context.view_layer.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    o = bpy.context.active_object
+    o.name = 'body'
+    # Trim the open ends: remove anything below the ankle (inside the shoe)
+    # and above the neck (inside the helmet), and beyond the wrist (glove).
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    kill = []
+    for v in bm.verts:
+        p = v.co
+        if p.z < J['footF'].z + 0.02:
+            kill.append(v)
+    bmesh.ops.delete(bm, geom=kill, context='VERTS')
+    bm.to_mesh(o.data)
+    bm.free()
+    dec = o.modifiers.new('dec', 'DECIMATE')
+    dec.ratio = 0.5
+    bpy.ops.object.modifier_apply(modifier='dec')
+    sm = o.modifiers.new('smooth', 'SMOOTH')
+    sm.factor = 0.4
+    sm.iterations = 6
+    bpy.ops.object.modifier_apply(modifier='smooth')
+    for p in o.data.polygons:
+        p.use_smooth = True
+    paint_leathers(o)
+    o.data.materials.append(mat('leather', (1, 1, 1), 0.45))
+    return o
+
+
+def paint_leathers(o):
+    """Race-leather design as vertex colours: red suit, white shoulders,
+    arm and leg stripes, black hips, knee sliders and lower legs."""
+    me = o.data
+    attr = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
+    for v in me.vertices:
+        p = v.co
+        c = COL['red']
+        # Distance to each limb segment decides the region.
+        dl = {}
+        for k, (a, b, _) in BONES.items():
+            if b:
+                dl[k] = seg_dist(p, J[a], J[b])
+        limb = min(dl, key=lambda k: dl[k][0])
+        t = dl[limb][1]
+        if limb.startswith('shin'):
+            s = limb[-1]
+            c = COL['black'] if t > 0.5 else COL['red']
+            # Knee slider on the front of the knee.
+            kv = p - J['knee' + s]
+            if kv.length < 0.09 and kv.x > 0.01:
+                c = COL['black']
+        elif limb.startswith('thigh'):
+            # White stripe down the outside of each thigh.
+            side = p - (J['hip' + limb[-1]].lerp(J['knee' + limb[-1]], t))
+            outward = 1 if limb[-1] == 'F' else -1  # front leg's outside is Blender +Y
+            c = COL['white'] if side.y * outward > 0.045 and abs(side.x) < 0.035 else COL['red']
+            kv = p - J['knee' + limb[-1]]
+            if kv.length < 0.09 and kv.x > 0.01:
+                c = COL['black']
+        elif limb.startswith('upperArm'):
+            c = COL['white'] if t < 0.45 else COL['red']
+        elif limb.startswith('forearm'):
+            c = COL['black'] if t > 0.75 else COL['red']
+        else:  # torso
+            h = (p - J['hip']).dot((J['neck'] - J['hip']).normalized())
+            if h < 0.12:
+                c = COL['black']
+            elif h > 0.42:
+                c = COL['white']
+            # Hump stripe down the back.
+            if p.x < -0.06 and abs(p.y) < 0.035 and h > 0.15:
+                c = COL['black']
+        attr.data[v.index].color = (*c, 1)
+
+
+def armature(body_obj):
+    arm = bpy.data.armatures.new('rig')
+    ob = bpy.data.objects.new('rig', arm)
+    bpy.context.scene.collection.objects.link(ob)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode='EDIT')
+    eb = {}
+    for name, (a, b, parent) in BONES.items():
+        bone = arm.edit_bones.new(name)
+        bone.head = J[a]
+        bone.tail = J[b] if b else J[a] + Vector((0, 0, 0.1))
+        if parent:
+            bone.parent = eb[parent]
+        eb[name] = bone
+    bpy.ops.object.mode_set(mode='OBJECT')
+    # Automatic (heat) weights.
+    bpy.ops.object.select_all(action='DESELECT')
+    body_obj.select_set(True)
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    # The hips bone has no length worth weighting; spine carries the pelvis.
+    return ob
+
+
+def helmet():
+    """Full-face aero helmet: shell with a tapered tail, chin bar and visor."""
+    head = J['head']
+    mb = bpy.data.metaballs.new('helmet')
+    mb.resolution = 0.012
+    o = bpy.data.objects.new('helmetMB', mb)
+    bpy.context.scene.collection.objects.link(o)
+    ellipsoid(mb, head + Vector((0, 0, 0.01)), 0.135, 0.118, 0.135)
+    # Aero tail sweeping back and down.
+    for a, b, r in (((-0.04, 0.01), (-0.13, -0.02), 0.085), ((-0.12, -0.02), (-0.2, -0.05), 0.05)):
+        t = mb.elements.new()
+        t.type = 'CAPSULE'
+        pa = head + Vector((a[0], 0, a[1]))
+        pb = head + Vector((b[0], 0, b[1]))
+        t.co = (pa + pb) / 2
+        t.size_x = (pb - pa).length / 2
+        t.rotation = Vector((1, 0, 0)).rotation_difference((pb - pa).normalized())
+        t.radius = r * MB * 0.8
+    ellipsoid(mb, head + Vector((0.075, 0, -0.095)), 0.07, 0.1, 0.055)
+    # Convert only this object: converting applies modifiers (e.g. the body's skin).
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = o
+    o.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    shell = bpy.context.active_object
+    shell.name = 'helmet'
+    dec = shell.modifiers.new('dec', 'DECIMATE')
+    dec.ratio = 0.35
+    bpy.ops.object.modifier_apply(modifier='dec')
+    for p in shell.data.polygons:
+        p.use_smooth = True
+    shell.data.materials.append(mat('helmetShell', (0.9, 0.9, 0.9), 0.25))
+    shell.data.materials.append(mat('visor', (0.05, 0.06, 0.08), 0.05, 0.6))
+    # Visor: a smooth curved patch just proud of the shell's front.
+    bm = bmesh.new()
+    rows = []
+    na, ne = 16, 6
+    for i in range(ne + 1):
+        el = math.radians(-30 + 48 * i / ne)
+        row = []
+        for j in range(na + 1):
+            az = math.radians(-58 + 116 * j / na)
+            c = head + Vector((0, 0, 0.01))
+            row.append(bm.verts.new(c + Vector((0.139 * math.cos(el) * math.cos(az), 0.122 * math.cos(el) * math.sin(az), 0.139 * math.sin(el)))))
+        rows.append(row)
+    for i in range(ne):
+        for j in range(na):
+            f = bm.faces.new((rows[i][j], rows[i][j + 1], rows[i + 1][j + 1], rows[i + 1][j]))
+            f.material_index = 1
+            f.smooth = True
+    bm.from_mesh(shell.data)
+    bm.to_mesh(shell.data)
+    bm.free()
+    # Shift so the origin is the head joint (the game places it there).
+    shell.data.transform(__import__('mathutils').Matrix.Translation(-head))
+    return shell
+
+
+def shoe():
+    """Low skate shoe, origin at the ankle, toe along +X (rig facing)."""
+    bm = bmesh.new()
+    sole_r = 0.0
+    prof = []  # (x along foot, half width, top height)
+    for k in range(13):
+        t = k / 12
+        x = -0.07 + t * 0.29
+        w = 0.042 + 0.012 * math.sin(t * math.pi * 0.9)
+        if t > 0.85:
+            w *= math.sqrt(max(0.0, 1 - ((t - 0.85) / 0.15) ** 2)) * 0.9 + 0.1
+        top = 0.075 - 0.045 * max(0.0, (t - 0.35) / 0.65) ** 0.8
+        prof.append((x, w, top))
+    rings = []
+    for x, w, top in prof:
+        ring = []
+        for k in range(12):
+            a = k / 12 * math.tau
+            y = math.cos(a) * w
+            z = (math.sin(a) * 0.5 + 0.5) * (top + 0.02) - 0.07
+            ring.append(bm.verts.new((x, y, max(z, -0.07))))
+        rings.append(ring)
+    for i in range(len(rings) - 1):
+        for k in range(12):
+            bm.faces.new((rings[i][k], rings[i][(k + 1) % 12], rings[i + 1][(k + 1) % 12], rings[i + 1][k]))
+    bm.faces.new(list(reversed(rings[0])))
+    bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new('shoe')
+    bm.to_mesh(me)
+    bm.free()
+    o = bpy.data.objects.new('shoe', me)
+    bpy.context.scene.collection.objects.link(o)
+    me.materials.append(mat('shoeUpper', (0.04, 0.04, 0.05), 0.7))
+    me.materials.append(mat('shoeSole', (0.85, 0.83, 0.78), 0.8))
+    for p in me.polygons:
+        p.use_smooth = True
+        if p.center.z < -0.055:
+            p.material_index = 1
+    return o
+
+
+def glove():
+    """Glove with a slide puck on the palm. Origin at the wrist, fingers
+    along +Z (Blender), i.e. down the forearm direction; palm faces -Y."""
+    mb = bpy.data.metaballs.new('glove')
+    mb.resolution = 0.008
+    o = bpy.data.objects.new('gloveMB', mb)
+    bpy.context.scene.collection.objects.link(o)
+    ellipsoid(mb, (0, 0, 0.06), 0.05, 0.026, 0.055)
+    ellipsoid(mb, (0, 0.008, 0.13), 0.046, 0.022, 0.05)
+    cuff = mb.elements.new()
+    cuff.type = 'CAPSULE'
+    cuff.co = (0, 0, 0.0)
+    cuff.radius = 0.04 * MB
+    cuff.size_x = 0.02
+    cuff.rotation = Vector((1, 0, 0)).rotation_difference(Vector((0, 0, 1)))
+    # Convert only this object: converting applies modifiers (e.g. the body's skin).
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = o
+    o.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    g = bpy.context.active_object
+    g.name = 'glove'
+    for p in g.data.polygons:
+        p.use_smooth = True
+    g.data.materials.append(mat('gloveLeather', (0.06, 0.06, 0.07), 0.6))
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.048, depth=0.012, vertices=24, location=(0, -0.03, 0.08),
+                                        rotation=(math.pi / 2, 0, 0))
+    puck = bpy.context.active_object
+    puck.data.materials.append(mat('puck', (0.1, 0.3, 0.85), 0.35))
+    bpy.ops.object.select_all(action='DESELECT')
+    g.select_set(True)
+    puck.select_set(True)
+    bpy.context.view_layer.objects.active = g
+    bpy.ops.object.join()
+    g = bpy.context.active_object
+    dec = g.modifiers.new('dec', 'DECIMATE')
+    dec.ratio = 0.5
+    bpy.ops.object.modifier_apply(modifier='dec')
+    return g
+
+
+if __name__ == '__main__':
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    b = body()
+    rig = armature(b)
+    h = helmet()
+    s = shoe()
+    g = glove()
+    for o in (b, h, s, g):
+        print(o.name, len(o.data.polygons), 'faces')
+    os.makedirs(OUT, exist_ok=True)
+    path = os.path.join(OUT, 'rider.glb')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', export_materials='EXPORT', export_image_format='NONE',
+                              export_normals=True, export_texcoords=False, export_apply=False, use_selection=True,
+                              export_skins=True, export_vertex_color='ACTIVE')
+    print('wrote', path)

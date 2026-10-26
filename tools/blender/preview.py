@@ -12,10 +12,15 @@ import bpy  # noqa: I001
 from mathutils import Vector
 
 
-def main(path, out, dist=None):
+def main(path, out, dist=None, only=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=path)
     objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    if only:
+        for o in objs:
+            if not o.name.startswith(only):
+                o.hide_render = True
+        objs = [o for o in objs if o.name.startswith(only)]
     lo = Vector((1e9, 1e9, 1e9))
     hi = -lo
     for o in objs:
@@ -60,4 +65,4 @@ def main(path, out, dist=None):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], float(sys.argv[3]) if len(sys.argv) > 3 else None)
+    main(sys.argv[1], sys.argv[2], float(sys.argv[3]) if len(sys.argv) > 3 else None, sys.argv[4] if len(sys.argv) > 4 else None)
