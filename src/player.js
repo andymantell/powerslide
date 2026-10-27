@@ -467,6 +467,12 @@ export class Player {
     const absD = Math.abs(p.d);
     const rail = RoadMesh.railSide(this.road.c[Math.round(p.s / DS)]) === side;
     const limit = rail ? RAIL_OFFSET - 0.35 : GRAVEL_EDGE;
+    // Urethane wheels stop dead in loose gravel: any real speed and you go
+    // over the nose.
+    if (!rail && absD > HALF_WIDTH + this.diff.gravelDepth && this.speed > this.diff.gravelCrashSpeed) {
+      this.crash('The wheels dug into the gravel');
+      return;
+    }
     if (absD < limit) return;
     const vSide = (this.vel.x * p.rightX + this.vel.y * p.rightZ) * side;
     if (rail) {

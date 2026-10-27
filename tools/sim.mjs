@@ -218,6 +218,25 @@ for (const [name, inp] of [['upright', {}], ['tucked', { tuck: 1 }]]) {
   console.log(`${name}: ${crash !== null ? `crashed at ${crash.toFixed(1)} s (${p.crashReason}) at ${fmt(p.speed)}` : `fine, ${fmt(p.speed)}, wobble ${p.wobble.toFixed(2)}`}`);
 }
 
+console.log('\n== Running into the edge of the road (rail on the left, gravel verge on the right)');
+for (const [what, side] of [['guardrail', -1], ['gravel', 1]]) {
+  const rows = [];
+  for (const kmh of [15, 30, 50, 70]) {
+    for (const deg of [3, 8, 15, 30]) {
+      const p = make(0, kmh / 3.6);
+      p.road.c.fill(side < 0 ? 1 : 0); // mountain on the right puts the rail on the left
+      const a = (side * deg * Math.PI) / 180;
+      p.pos.x = side * 3.5;
+      p.yaw = a;
+      p.vel.set(Math.sin(a) * (kmh / 3.6), -Math.cos(a) * (kmh / 3.6));
+      run(p, 3, { steer: 0 });
+      rows.push(`${String(kmh).padStart(2)} km/h ${String(deg).padStart(2)}°: ${p.crashed ? 'CRASH' : 'ok'}`);
+    }
+  }
+  console.log(`${what}:`);
+  for (let i = 0; i < rows.length; i += 4) console.log('  ' + rows.slice(i, i + 4).join('   '));
+}
+
 console.log('\n== A crude autopilot down a generated road, plus step cost');
 {
   const road = new Road(42);

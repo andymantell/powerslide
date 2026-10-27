@@ -57,7 +57,12 @@ export const TUNING = {
   leanRate: 5.5, recover: 9,
   wobble: true, wobbleSpeed: 20, highside: true, highsideSlip: 1.05, highsideSpeed: 13,
   dirtGrip: 0.55,
-  railCrashSpeed: 4.5,
+  // Hitting the guardrail faster than this sideways (m/s) throws you; slower
+  // is a scrape. 2.2 m/s is about 10° at 45 km/h or 6° at 75 km/h.
+  railCrashSpeed: 2.2,
+  // Running this far (m) into the gravel verge above gravelCrashSpeed (m/s)
+  // digs the wheels in.
+  gravelDepth: 0.5, gravelCrashSpeed: 6,
 };
 
 // Traffic for endless mode; levels set their own.
