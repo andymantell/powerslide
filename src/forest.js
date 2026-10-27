@@ -54,7 +54,9 @@ function shapeFoliage(geo, H) {
 }
 
 export class Forest {
-  constructor(scene, renderer, q = {}) {
+  // species: the mesh name prefix in conifers.glb (tools/blender/tree.py SPECIES).
+  constructor(scene, renderer, q = {}, species = 'spruce') {
+    this.species = species;
     this.scene = scene;
     this.renderer = renderer;
     this.fullRadius = q.treeLodRadius ?? 90;
@@ -106,9 +108,9 @@ export class Forest {
     gltf.scene.traverse((o) => {
       if (o.isMesh) byName[o.name] = o.geometry;
     });
-    for (let v = 0; byName[`spruce${v}_trunk`]; v++) {
-      const trunk = byName[`spruce${v}_trunk`];
-      const fol = byName[`spruce${v}_foliage`];
+    for (let v = 0; byName[`${this.species}${v}_trunk`]; v++) {
+      const trunk = byName[`${this.species}${v}_trunk`];
+      const fol = byName[`${this.species}${v}_foliage`];
       fol.computeBoundingBox();
       const H = fol.boundingBox.max.y;
       shapeFoliage(fol, H);

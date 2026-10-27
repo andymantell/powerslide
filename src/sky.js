@@ -5,19 +5,21 @@
 // the sun's glow, so distant ridges fade into the same sky colour.
 import * as THREE from 'three';
 
-// Look of the default biome. Other biomes can pass their own to createSky.
+// Each biome's look, keyed by the name in its biomes.js `look.atmosphere`.
 export const ATMOSPHERE = {
-  sunAzimuth: -2.22, // radians, measured in the xz plane from +X
-  sunElevation: 0.43, // radians above the horizon
-  zenith: '#1f56b0',
-  horizon: '#bcd0e6',
-  haze: '#b9c6d3', // fog colour away from the sun
-  sunHaze: '#f2cf9c', // fog colour towards the sun
-  sunColor: '#fff0d8',
-  sunIntensity: 3.2,
-  cloudCover: 0.42,
-  cloudColor: '#ffffff',
-  envIntensity: 0.55,
+  alpine: {
+    sunAzimuth: -2.22, // radians, measured in the xz plane from +X
+    sunElevation: 0.43, // radians above the horizon
+    zenith: '#1f56b0',
+    horizon: '#bcd0e6',
+    haze: '#b9c6d3', // fog colour away from the sun
+    sunHaze: '#f2cf9c', // fog colour towards the sun
+    sunColor: '#fff0d8',
+    sunIntensity: 3.2,
+    cloudCover: 0.42,
+    cloudColor: '#ffffff',
+    envIntensity: 0.55,
+  },
 };
 
 export const SUN_DIR = new THREE.Vector3();
@@ -25,7 +27,7 @@ function sunDir(a) {
   const ce = Math.cos(a.sunElevation);
   return new THREE.Vector3(Math.cos(a.sunAzimuth) * ce, Math.sin(a.sunElevation), Math.sin(a.sunAzimuth) * ce).normalize();
 }
-SUN_DIR.copy(sunDir(ATMOSPHERE));
+SUN_DIR.copy(sunDir(ATMOSPHERE.alpine));
 
 const v3 = (c) => {
   const col = new THREE.Color(c);
@@ -125,7 +127,7 @@ const skyFrag = `varying vec3 vDir;
     gl_FragColor = vec4(col, 1.0);
   }`;
 
-export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE) {
+export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE.alpine) {
   installFog(atmo);
   const sun3 = sunDir(atmo);
   SUN_DIR.copy(sun3);

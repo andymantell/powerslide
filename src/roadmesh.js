@@ -16,11 +16,11 @@ const BEHIND = 250;
 export const RAIL_THRESHOLD = 0.3; // |cliff| above this gets a guardrail on the valley side
 
 export class RoadMesh {
-  constructor(scene, road, renderer) {
+  constructor(scene, road, renderer, markings) {
     this.scene = scene;
     this.road = road;
     this.chunks = new Map();
-    this.roadMat = createRoadMaterial(renderer);
+    this.roadMat = createRoadMaterial(renderer, markings);
     const gravel = groundTexture('gravel', 'albedo', renderer);
     this.skirtMat = new THREE.MeshStandardMaterial({ map: gravel, color: '#dcd6cc', roughness: 1, side: THREE.DoubleSide });
     // Keep the up-facing normal on whichever face is seen.

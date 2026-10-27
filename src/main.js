@@ -8,9 +8,10 @@ import { Input } from './input.js';
 import { Audio } from './audio.js';
 import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
-import { createSky, SUN_DIR } from './sky.js';
+import { createSky, SUN_DIR, ATMOSPHERE } from './sky.js';
 import { Post } from './post.js';
-import { texturesReady } from './ground.js';
+import { texturesReady, GROUND_SETS } from './ground.js';
+import { MARKINGS } from './roadmat.js';
 import { Forest } from './forest.js';
 import { Boulders } from './boulders.js';
 import { Grass } from './grass.js';
@@ -19,6 +20,7 @@ import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
 import { registerOffline, keepSaves } from './pwa.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, ENDLESS_TRAFFIC, autoQuality } from './settings.js';
+import { lookOf } from './biomes.js';
 import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
 
 const $ = (id) => document.getElementById(id);
@@ -36,21 +38,30 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
+// The level to open with (?level=<id> or ?level=endless), else the next one to
+// play. Its biome's look (sky, ground, road paint, trees) is fixed for the
+// page; picking a level in another biome reloads the page into it.
+const params = new URLSearchParams(location.search);
+const wanted = params.get('level');
+const bootLevel = wanted === 'endless' ? null : BIOMES.flatMap((b) => b.levels).find((l) => l.id === wanted) || nextLevel();
+const look = lookOf(bootLevel && biomeOf(bootLevel));
+const pick = (map, key) => map[key] || map.alpine;
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12000);
-const { sky, sun } = createSky(scene, renderer, Q);
+const { sky, sun } = createSky(scene, renderer, Q, pick(ATMOSPHERE, look.atmosphere));
 const post = new Post(renderer, scene, camera, Q);
 
 // The world is rebuilt for each level (see loadWorld); start with a stub road.
 const road = new Road(1);
 road.ensure(START_S + 200);
-const terrain = new Terrain(scene, road, 12, Q, renderer);
-const forest = new Forest(scene, renderer, Q);
+const terrain = new Terrain(scene, road, 12, Q, renderer, pick(GROUND_SETS, look.ground));
+const forest = new Forest(scene, renderer, Q, look.species);
 terrain.forest = forest;
-const boulders = new Boulders(scene, renderer);
+const boulders = new Boulders(scene, renderer, pick(GROUND_SETS, look.ground));
 terrain.boulders = boulders;
 const grass = new Grass(scene, renderer, terrain, Q);
-const roadMesh = new RoadMesh(scene, road, renderer);
+const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
 const player = new Player(scene, road, terrain);
 const traffic = new Traffic(scene, road);
 const input = new Input();
@@ -248,6 +259,11 @@ async function toTitle() {
 
 async function selectLevel(level) {
   if (game.mode === 'loading') return;
+  if (JSON.stringify(lookOf(level && biomeOf(level))) !== JSON.stringify(look)) {
+    // Another biome's look: reload into it.
+    location.search = `?level=${level ? level.id : 'endless'}`;
+    return;
+  }
   if (level !== game.level || !level) await loadWorld(level);
   else player.reset(road.start);
   showIntro();
@@ -883,10 +899,7 @@ function frame(now) {
 // ---------------------------------------------------------------- boot
 async function boot() {
   await texturesReady();
-  const params = new URLSearchParams(location.search);
-  const wanted = params.get('level');
-  const level = wanted === 'endless' ? null : BIOMES.flatMap((b) => b.levels).find((l) => l.id === wanted) || nextLevel();
-  await loadWorld(level);
+  await loadWorld(bootLevel);
   // Warm up: settle the rider pose and a few cars.
   if (traffic.density > 0) for (let i = 0; i < 4; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
   player.animate(0.016);
@@ -916,4 +929,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });

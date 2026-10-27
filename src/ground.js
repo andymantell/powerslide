@@ -32,7 +32,7 @@ export function texturesReady() {
   return Promise.all(pending);
 }
 
-// Surface set for the default alpine biome; other biomes can swap names.
+// Surface sets per biome, keyed by the name in its biomes.js `look.ground`.
 export const GROUND_SETS = {
   alpine: { base: 'grass', rock: 'rock', gravel: 'gravel', snow: 'snow' },
 };

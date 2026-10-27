@@ -8,9 +8,9 @@ const MODEL = new URL('./assets/models/rocks.glb', import.meta.url).href;
 const MAX = 3000;
 
 export class Boulders {
-  constructor(scene, renderer) {
+  constructor(scene, renderer, groundSet) {
     this.scene = scene;
-    this.mat = createRockMaterial(renderer);
+    this.mat = createRockMaterial(renderer, groundSet);
     this.meshes = [];
     this.sources = new Set(); // Float32Arrays of [x, y, z, scale, yaw, tilt, variant]
     this.dirty = true;

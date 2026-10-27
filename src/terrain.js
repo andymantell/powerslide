@@ -16,7 +16,8 @@ const SHOULDER = 6.5;
 
 export class Terrain {
   // q: quality preset (nearRadius, nearSegs, farRadius, treeSpacing).
-  constructor(scene, road, seed = 99, q = {}, renderer) {
+  // groundSet: the biome's entry in GROUND_SETS.
+  constructor(scene, road, seed = 99, q = {}, renderer, groundSet) {
     this.scene = scene;
     this.nearRadius = q.nearRadius ?? 4;
     this.nearSegs = q.nearSegs ?? 64;
@@ -55,8 +56,8 @@ export class Terrain {
         );
     };
 
-    this.nearMat = createGroundMaterial(renderer, { simple: !q.groundDetail, patch: patch(true) });
-    this.farMat = createGroundMaterial(renderer, { far: true, patch: patch(false) });
+    this.nearMat = createGroundMaterial(renderer, { simple: !q.groundDetail, patch: patch(true), set: groundSet });
+    this.farMat = createGroundMaterial(renderer, { far: true, patch: patch(false), set: groundSet });
 
     this.forest = null; // set by the owner; receives each tile's tree list
     this.boulders = null;
