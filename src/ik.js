@@ -1,10 +1,10 @@
 // Inverse kinematics helpers, independent of any particular rider model.
 //
 // twoBoneIK solves a limb (hip-knee-foot, shoulder-elbow-hand) analytically.
-// SkeletonDriver takes the joint positions RiderPose produces and turns them
-// into bone rotations for any THREE.Bone skeleton: each bone is aimed from
-// its joint towards the next one, measured against the bone's own rest pose,
-// so bone axes, names and proportions of the rig don't matter.
+// SkeletonDriver poses any THREE.Bone skeleton from a RiderPose: a frame
+// function per bone says where the bone starts and which way it faces (aim
+// and twist), measured against the same frame in the bind pose, so bone
+// axes, names and proportions of the rig don't matter.
 
 import * as THREE from 'three';
 
@@ -28,70 +28,69 @@ export function twoBoneIK(root, target, l1, l2, pole, outJoint, outEnd) {
   outEnd.copy(root).addScaledVector(_dir, dist);
 }
 
-// The bone segments of a humanoid rig, in parent-before-child order, as
-// pairs of RiderPose joint names. Map each to a bone name when building a
-// SkeletonDriver; leave out any the rig doesn't have.
-export const HUMANOID_SEGMENTS = {
-  spine: ['hip', 'neck'],
-  head: ['neck', 'head'],
-  thighF: ['hipF', 'kneeF'],
-  shinF: ['kneeF', 'footF'],
-  thighR: ['hipR', 'kneeR'],
-  shinR: ['kneeR', 'footR'],
-  upperArmF: ['shF', 'elF'],
-  forearmF: ['elF', 'haF'],
-  upperArmR: ['shR', 'elR'],
-  forearmR: ['elR', 'haR'],
-};
-
 const _q = new THREE.Quaternion();
 const _pq = new THREE.Quaternion();
-const _wq = new THREE.Quaternion();
-const _a = new THREE.Vector3();
-const _b = new THREE.Vector3();
 const _rootQ = new THREE.Quaternion();
+const _a = new THREE.Vector3();
+const _x = new THREE.Vector3();
+const _z = new THREE.Vector3();
+const _m = new THREE.Matrix4();
+
+// A rotation from a primary direction (becomes +Y) and a reference direction
+// (+Z, made square to the primary one). Fills `out` and returns it.
+export function frameQuat(dir, ref, out) {
+  _z.copy(ref).addScaledVector(dir, -ref.dot(dir));
+  if (_z.lengthSq() < 1e-10) _z.set(Math.abs(dir.x) < 0.9 ? 1 : 0, Math.abs(dir.x) < 0.9 ? 0 : 1, 0).cross(dir);
+  _z.normalize();
+  _x.crossVectors(dir, _z);
+  _m.makeBasis(_x, dir, _z);
+  return out.setFromRotationMatrix(_m);
+}
 
 export class SkeletonDriver {
   // rigSpace: the Object3D whose local frame is RiderPose's rig space.
-  // hips: the root bone, moved to joints.hip.
-  // bones: { segmentName: THREE.Bone }, segment names from HUMANOID_SEGMENTS.
-  // Call it with the skeleton in its rest (bind) pose.
-  constructor(rigSpace, hips, bones, segments = HUMANOID_SEGMENTS) {
+  // rig: { boneName: frameFn } in parent-before-child order. frameFn(pose,
+  // out) sets out.pos (where the bone starts, rig space) and out.q (a
+  // rig-space orientation, e.g. from frameQuat) for that pose and returns out.
+  // bindPose: a pose that matches the skeleton's rest (bind) pose; each
+  // bone's rotation is driven by how its frame turns away from this one.
+  // Bones that the rig doesn't name are left in their rest pose. Every bone
+  // is moved to its joint as well as turned, so parts hanging off bones
+  // (helmet, shoes, gloves) always meet the joints the pose asks for.
+  constructor(rigSpace, bones, rig, bindPose) {
     this.rigSpace = rigSpace;
-    this.hips = hips;
     this.items = [];
     rigSpace.updateMatrixWorld(true);
-    for (const [name, [from, to]] of Object.entries(segments)) {
+    rigSpace.getWorldQuaternion(_rootQ).invert();
+    const out = { pos: new THREE.Vector3(), q: new THREE.Quaternion() };
+    for (const [name, frame] of Object.entries(rig)) {
       const bone = bones[name];
       if (!bone) continue;
-      // Rest direction: towards the bone's first child, in the bone's own space.
-      const child = bone.children.find((c) => c.isBone) || bone.children[0];
-      const restDir = child ? child.position.clone().normalize() : new THREE.Vector3(0, 1, 0);
-      this.items.push({ bone, from, to, restDir, restQ: bone.quaternion.clone() });
+      // Bone rest orientation in rig space, relative to its bind frame.
+      frame(bindPose, out);
+      const offset = bone.getWorldQuaternion(new THREE.Quaternion()).premultiply(_rootQ);
+      offset.premultiply(out.q.clone().invert());
+      this.items.push({ bone, frame, offset });
     }
+    this.out = out;
   }
 
   apply(pose) {
-    const J = pose.joints;
-    if (this.hips && this.hips.parent) {
-      _a.copy(J.hip);
-      this.rigSpace.localToWorld(_a);
-      this.hips.parent.worldToLocal(_a);
-      this.hips.position.copy(_a);
-    }
-    for (const it of this.items) it.bone.quaternion.copy(it.restQ);
+    const out = this.out;
+    this.rigSpace.updateWorldMatrix(true, false);
     this.rigSpace.getWorldQuaternion(_rootQ);
-    // Parents come first, so each bone is aimed after its parent has moved.
-    for (const it of this.items) {
-      const { bone } = it;
-      bone.parent.updateWorldMatrix(true, false);
-      bone.parent.getWorldQuaternion(_pq);
-      _wq.copy(_pq).multiply(bone.quaternion);
-      _a.copy(it.restDir).applyQuaternion(_wq); // current world direction
-      _b.subVectors(J[it.to], J[it.from]).applyQuaternion(_rootQ).normalize(); // wanted
-      _q.setFromUnitVectors(_a, _b);
-      _wq.premultiply(_q);
-      bone.quaternion.copy(_pq.invert()).multiply(_wq);
+    // Parents come first, so each bone is set after its parent has moved.
+    for (const { bone, frame, offset } of this.items) {
+      frame(pose, out);
+      const parent = bone.parent;
+      parent.updateWorldMatrix(true, false);
+      _a.copy(out.pos);
+      this.rigSpace.localToWorld(_a);
+      parent.worldToLocal(_a);
+      bone.position.copy(_a);
+      _q.copy(_rootQ).multiply(out.q).multiply(offset); // wanted world rotation
+      parent.getWorldQuaternion(_pq);
+      bone.quaternion.copy(_pq.invert()).multiply(_q);
     }
   }
 }

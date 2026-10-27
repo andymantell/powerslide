@@ -59,6 +59,7 @@ export class RiderPose {
     this.footRollF = 0; // soles follow the deck roll
     this.footRollR = 0;
     this.torsoDir = new THREE.Vector3(0, 1, 0);
+    this.bodyUp = new THREE.Vector3(0, 1, 0); // the whole-body lean, before the torso bends
     this.chestFacing = new THREE.Vector3(1, 0, 0); // which way the chest points
   }
 
@@ -99,6 +100,7 @@ export class RiderPose {
     const midZ = (FOOT_Z_FRONT + FOOT_Z_REAR) * 0.5 + tuck * 0.08 - weight * 0.11;
     _a.set(-0.04 - tuck * 0.05 - bend * 0.06 - spread * 0.03, hipH, 0).applyQuaternion(_q);
     J.hip.set(0, ANKLE, midZ).add(_a);
+    this.bodyUp.copy(Y).applyQuaternion(_q);
     // Air brake: the chest turns square to the road ahead, and the hips
     // follow it part of the way (the feet stay planted sideways).
     const twist = spread * 1.4;

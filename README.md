@@ -128,9 +128,13 @@ preset.
 - `tools/blender/*.py` build the models in `src/assets/models` with Blender's
   Python module (`pip install bpy` on Python 3.13): `tree.py` (spruces from
   branch cards), `rocks.py` (boulders), `board.py` (deck, trucks, wheels) and
-  `rider.py` (skinned rider in race leathers, helmet, shoes and gloves, rigged
-  to the bones `SkeletonDriver` in `src/ik.js` expects). `preview.py` renders
-  Cycles previews of any exported model.
+  `rider.py` (skinned rider in race leathers; the helmet, shoes and gloves hang
+  off the head, foot and hand bones, and `RIDER_RIG` in `src/rider.js` says how
+  each bone follows the pose). `preview.py` renders Cycles previews of any
+  exported model.
+- `/tools/poses/` (with `npm run dev` running) draws the rider in every pose
+  from several sides; `?pose=tuck,airbrake&view=front,side&zoom=neck&focus=haF`
+  narrows it down. `node tools/poses/shoot.mjs out.png [query]` saves it.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
   vista, trees, forest, verge, cutting, boulder) for before/after comparisons.

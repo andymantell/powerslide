@@ -2,12 +2,13 @@
 
   body     skinned one-piece race leathers (metaball body, auto-weighted),
            with the colour design baked into vertex colours
-  helmet   full-face aero helmet with visor (rigid, follows the head joint)
-  shoe     skate shoe (rigid, one per foot)
-  glove    glove with slide puck on the palm (rigid, one per hand)
+  helmet   full-face aero helmet with visor (rigid, parented to the head bone)
+  shoeF/R  skate shoes (rigid, parented to the foot bones)
+  gloveF/R gloves with slide pucks on the palms (rigid, parented to the hands)
 
-The skeleton matches HUMANOID_SEGMENTS in src/ik.js (bone names below), so
-SkeletonDriver can drive it from the RiderPose joints. The bind pose is built
+The bones are listed in BONES below; RIDER_RIG in src/rider.js tells
+SkeletonDriver how to aim each one from the RiderPose joints. The rigid parts
+hang off bones, so they stay joined to the body in every pose. The bind pose is built
 in RiderPose rig space: deck top at y = 0, facing +X, front (left) side at -Z.
 Blender is Z-up, so a rig point (x, y, z) is Blender (x, -z, y).
 
@@ -18,7 +19,7 @@ import os
 
 import bpy  # noqa: I001
 import bmesh
-from mathutils import Vector
+from mathutils import Quaternion, Vector
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'src', 'assets', 'models')
@@ -33,29 +34,50 @@ def R(x, y, z):
 J = {
     'hip': (0.0, 0.95, 0.0),
     'hipF': (0.0, 0.95, -0.1), 'hipR': (0.0, 0.95, 0.1),
-    'kneeF': (0.02, 0.5, -0.11), 'kneeR': (0.02, 0.5, 0.11),
+    # Knees and elbows slightly bent, so each limb has a clear bend direction.
+    'kneeF': (0.04, 0.5, -0.11), 'kneeR': (0.04, 0.5, 0.11),
     'footF': (0.0, 0.05, -0.12), 'footR': (0.0, 0.05, 0.12),
     'chest': (0.0, 1.45, 0.0), 'neck': (0.0, 1.55, 0.0), 'head': (0.0, 1.73, 0.0),
     'shF': (0.0, 1.42, -0.19), 'shR': (0.0, 1.42, 0.19),
-    'elF': (0.0, 1.14, -0.29), 'elR': (0.0, 1.14, 0.29),
+    'clav': (0.0, 1.42, 0.0),
+    'elF': (-0.04, 1.14, -0.29), 'elR': (-0.04, 1.14, 0.29),
     'haF': (0.02, 0.87, -0.36), 'haR': (0.02, 0.87, 0.36),
 }
 J = {k: R(*v) for k, v in J.items()}
+# Bone ends past the hands, feet (toes along +X) and head.
+J['handTipF'] = J['haF'] + (J['haF'] - J['elF']).normalized() * 0.1
+J['handTipR'] = J['haR'] + (J['haR'] - J['elR']).normalized() * 0.1
+J['toeF'], J['toeR'] = J['footF'] + Vector((0.15, 0, 0)), J['footR'] + Vector((0.15, 0, 0))
+J['headTop'] = J['head'] + Vector((0, 0, 0.12))
 
 # bone name: (head joint, tail joint, parent)
 BONES = {
     'hips': ('hip', None, None),
-    'spine': ('hip', 'neck', 'hips'),
-    'head': ('neck', 'head', 'spine'),
+    'spine': ('hip', 'chest', 'hips'),
+    'chest': ('chest', 'neck', 'spine'),
+    'neck': ('neck', 'head', 'chest'),
+    'head': ('head', 'headTop', 'neck'),
     'thighF': ('hipF', 'kneeF', 'hips'),
     'shinF': ('kneeF', 'footF', 'thighF'),
+    'footF': ('footF', 'toeF', 'shinF'),
     'thighR': ('hipR', 'kneeR', 'hips'),
     'shinR': ('kneeR', 'footR', 'thighR'),
-    'upperArmF': ('shF', 'elF', 'spine'),
+    'footR': ('footR', 'toeR', 'shinR'),
+    'clavF': ('clav', 'shF', 'chest'),
+    'upperArmF': ('shF', 'elF', 'clavF'),
     'forearmF': ('elF', 'haF', 'upperArmF'),
-    'upperArmR': ('shR', 'elR', 'spine'),
+    'handF': ('haF', 'handTipF', 'forearmF'),
+    'clavR': ('clav', 'shR', 'chest'),
+    'upperArmR': ('shR', 'elR', 'clavR'),
     'forearmR': ('elR', 'haR', 'upperArmR'),
+    'handR': ('haR', 'handTipR', 'forearmR'),
 }
+# Bones that shape the body's skin; the rest only carry rigid parts.
+SKIN = ('hips', 'spine', 'chest', 'neck', 'thighF', 'shinF', 'thighR', 'shinR', 'clavF', 'upperArmF', 'forearmF',
+        'clavR', 'upperArmR', 'forearmR')
+# Segments the leathers design is laid out on (nearest one wins).
+PAINT = ('spine', 'chest', 'neck', 'thighF', 'shinF', 'thighR', 'shinR', 'upperArmF', 'forearmF', 'upperArmR',
+         'forearmR')
 
 COL = {
     'red': (0.62, 0.035, 0.04),
@@ -159,7 +181,10 @@ def body():
     ellip(hip + up * 0.49, 0.09 * k, 0.19 * k, 0.08 * k)
     # Aero hump on the upper back.
     ellip(hip + up * 0.47 + Vector((-0.1, 0, 0)), 0.06, 0.1, 0.13)
-    capsule(neck - up * 0.06, neck + up * 0.08, 0.058)
+    # Neck runs up into the helmet, thick enough to read as neck and collar.
+    capsule(neck - up * 0.06, neck + up * 0.1, 0.068)
+    # Trapezius sloping from the neck out to the shoulders.
+    ellip(hip + up * 0.55, 0.075, 0.13, 0.05)
     bpy.context.view_layer.objects.active = ob
     ob.select_set(True)
     bpy.ops.object.convert(target='MESH')
@@ -172,7 +197,7 @@ def body():
     kill = []
     for v in bm.verts:
         p = v.co
-        if p.z < J['footF'].z + 0.02:
+        if p.z < J['footF'].z - 0.01:
             kill.append(v)
     bmesh.ops.delete(bm, geom=kill, context='VERTS')
     bm.to_mesh(o.data)
@@ -210,9 +235,9 @@ def paint_leathers(o):
         p = v.co
         white = black = -1.0
         dl = {}
-        for k, (a, b, _) in BONES.items():
-            if b:
-                dl[k] = seg_dist(p, J[a], J[b])
+        for k in PAINT:
+            a, b, _ = BONES[k]
+            dl[k] = seg_dist(p, J[a], J[b])
         limb = min(dl, key=lambda k: dl[k][0])
         t = dl[limb][1]
         a, b, _ = BONES[limb]
@@ -255,6 +280,7 @@ def armature(body_obj):
         bone.tail = J[b] if b else J[a] + Vector((0, 0, 0.1))
         if parent:
             bone.parent = eb[parent]
+        bone.use_deform = name in SKIN
         eb[name] = bone
     bpy.ops.object.mode_set(mode='OBJECT')
     # Automatic (heat) weights.
@@ -263,8 +289,22 @@ def armature(body_obj):
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-    # The hips bone has no length worth weighting; spine carries the pelvis.
     return ob
+
+
+def attach(rig, o, bone, at, rot=None):
+    """Places a rigid part at its bind position and parents it to a bone."""
+    if rot:
+        o.rotation_mode = 'QUATERNION'
+        o.rotation_quaternion = rot
+    o.location = at
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action='DESELECT')
+    o.select_set(True)
+    rig.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+    rig.data.bones.active = rig.data.bones[bone]
+    bpy.ops.object.parent_set(type='BONE', keep_transform=True)
 
 
 def helmet():
@@ -421,8 +461,26 @@ if __name__ == '__main__':
     b = body()
     rig = armature(b)
     h = helmet()
+    # Sat a little low on the head joint so it nests down onto the neck.
+    attach(rig, h, 'head', J['head'] + Vector((0, 0, -0.025)))
     s = shoe()
+    s2 = s.copy()
+    bpy.context.scene.collection.objects.link(s2)
+    for o, side in ((s, 'F'), (s2, 'R')):
+        o.name = 'shoe' + side
+        # Heel back from the ankle, sole on the deck.
+        attach(rig, o, 'foot' + side, J['foot' + side] + R(-0.045, 0.02, 0))
     g = glove()
+    g2 = g.copy()
+    bpy.context.scene.collection.objects.link(g2)
+    for o, side in ((g, 'F'), (g2, 'R')):
+        o.name = 'glove' + side
+        # Fingers on down the forearm, palm (puck) towards the body.
+        fwd = (J['ha' + side] - J['el' + side]).normalized()
+        q = Vector((0, 0, 1)).rotation_difference(fwd)
+        if side == 'R':
+            q = Quaternion(fwd, math.pi) @ q
+        attach(rig, o, 'hand' + side, J['ha' + side], q)
     for o in (b, h, s, g):
         print(o.name, len(o.data.polygons), 'faces')
     os.makedirs(OUT, exist_ok=True)

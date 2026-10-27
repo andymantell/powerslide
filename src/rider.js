@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { trackLoad } from './ground.js';
-import { SkeletonDriver } from './ik.js';
+import { SkeletonDriver, frameQuat } from './ik.js';
 import { RiderPose, DECK_HEIGHT, THIGH, SHIN, UPPER_ARM, FOREARM } from './riderpose.js';
 
 export { DECK_HEIGHT };
@@ -108,26 +108,128 @@ const riderParts = new GLTFLoader().loadAsync(RIDER_URL).then((gltf) => {
     gloveLeather: new THREE.MeshStandardMaterial({ color: '#141416', roughness: 0.6 }),
     puck: new THREE.MeshStandardMaterial({ color: '#1f5fd6', roughness: 0.35 }),
   };
-  const parts = { scene: gltf.scene, materials };
   gltf.scene.traverse((o) => {
-    if (!o.isMesh || o.isSkinnedMesh) {
-      if (o.isGroup && ['helmet', 'shoe', 'glove'].includes(o.name)) {
-        // Multi-material parts import as a group of primitives.
-        const meshes = o.children.filter((c) => c.isMesh);
-        parts[o.name] = {
-          geometry: mergeGeometries(meshes.map((c) => c.geometry), true),
-          material: meshes.map((c) => materials[c.material.name] ?? c.material),
-        };
-      }
-      return;
-    }
-    if (['helmet', 'shoe', 'glove'].includes(o.name)) {
-      parts[o.name] = { geometry: o.geometry, material: materials[o.material.name] ?? o.material };
+    if (!o.isMesh) return;
+    o.material = materials[o.material.name] ?? o.material;
+    o.castShadow = true;
+    if (o.isSkinnedMesh) {
+      o.receiveShadow = true;
+      o.frustumCulled = false;
     }
   });
-  return parts;
+  return gltf.scene;
 });
 trackLoad(riderParts);
+
+const _d = new THREE.Vector3();
+const _r = new THREE.Vector3();
+const _s = new THREE.Vector3();
+const _ac = new THREE.Vector3();
+const _bend = new THREE.Vector3();
+const _e = new THREE.Euler();
+const _hq = new THREE.Quaternion();
+const HEAD_TURN = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+const FOOT_TURN = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+
+// Which way a limb's middle joint sticks out from the line between its ends
+// (knee forward, elbow back), falling back to `fallback` when it's straight.
+function bendDir(a, b, c, fallback, out) {
+  _ac.subVectors(c, a);
+  out.subVectors(b, a);
+  out.addScaledVector(_ac, -out.dot(_ac) / Math.max(_ac.lengthSq(), 1e-8));
+  return out.addScaledVector(fallback, 0.01);
+}
+
+// The head's orientation: the helmet is modelled facing +X and RiderPose's
+// head angles turn a head that faces -Z.
+function headQuat(pose, out) {
+  _e.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
+  return out.setFromEuler(_e).multiply(HEAD_TURN);
+}
+
+const aim = (from, to, ref, out) => {
+  out.pos.copy(from);
+  frameQuat(_d.subVectors(to, from).normalize(), ref, out.q);
+  return out;
+};
+const sideways = (J, s) => _r.subVectors(J['hipR'], J['hipF']).normalize().multiplyScalar(s);
+
+// How the skinned rider's bones (tools/blender/rider.py) follow a RiderPose:
+// each bone starts at its joint, aims at the next one and twists to keep the
+// body square: pelvis and chest to the hips and shoulders, knees and elbows to
+// the way they bend, head, hands and feet to their own angles.
+const limb = (a, b, c, from, to, fallback, at = from) => (p, out) => {
+  const J = p.joints;
+  aim(J[from], J[to], bendDir(J[a], J[b], J[c], fallback(p), _bend), out);
+  out.pos.copy(J[at]);
+  return out;
+};
+const facing = (p) => p.chestFacing;
+const behind = (p) => _r.copy(p.chestFacing).negate();
+const clav = (p) => _r.copy(p.joints.chest).addScaledVector(p.torsoDir, -0.03);
+const footFrame = (s) => (p, out) => {
+  out.pos.copy(p.joints['foot' + s]);
+  _e.set(0, p['footYaw' + s], p['footRoll' + s], 'ZYX');
+  out.q.setFromEuler(_e).multiply(FOOT_TURN);
+  return out;
+};
+export const RIDER_RIG = {
+  hips: (p, out) => {
+    out.pos.copy(p.joints.hip);
+    _d.copy(p.bodyUp).lerp(p.torsoDir, 0.35).normalize();
+    frameQuat(_d, sideways(p.joints, 1), out.q);
+    return out;
+  },
+  spine: (p, out) => {
+    const J = p.joints;
+    _s.subVectors(J.shR, J.shF).normalize().add(sideways(J, 1));
+    return aim(J.hip, J.chest, _s, out);
+  },
+  chest: (p, out) => aim(p.joints.chest, p.joints.neck, _s.subVectors(p.joints.shR, p.joints.shF), out),
+  neck: (p, out) => {
+    const J = p.joints;
+    _s.set(0, 0, 1).applyQuaternion(headQuat(p, _hq)).add(_r.subVectors(J.shR, J.shF).normalize());
+    return aim(J.neck, J.head, _s, out);
+  },
+  head: (p, out) => {
+    out.pos.copy(p.joints.head);
+    headQuat(p, out.q);
+    return out;
+  },
+  thighF: limb('hipF', 'kneeF', 'footF', 'hipF', 'kneeF', facing),
+  shinF: limb('hipF', 'kneeF', 'footF', 'kneeF', 'footF', facing),
+  footF: footFrame('F'),
+  thighR: limb('hipR', 'kneeR', 'footR', 'hipR', 'kneeR', facing),
+  shinR: limb('hipR', 'kneeR', 'footR', 'kneeR', 'footR', facing),
+  footR: footFrame('R'),
+  clavF: (p, out) => aim(clav(p), p.joints.shF, _s.copy(p.torsoDir), out),
+  upperArmF: limb('shF', 'elF', 'haF', 'shF', 'elF', behind),
+  forearmF: limb('shF', 'elF', 'haF', 'elF', 'haF', behind),
+  handF: limb('shF', 'elF', 'haF', 'elF', 'haF', behind, 'haF'),
+  clavR: (p, out) => aim(clav(p), p.joints.shR, _s.copy(p.torsoDir), out),
+  upperArmR: limb('shR', 'elR', 'haR', 'shR', 'elR', behind),
+  forearmR: limb('shR', 'elR', 'haR', 'elR', 'haR', behind),
+  handR: limb('shR', 'elR', 'haR', 'elR', 'haR', behind, 'haR'),
+};
+
+// The bind pose of rider.glb as a RiderPose: joints at the bone heads,
+// standing square, head and feet turned to face +X.
+function bindPose(bones, rigSpace) {
+  const joints = {};
+  const heads = {
+    hip: 'hips', hipF: 'thighF', hipR: 'thighR', kneeF: 'shinF', kneeR: 'shinR', footF: 'footF', footR: 'footR',
+    chest: 'chest', neck: 'neck', head: 'head', shF: 'upperArmF', shR: 'upperArmR', elF: 'forearmF',
+    elR: 'forearmR', haF: 'handF', haR: 'handR',
+  };
+  rigSpace.updateMatrixWorld(true);
+  for (const [j, b] of Object.entries(heads)) joints[j] = rigSpace.worldToLocal(bones[b].getWorldPosition(new THREE.Vector3()));
+  const up = new THREE.Vector3(0, 1, 0);
+  return {
+    joints, torsoDir: up, bodyUp: up, chestFacing: new THREE.Vector3(1, 0, 0),
+    headPitch: 0, headYaw: -Math.PI / 2, headRoll: 0,
+    footYawF: Math.PI / 2, footYawR: Math.PI / 2, footRollF: 0, footRollR: 0,
+  };
+}
 
 const _a = new THREE.Vector3();
 const _c = new THREE.Vector3();
@@ -155,6 +257,32 @@ function makeBibTexture() {
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
+}
+
+// A bib-sized patch draped onto the skinned mesh (in its bind pose), seen
+// from +X (side 1) or -X (side -1) of rig space; returns rig-space geometry.
+function conform(body, rigSpace, centre, side) {
+  const geo = new THREE.PlaneGeometry(0.2, 0.22, 10, 11);
+  // The plane faces +Z; turn it to face +X or -X.
+  geo.rotateY((side * Math.PI) / 2);
+  geo.translate(centre.x, centre.y, centre.z);
+  const pos = geo.attributes.position;
+  const ray = new THREE.Raycaster();
+  const dir = new THREE.Vector3(-side, 0, 0).transformDirection(rigSpace.matrixWorld);
+  const p = new THREE.Vector3();
+  rigSpace.updateMatrixWorld(true);
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i);
+    p.x += side * 0.4;
+    ray.set(rigSpace.localToWorld(p), dir);
+    const hit = ray.intersectObject(body)[0];
+    if (!hit) continue;
+    p.copy(hit.point).addScaledVector(dir, -0.006);
+    rigSpace.worldToLocal(p);
+    pos.setXYZ(i, p.x, p.y, p.z);
+  }
+  geo.computeVertexNormals();
+  return geo;
 }
 
 function place(mesh, a, b) {
@@ -281,47 +409,32 @@ export class RiderModel {
   }
 
   // Swaps the capsule stand-in for the skinned model from tools/blender/rider.py.
-  useModel(parts) {
-    const scene = cloneSkinned(parts.scene);
+  // The helmet, shoes and gloves hang off the head, foot and hand bones.
+  useModel(model) {
+    const scene = cloneSkinned(model);
     const bones = {};
-    let body = null;
-    const rigid = {};
     scene.traverse((o) => {
       if (o.isBone) bones[o.name] = o;
-      if (o.isSkinnedMesh) body = o;
-      else if (o.isMesh) rigid[o.name] = o;
     });
-    if (!body || !bones.hips) return;
-    body.material = parts.materials.leather;
-    body.castShadow = true;
-    body.receiveShadow = true;
-    body.frustumCulled = false;
-    for (const k of Object.keys(rigid)) rigid[k].removeFromParent();
+    if (!bones.hips) return;
     this.rig.add(scene);
-    this.driver = new SkeletonDriver(this.rig, bones.hips, bones);
-    // Blender bones point along their local +Y.
-    for (const it of this.driver.items) it.restDir.set(0, 1, 0);
-
-    for (const k of Object.keys(this.m)) if (!k.startsWith('bib')) this.m[k].visible = false;
+    const bind = bindPose(bones, this.rig);
+    this.driver = new SkeletonDriver(this.rig, bones, RIDER_RIG, bind);
+    for (const k of Object.keys(this.m)) this.m[k].visible = false;
     this.head.clear();
-    const helmet = new THREE.Mesh(parts.helmet.geometry, parts.helmet.material);
-    helmet.rotation.y = Math.PI / 2; // modelled facing +X; the head group faces -Z
-    helmet.castShadow = true;
-    this.head.add(helmet);
-    const rigidPart = (part, rotY, offset) => {
-      const g = new THREE.Group();
-      const mesh = new THREE.Mesh(part.geometry, part.material);
-      mesh.rotation.y = rotY;
-      mesh.position.copy(offset);
-      mesh.castShadow = true;
-      g.add(mesh);
-      this.rig.add(g);
-      return g;
-    };
-    // Shoes: toe along +X in the model; the stance yaw expects +Z.
-    const shoeOff = new THREE.Vector3(0, 0.02, -0.045);
-    this.shoes = [rigidPart(parts.shoe, -Math.PI / 2, shoeOff), rigidPart(parts.shoe, -Math.PI / 2, shoeOff)];
-    this.gloves = [rigidPart(parts.glove, 0, new THREE.Vector3()), rigidPart(parts.glove, Math.PI, new THREE.Vector3())];
+    let body = null;
+    scene.traverse((o) => {
+      if (o.isSkinnedMesh) body = o;
+    });
+    // Bibs moulded onto the leathers (front and back), riding on the chest.
+    const centre = bind.joints.chest.clone().add(new THREE.Vector3(0, -0.07, 0));
+    for (const side of [1, -1]) {
+      const bib = this.m[side > 0 ? 'bibFront' : 'bibBack'];
+      const geo = conform(body, this.rig, centre, side);
+      const mesh = new THREE.Mesh(geo, bib.material);
+      this.rig.add(mesh);
+      bones.chest.attach(mesh);
+    }
   }
 
   // Solve and show a pose; see RiderPose.solve for the parameters.
@@ -334,31 +447,19 @@ export class RiderModel {
     const m = this.m;
     this.head.position.copy(J.head);
     this.head.rotation.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
+    if (this.driver) {
+      this.driver.apply(pose);
+      return;
+    }
     // Bibs sit on the torso surface, facing the way the chest points.
     const up = pose.torsoDir;
     _bz.copy(pose.chestFacing).addScaledVector(up, -pose.chestFacing.dot(up)).normalize();
     _bx.crossVectors(up, _bz);
     _bm.makeBasis(_bx, up, _bz);
-    const depth = this.driver ? 0.118 : 0.163;
     for (const [bib, side] of [[m.bibFront, 1], [m.bibBack, -1]]) {
       bib.quaternion.setFromRotationMatrix(_bm);
       if (side < 0) bib.rotateY(Math.PI);
-      bib.position.copy(J.chest).addScaledVector(up, -0.06).addScaledVector(_bz, depth * side);
-    }
-    if (this.driver) {
-      this.driver.apply(pose);
-      const [sf, sr] = this.shoes;
-      sf.position.copy(J.footF);
-      sr.position.copy(J.footR);
-      sf.rotation.set(0, pose.footYawF, pose.footRollF, 'ZYX');
-      sr.rotation.set(0, pose.footYawR, pose.footRollR, 'ZYX');
-      // Gloves point down the forearm.
-      const [gf, gr] = this.gloves;
-      gf.position.copy(J.haF);
-      gr.position.copy(J.haR);
-      gf.quaternion.setFromUnitVectors(Y, _c.subVectors(J.haF, J.elF).normalize());
-      gr.quaternion.setFromUnitVectors(Y, _c.subVectors(J.haR, J.elR).normalize());
-      return;
+      bib.position.copy(J.chest).addScaledVector(up, -0.06).addScaledVector(_bz, 0.163 * side);
     }
     place(m.thighF, J.hipF, J.kneeF);
     place(m.thighR, J.hipR, J.kneeR);
