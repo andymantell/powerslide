@@ -25,6 +25,7 @@ import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
 import { registerOffline, keepSaves } from './pwa.js';
+import { exportCode, importCode, hasProgress } from './transfer.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, autoQuality } from './settings.js';
 import { lookOf } from './biomes.js';
 import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, levelMix } from './endless.js';
@@ -855,6 +856,11 @@ function moveFocus(dx, dy) {
 
 const stickNav = { x: 0, y: 0, t: 0 };
 function menuInput(dt) {
+  // Typing or pasting a stars code: B leaves the box.
+  if (document.activeElement?.tagName === 'TEXTAREA') {
+    if (input.wasPressed('Pad1')) document.activeElement.blur();
+    return;
+  }
   // Typing a road code: leave the keys to the text box.
   if (document.activeElement?.tagName === 'INPUT') return;
   const pressed = (c) => input.wasPressed(c);
@@ -921,6 +927,103 @@ $('settings-back').addEventListener('click', () => {
   show('title');
   setFocus($('opts'));
 });
+
+// Your stars, on the settings screen: backups to a file (Files, iCloud Drive,
+// Google Drive), and moving progress between Safari and the iPad home screen
+// app, which keep separate storage, as a code on the clipboard (or typed into
+// the box if the clipboard won't play). Ported from push-pump-pop.
+function setupMove() {
+  let ls = null;
+  try {
+    ls = localStorage;
+  } catch {
+    /* no storage: nothing to move */
+  }
+  const box = $('movecode');
+  const say = (t) => {
+    $('movemsg').textContent = t;
+  };
+  const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
+  // A brand new home screen app: point at the stars left in Safari.
+  if (standalone && ls && !hasProgress(ls)) say('Got stars in Safari? Press COPY MY STARS there, then PASTE MY STARS here.');
+  const take = (text) => {
+    if (!ls) {
+      say('This browser can\u2019t save stars.');
+      return false;
+    }
+    const n = importCode(ls, text);
+    if (n < 0) return false;
+    say(n ? `Got your stars from ${n} level${n === 1 ? '' : 's'}!` : 'Done! There were no stars to bring yet.');
+    box.classList.add('hidden');
+    box.blur();
+    setTimeout(() => location.reload(), 1500);
+    return true;
+  };
+  $('movesave').addEventListener('click', async () => {
+    if (!ls) return say('This browser can\u2019t save stars.');
+    const day = new Date().toISOString().slice(0, 10);
+    const file = new File([`Powerslide stars backup, ${day}. Load it with LOAD BACKUP on the Settings screen.\n${exportCode(ls)}\n`],
+      `powerslide-stars-${day}.txt`, { type: 'text/plain' });
+    // The share sheet has Save to Files on the iPad and Drive on Android; elsewhere, download it.
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        say('Saved! Keep that file safe.');
+      } catch (e) {
+        if (e.name !== 'AbortError') say('Couldn\u2019t save the backup. Try again?');
+      }
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    say('Saved to your downloads! Keep that file safe.');
+  });
+  const picker = $('movefile');
+  $('moveload').addEventListener('click', () => {
+    picker.value = '';
+    picker.click();
+  });
+  picker.addEventListener('change', async () => {
+    const f = picker.files?.[0];
+    if (f && !take(await f.text())) say('Hmm, that file isn\u2019t a stars backup.');
+  });
+  const notStars = () => say(`Hmm, that wasn\u2019t stars. Press COPY MY STARS in the other one first.`);
+  $('movecopy').addEventListener('click', async () => {
+    if (!ls) return say('This browser can\u2019t save stars.');
+    const code = exportCode(ls);
+    try {
+      await navigator.clipboard.writeText(code);
+      say(standalone ? 'Copied! Now open Safari and press PASTE MY STARS.' : 'Copied! Now open the app and press PASTE MY STARS.');
+    } catch {
+      box.value = code;
+      box.classList.remove('hidden');
+      box.select();
+      say('Copy all of this text, then paste it in the other one.');
+    }
+  });
+  $('movepaste').addEventListener('click', async () => {
+    try {
+      if (!take(await navigator.clipboard.readText())) notStars();
+    } catch {
+      box.value = '';
+      box.classList.remove('hidden');
+      box.focus();
+      say('Press in the box and choose Paste.');
+    }
+  });
+  box.addEventListener('input', () => {
+    if (box.value.trim() && !take(box.value)) notStars();
+  });
+  // Esc or B leaves the box so the menus work again.
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') box.blur();
+  });
+}
+setupMove();
+
 $('help-back').addEventListener('click', () => {
   show('title');
   setFocus($('howto'));

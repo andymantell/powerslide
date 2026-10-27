@@ -336,6 +336,15 @@ run fullscreen and offline.
 - **Android:** open it in Chrome, tap **⋮ → Install app** (or accept the install banner).
 - **Xbox / PC:** in Edge, open the **⋯** menu → **Apps → Install Powerslide**.
 
+On the iPad the home screen app doesn't share storage with Safari, and either can
+lose it. The Settings screen's Your stars section (`src/transfer.js`, ported from
+push-pump-pop) copies progress as a code and merges it in the other copy, keeping
+the better of each level's stars, time and score and each endless best (settings
+stay as they are, and the graphics level never travels). The same code goes into a
+backup file: Save backup shares it to Files / iCloud Drive / Google Drive, or
+downloads it, and Load backup picks it. Installed copies also ask
+`navigator.storage.persist()`.
+
 `public/sw.js` is the service worker (only registered in production builds, not
 under `npm run dev`). It goes network first for the page and unhashed files, so an
 online player gets exactly what a browser tab would, and keeps a copy for offline

@@ -73,6 +73,20 @@
       </div>
       <p id="tilt-note" class="small touch-only">Turn the screen like a steering wheel. However you're holding it when you press RIDE (or carry on after a pause) is straight ahead. Swipe up and down, tap and flick work as normal.</p>
       <p class="small">Changing the graphics restarts the game.</p>
+      <h3 class="opt-head">YOUR STARS</h3>
+      <p class="small"><b>Keep them safe:</b> save a backup to Files, iCloud Drive or Google Drive. Load it to get them back.</p>
+      <div class="btns move">
+        <button id="movesave" class="secondary">SAVE BACKUP</button>
+        <button id="moveload" class="secondary">LOAD BACKUP</button>
+      </div>
+      <input id="movefile" type="file" accept=".txt,text/plain" hidden />
+      <p class="small">Played in <b>Safari</b> and the <b>home screen app</b>? They keep their stars apart. Press <b>COPY</b> where your stars are, then <b>PASTE</b> in the other one.</p>
+      <div class="btns move">
+        <button id="movecopy" class="secondary">COPY MY STARS</button>
+        <button id="movepaste" class="secondary">PASTE MY STARS</button>
+      </div>
+      <textarea id="movecode" class="hidden" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Stars code"></textarea>
+      <p id="movemsg"></p>
       <button id="settings-back" class="secondary">BACK</button>
     </div>
 
