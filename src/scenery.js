@@ -20,19 +20,41 @@ const AHEAD = 2300; // dressed this far in front of the rider
 const STRETCH = 300; // dressed this much at a time
 const BEHIND = 700; // structures and props this far back are dropped
 
+// pieces: set pieces and how often each comes. animals and plants are
+// scattered in the fields; verge props stand by the road; houses line a
+// village, with `centre` props in the middle of it; fence runs along farms.
 const PALETTES = {
   alpine: {
     pieces: { bridge: 1, covered: 1, stream: 1.3, gallery: 1, lake: 0.8, village: 0.7, farm: 1 },
-    cows: ['cow', 'cow_pied', 'cow_dun'],
+    animals: ['cow', 'cow_pied', 'cow_dun'],
+    hay: true,
     verge: ['shrine', 'bench', 'shrine'],
     snowpoles: true,
-    chalets: ['chalet', 'chalet_small', 'chalet_tall'],
+    houses: ['chalet', 'chalet_small', 'chalet_tall'],
+    centre: [['church', 28], ['fountain', 11.5], ['bench', 8.4]],
+    farm: ['farmhouse', 'barn', 'churns'],
+    fence: 'fence',
+  },
+  // Narrow lanes between stone walls and hedge banks, cattle grids, tors,
+  // ponies and sheep on the open moor.
+  dartmoor: {
+    pieces: { walls: 1.4, hedge: 1, grid: 0.8, stream: 1, village: 0.6, farm: 0.8, tors: 1 },
+    animals: ['pony', 'pony_dark', 'pony_grey', 'sheep', 'sheep', 'sheep_dark'],
+    plants: ['gorse', 'gorse_big', 'bracken', 'bracken', 'hawthorn'],
+    verge: ['fingerpost', 'sign_pony', 'whitepost'],
+    houses: ['cottage', 'cottage_b', 'cottage_slate'],
+    centre: [['church_uk', 28], ['inn', 20], ['phonebox', 7.5]],
+    farm: ['cottage', 'ruin_a', 'tractor'],
+    fence: 'fieldwall',
+    tors: ['tor_big', 'tor', 'tor_small'],
   },
   // Biomes without their own list yet: the plainer pieces only.
   other: {
     pieces: { stream: 1, farm: 1 },
-    cows: ['cow', 'cow_dun'],
+    animals: ['cow', 'cow_dun'],
     verge: ['bench'],
+    farm: ['farmhouse', 'barn'],
+    fence: 'fence',
   },
 };
 
@@ -95,7 +117,8 @@ export class Scenery {
       if (SPAN_TYPES[f.type]) {
         const half = (f.span ?? 18) / 2;
         const [s0, s1] = f.from !== undefined ? [f.from, f.to] : [f.at - half, f.at + half];
-        road.spans.push({ type: f.type, s0: S + s0, s1: S + s1, f });
+        const side = f.side === 'left' ? -1 : f.side === 'right' ? 1 : 0;
+        road.spans.push({ type: f.type, s0: S + s0, s1: S + s1, side, f });
       }
       const job = this.structures.add(f);
       if (job) jobs.push(job);
@@ -110,16 +133,17 @@ export class Scenery {
       }
     }
 
-    // Furniture: a shrine or a bench by the road, cows and hay in the fields,
-    // and snow poles along the higher stretches.
+    // Furniture: something by the road, animals (and hay or gorse) in the
+    // fields, and snow poles along the higher stretches.
     const at = (s) => s - S;
     if (rand() < 0.35) {
       const s = a + rand() * STRETCH;
-      const side = rand() < 0.5 ? -1 : 1;
-      if (road.barrierAt(s, side) === null) entries.push({ type: pick(rand, pal.verge), at: at(s), d: side * 7.2 });
+      const side = rand() < 0.6 ? road.drive || 1 : -(road.drive || 1);
+      if (road.barrierAt(s, side) === null && !road.spanAt(s)) entries.push({ type: pick(rand, pal.verge), at: at(s), d: side * 7.2 });
     }
-    if (rand() < 0.4) entries.push({ scatter: pal.cows, from: at(a), to: at(b), near: 15, far: 70, count: 2 + Math.floor(rand() * 5) });
-    if (rand() < 0.2) entries.push({ scatter: ['haybale'], from: at(a), to: at(b), near: 15, far: 80, count: 3 + Math.floor(rand() * 5) });
+    if (rand() < 0.4) entries.push({ scatter: pal.animals, from: at(a), to: at(b), near: 15, far: 70, count: 2 + Math.floor(rand() * 5) });
+    if (pal.hay && rand() < 0.2) entries.push({ scatter: ['haybale'], from: at(a), to: at(b), near: 15, far: 80, count: 3 + Math.floor(rand() * 5) });
+    if (pal.plants && rand() < 0.7) entries.push({ scatter: pal.plants, from: at(a), to: at(b), near: 7, far: 70, count: 6 + Math.floor(rand() * 10) });
     if (pal.snowpoles && road.wildness(a) > 0.4 && rand() < 0.5) entries.push({ row: 'snowpole', from: at(a), to: at(b), d: 6.6, every: 22, both: true });
 
     dressRange(road, props, a, b, entries.filter((e) => [].concat(e.type || e.row || e.scatter || []).every((t) => PROP_TYPES[t])), rand);
@@ -141,7 +165,7 @@ export class Scenery {
     const rand = this.rand;
     const S = road.start;
     const pal = this.palette;
-    const types = Object.entries(pal.pieces).filter(([t]) => (t === 'village' || t === 'farm' ? PLANS.flat : PLANS[t]));
+    const types = Object.entries(pal.pieces).filter(([t]) => (t === 'village' || t === 'farm' ? PLANS.flat : t === 'tors' ? pal.tors : PLANS[t]));
     let total = 0;
     for (const [, w] of types) total += w;
     let r = rand() * total;
@@ -224,13 +248,13 @@ export class Scenery {
           feature({ type: 'flat', from: s0 - S, to: s0 + len - S, width: 60 });
           let side = rand() < 0.5 ? -1 : 1;
           for (let s = s0 + 15; s < s0 + len - 15; s += 32 + rand() * 18) {
-            entries.push({ type: pick(rand, pal.chalets || ['farmhouse']), at: s - S, d: side * (17 + rand() * 3) });
+            entries.push({ type: pick(rand, pal.houses || ['farmhouse']), at: s - S, d: side * (17 + rand() * 3) });
             side = -side;
           }
           const mid = s0 + len / 2;
-          if (PROP_TYPES.church) entries.push({ type: 'church', at: mid - S, d: (rand() < 0.5 ? -1 : 1) * 28 });
-          if (PROP_TYPES.fountain) entries.push({ type: 'fountain', at: mid + 20 - S, d: -11.5 });
-          entries.push({ type: 'bench', at: mid + 32 - S, d: 8.4 });
+          (pal.centre || []).forEach(([type, d], i) => {
+            entries.push({ type, at: mid + i * 16 - S, d: (i % 2 ? 1 : -1) * d });
+          });
         };
       }
       case 'farm': {
@@ -240,12 +264,40 @@ export class Scenery {
         done(s0 + len);
         return (feature, entries) => {
           feature({ type: 'flat', from: s0 - S, to: s0 + len - S, width: 70 });
-          entries.push({ row: 'fence', from: s0 + 10 - S, to: s0 + len - 10 - S, d: 8.8, every: 3, both: true });
+          const fence = pal.fence === 'fieldwall' ? { d: 26, every: 4 } : { d: 8.8, every: 3 };
+          entries.push({ row: pal.fence, from: s0 + 10 - S, to: s0 + len - 10 - S, d: fence.d, every: fence.every, both: true });
           const mid = s0 + len * (0.3 + rand() * 0.4);
-          entries.push({ type: 'farmhouse', at: mid - S, d: side * 44 });
-          entries.push({ type: 'barn', at: mid + 45 - S, d: side * 40 });
-          entries.push({ type: 'churns', at: mid - 15 - S, d: side * 7, yaw: 'along' });
-          entries.push({ scatter: pal.cows, from: s0 + 20 - S, to: s0 + len - 20 - S, near: 13, far: 70, count: 10 + Math.floor(rand() * 10) });
+          const [house, barn, small] = pal.farm;
+          entries.push({ type: house, at: mid - S, d: side * 44 });
+          if (barn) entries.push({ type: barn, at: mid + 45 - S, d: side * 40 });
+          if (small) entries.push({ type: small, at: mid - 15 - S, d: side * 12, yaw: 'along' });
+          entries.push({ scatter: pal.animals, from: s0 + 20 - S, to: s0 + len - 20 - S, near: 13, far: 70, count: 10 + Math.floor(rand() * 10) });
+        };
+      }
+      case 'walls':
+      case 'hedge': {
+        const len = 150 + rand() * 250;
+        done(s0 + len);
+        const r = rand();
+        const side = r < 0.6 ? undefined : r < 0.8 ? 'left' : 'right';
+        return (feature) => feature({ type, from: s0 - S, to: s0 + len - S, ...(side ? { side } : {}) });
+      }
+      case 'grid': {
+        if (!straight(s0 - 25, s0 + 25, 1 / 150)) return null;
+        done(s0 + 60);
+        // Walls run up to the grid on both sides, as on the moor's edge.
+        return (feature) => {
+          feature({ type: 'walls', from: s0 - 70 - S, to: s0 - 7 - S });
+          feature({ type: 'grid', at: s0 - S });
+          feature({ type: 'walls', from: s0 + 7 - S, to: s0 + 60 - S });
+        };
+      }
+      case 'tors': {
+        done(s0 + 300);
+        return (feature, entries) => {
+          const side = rand() < 0.5 ? -1 : 1;
+          entries.push({ type: pal.tors[0], at: s0 + 120 - S, d: side * (70 + rand() * 50), scale: 1 + rand() * 0.7 });
+          entries.push({ scatter: pal.tors.slice(1), from: s0 - S, to: s0 + 300 - S, near: 25, far: 120, count: 3 + Math.floor(rand() * 4) });
         };
       }
     }

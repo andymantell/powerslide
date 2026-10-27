@@ -320,6 +320,7 @@ export class Structures {
   // A cattle grid under s: the board rattles over it.
   rattleAt(s) {
     for (const j of this.todo || []) if (j.f.type === 'grid' && Math.abs(s - j.s0) < 1.4) return true;
+    for (const j of this.endless || []) if (j.f.type === 'grid' && Math.abs(s - j.s0) < 1.4) return true;
     return false;
   }
 
