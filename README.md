@@ -227,7 +227,9 @@ first touch, click or key starts it, and it sleeps while the game is hidden.
   `crickets`), the calls dropped in at random (cowbells, skylarks, sheep,
   ponies, gulls, sirens…) and an `echo`. Set pieces and props make their own
   sounds as you ride past (`spotsFor`): waterfalls, streams, church bells, the
-  sawmill, cow herds and fountains, and galleries ring with an echo.
+  sawmill, cow herds, sheep and ponies, ducks, the inn, a parked tractor,
+  fountains and fords; galleries ring with an echo and hedge banks close the
+  sound in. Cattle grids rattle and fords splash under the board.
 - **Music** (`src/music.js`): an optional four-chord loop per biome, with
   bass and drums while riding.
 
@@ -238,7 +240,7 @@ A level's `"ambience"` changes its biome's mix:
   "layers": { "water": 0.3, "wind": { "level": 0.5, "whistle": 0.4 } },
   "events": { "cowbell": 0, "marmot": { "every": [5, 12], "gain": 0.5 } },
   "spots": [{ "at": 820, "d": -30, "sound": "waterfall", "radius": 150, "gain": 0.7 }],
-  "zones": [{ "from": 1200, "to": 1350, "echo": { "time": 0.07, "feedback": 0.45, "mix": 0.5 } }]
+  "zones": [{ "from": 1200, "to": 1350, "echo": { "time": 0.07, "feedback": 0.45, "mix": 0.5 }, "muffle": 1800 }]
 }
 ```
 

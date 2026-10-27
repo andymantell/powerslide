@@ -136,6 +136,12 @@ export class Audio {
       this.bus[key] = ctx.createGain();
       this.bus[key].connect(this.master);
     }
+    // Closes in the ambience between hedge banks (see setEcho's zones).
+    this.ambMuffle = ctx.createBiquadFilter();
+    this.ambMuffle.type = 'lowpass';
+    this.ambMuffle.frequency.value = 20000;
+    this.bus.ambience.disconnect();
+    this.bus.ambience.connect(this.ambMuffle).connect(this.master);
     this.applyVolume();
 
     // Noise: white, and brown for low rumbles; rain is drops over a hiss.
@@ -182,6 +188,9 @@ export class Audio {
     this.scrape = this.loop(this.noise, 'bandpass', 1200, 0.8, fx); // body or deck on the road
     this.railScrape = this.loop(this.noise, 'bandpass', 3800, 6, fx);
     this.skitter = this.loop(this.noise, 'bandpass', 600, 1, fx); // the loose board
+    this.splash = this.loop(this.noise, 'bandpass', 1100, 0.8, fx); // wading through a ford
+    // A cattle grid: the wheels drumming over its bars.
+    this.grid = this.tone('square', 60, 'bandpass', 2400, 2, fx);
     // Urethane squeal on top of the slide hiss, and the bearings' hum.
     this.squeal = this.tone('sawtooth', 1000, 'bandpass', 1000, 8, fx);
     this.bearing = this.tone('triangle', 200, 'lowpass', 1200, 0.7, fx);
@@ -370,11 +379,12 @@ export class Audio {
     this.updateTraffic(player, cars, camera, dt);
     const cp = camera.position;
     this.ambience.update(dt, { x: cp.x, z: cp.z, yaw: player.yaw });
-    // Galleries and tunnels ring with their own echo.
+    // Galleries and tunnels ring with their own echo; hedge banks muffle.
     const zone = this.scene.zones?.find((z) => player.s >= z.s0 && player.s <= z.s1) || null;
     if (zone !== this.zone) {
       this.zone = zone;
       this.setEcho(zone?.echo);
+      this.ambMuffle.frequency.setTargetAtTime(zone?.muffle || 20000, now, 0.4);
     }
     this.music.riding = this.riding ? 1 : 0;
     this.music.speed = clamp(player.speed / 25, 0, 1);
@@ -425,6 +435,16 @@ export class Audio {
     if (hand > 0.3 && Math.random() < hand * dt * 35) {
       noiseBurst(this.k, this.bus.effects, this.ctx.currentTime, { freq: 4000 + Math.random() * 4000, type: 'highpass', dur: 0.015, gain: 0.25 * hand });
     }
+
+    // A cattle grid (main.js sets this.onGrid): bars every 15 cm.
+    const grid = this.onGrid && v > 1 ? 1 : 0;
+    this.set(this.grid.o, 'frequency', Math.max(20, v / 0.15), 0.01);
+    this.set(this.grid.g, 'gain', grid * Math.min(0.3, v * 0.03), 0.01);
+    // A ford: a splash going in, then wading.
+    const water = crashed ? 0 : p.water || 0;
+    if (water > 0.005 && !this.wasWet && v > 1) this.burst(900, 0.7, 0.6, Math.min(0.8, v * 0.06), 'bandpass', 300);
+    this.wasWet = water > 0.005;
+    this.set(this.splash.g, 'gain', Math.min(1, water * 12) * Math.min(0.4, v * 0.04) * (0.6 + Math.random() * 0.4), 0.03);
 
     // Footbrake: a shoe sole juddering along the road.
     this.set(this.shoe.g, 'gain', crashed ? 0 : (p.brake || 0) * Math.min(1, v / 3) * 0.45 * (0.6 + Math.random() * 0.4), 0.02);

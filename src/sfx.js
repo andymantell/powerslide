@@ -478,8 +478,82 @@ function saw(k, out, t, r) {
   ], { freq: 2200, q: 1.5 }).end;
 }
 
+// Ducks quacking at the ford.
+function duck(k, out, t, r) {
+  const f = ramp(r, 280, 360);
+  const list = [];
+  let at = 0;
+  for (let i = 0; i < 2 + Math.floor(r() * 4); i++) {
+    list.push({ at, dur: ramp(r, 0.1, 0.16), f0: f * 1.15, f1: f * 0.85, atk: 0.01 });
+    at += ramp(r, 0.14, 0.3);
+  }
+  return notes(k, out, t, 'sawtooth', list, { freq: 1100, q: 3 }).end;
+}
+
+// Muffled chatter and the odd glass from inside a pub.
+function pub(k, out, t, r) {
+  const { ctx } = k;
+  const dur = 6;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(1, t + 0.8);
+  g.gain.setValueAtTime(1, t + dur - 0.8);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 700; // through the walls
+  g.connect(lp).connect(out);
+  // A few voices: noise through a moving vowel-like band, talking in bursts.
+  for (let v = 0; v < 4; v++) {
+    const src = ctx.createBufferSource();
+    src.buffer = k.noise;
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 4;
+    const vg = ctx.createGain();
+    vg.gain.value = 0;
+    for (let a = 0; a < dur; a += ramp(r, 0.08, 0.2)) {
+      f.frequency.setValueAtTime(ramp(r, 300, 900), t + a);
+      vg.gain.setValueAtTime(r() < 0.65 ? ramp(r, 0.3, 1) : 0, t + a);
+    }
+    src.connect(f).connect(vg).connect(g);
+    src.start(t, r());
+    src.stop(t + dur);
+  }
+  if (r() < 0.5) bell(k, out, t + ramp(r, 1, 5), ramp(r, 2400, 3200), [1, 1.6], [0.3, 0.15], 0.2);
+  return dur;
+}
+
+// An old phone box ringing: brring-brring.
+function phone(k, out, t) {
+  let end = 0;
+  for (let i = 0; i < 3; i++) {
+    for (const at of [0, 0.6]) {
+      const n = notes(k, out, t + i * 3 + at, 'square', [{ at: 0, dur: 0.4, f0: 400, atk: 0.01, g: 0.5 }], { type: 'lowpass', freq: 2000 });
+      vibrato(k, n.o, t + i * 3 + at, 0.4, 17, 25);
+      end = i * 3 + at + 0.4;
+    }
+  }
+  return end;
+}
+
+// A parked tractor ticking over.
+function tractorIdle(k, out, t, r) {
+  const n = notes(k, out, t, 'sawtooth', [{ at: 0, dur: 5, f0: ramp(r, 11, 13), atk: 0.3, g: 0.8 }], { type: 'lowpass', freq: 380 });
+  vibrato(k, n.o, t, 5, 0.7, 0.6);
+  return 5;
+}
+
+// A radio mast's faint electrical hum.
+function mastHum(k, out, t) {
+  let end = 0;
+  for (const [f, g] of [[100, 0.6], [150, 0.3], [200, 0.2]]) end = notes(k, out, t, 'sine', [{ at: 0, dur: 8, f0: f, atk: 1, g }]).end;
+  return end;
+}
+
 // Everything the ambience can schedule, by name.
 export const CALLS = {
   songbird, skylark, cuckoo, curlew, crow, raven: (k, o, t, r) => crow(k, o, t, r, true), gull, raptor, marmot, chough, owl, woodpecker,
-  sheep, pony, cowbell, dog, chimes, mower, siren, farHorn, tramBell, airHiss, wave, foghorn, buoy, thunder, churchBell, saw,
+  sheep, pony, cowbell, dog, chimes, mower, siren, farHorn, tramBell, airHiss, wave, foghorn, buoy, thunder, churchBell, saw, duck, pub, phone, tractorIdle, mastHum,
 };

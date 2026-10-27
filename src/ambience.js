@@ -385,9 +385,27 @@ export function spotsFor(level) {
     else if (f.type === 'covered') spots.push({ at: mid(f), d: 0, sound: 'stream', radius: 80, gain: 0.45 });
     else if (f.type === 'lake') spots.push({ at: mid(f), d: 0, sound: 'surf', radius: Math.max(150, ((f.to ?? 0) - (f.from ?? 0)) * 0.6), gain: 0.12 });
     else if (f.type === 'gallery' || f.type === 'tunnel') zones.push({ from: f.from ?? f.at, to: f.to ?? f.at, echo: { time: 0.07, feedback: 0.45, mix: 0.55 } });
+    else if (f.type === 'ford') spots.push({ at: mid(f), d: 0, sound: 'stream', radius: 60, gain: 0.45 });
+    // Between high hedge banks the moor goes quiet and close.
+    else if (f.type === 'hedge') zones.push({ from: f.from ?? f.at, to: f.to ?? f.at, muffle: 1800, echo: { time: 0.03, feedback: 0.15, mix: 0.12 } });
   }
   for (const p of level?.props || []) {
     const types = [].concat(p.type || p.scatter || p.row || []);
+    const one = (sound, radius, gain, every) => spots.push({ at: mid(p), d: p.d ?? 0, sound, radius, gain, every });
+    if (types.includes('church_uk')) one('churchBell', 320, 0.45, [25, 50]);
+    if (types.some((t) => t.startsWith('duck'))) one('duck', 70, 0.45, [4, 10]);
+    if (types.includes('inn')) one('pub', 60, 0.5, [5.5, 6]);
+    if (types.includes('tractor')) one('tractorIdle', 45, 0.4, [4.9, 5]);
+    if (types.includes('phonebox')) one('phone', 50, 0.35, [40, 90]);
+    if (types.includes('mast')) one('mastHum', 50, 0.3, [7.9, 8]);
+    if (p.scatter && types.some((t) => t.startsWith('sheep') || t.startsWith('pony'))) {
+      const side = p.side === 'left' ? -1 : 1;
+      for (let s = p.from; s <= p.to; s += 180) {
+        const d = side * ((p.near ?? 15) + (p.far ?? 60)) * 0.4;
+        if (types.some((t) => t.startsWith('sheep'))) spots.push({ at: s, d, sound: 'sheep', radius: 120, gain: 0.5, every: [3, 9] });
+        if (types.some((t) => t.startsWith('pony'))) spots.push({ at: s + 90, d: -d, sound: 'pony', radius: 120, gain: 0.45, every: [10, 25] });
+      }
+    }
     if (types.includes('church')) spots.push({ at: mid(p), d: p.d ?? 0, sound: 'churchBell', radius: 320, gain: 0.45, every: [25, 50] });
     if (types.includes('sawmill')) spots.push({ at: mid(p), d: p.d ?? 0, sound: 'saw', radius: 160, gain: 0.35, every: [6, 12] });
     if (types.some((t) => t === 'fountain' || t === 'trough')) spots.push({ at: mid(p), d: p.d ?? 0, sound: 'waterfall', radius: 25, gain: 0.25 });

@@ -1148,6 +1148,7 @@ function frame(now) {
     player.water = structures.waterAt(player.s);
     player.update(dt, game.mode === 'play' ? state : game.mode === 'finished' ? runOut() : { steer: 0 });
     if (structures.rattleAt(player.s) && !player.crashed) player.shake = Math.max(player.shake, 0.45);
+    audio.onGrid = structures.rattleAt(player.s) && !player.crashed;
     if (game.mode === 'play' && !player.crashed) game.time += dt;
     // Past the finish, coast to a stop.
     if (game.mode === 'finished' && !player.crashed) player.vel.multiplyScalar(Math.exp(-dt * 0.8));
