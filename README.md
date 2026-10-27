@@ -27,15 +27,19 @@ Then open the URL Vite prints (usually http://localhost:5173).
 | `S` / `↓` | LT (analogue) | | Air brake at speed (stand tall, chest to the road, arms wide); footbrake once slow |
 | `Space` / `Shift` (hold) | A, LB or RB (hold) | Flick back and hold (or hold a second finger) | Powerslide. Steer left/right to guide it (into the slide opens it a little); hold brake to throw it fully sideways and scrub hard, tuck to close it down and carry speed |
 | `C` | Y | | Cycle camera (chase, low, helmet) |
-| `P` / `Esc` | ☰ Menu | | Pause |
-| `M` / `U` / `F` | | | Mute, km/h or mph, FPS counter |
+| `P` / `Esc` | ☰ Menu | ☰ button (top right) | Pause |
+| `R` | ⧉ View | ↻ button (top right) | Restart the level (or a fresh endless run) |
+| `M` / `U` / `F` | | | Mute, mph or km/h, FPS counter |
 
-Touch has no buttons: the whole screen is one invisible analogue stick, centred
+Apart from the two buttons in the top right, touch has no buttons: the rest of the screen is one invisible analogue stick, centred
 wherever your finger lands. Lifting your finger centres the steering but keeps
 the current tuck or air brake; the next touch carries on from there.
 
 In menus, use the d-pad, left stick or arrow keys to move between buttons, A or
-Enter to select, B or Esc to go back, and Y to cycle the graphics setting.
+Enter to select, and B or Esc to go back.
+
+**Settings** (from the title screen): speed in mph (the default) or km/h, and
+graphics.
 
 **Xbox:** Edge on Xbox may use the controller to move a cursor rather than
 passing it to the game. If so, hold the Menu button (or select the controller
@@ -111,7 +115,7 @@ straight to a level (locked or not) while working on it.
 
 ## Graphics
 
-Auto picks Low on phones, Medium on iPad and Android tablets, and High on the
+Set on the Settings screen. Auto picks Low on phones, Medium on iPad and Android tablets, and High on the
 Xbox and desktops. You can override this with Low, Medium, High or Ultra. The
 setting controls antialiasing, shadow resolution and softness, terrain detail
 and ground texturing, view distance, tree density, how far out trees are

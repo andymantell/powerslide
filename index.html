@@ -49,19 +49,27 @@
       <div class="btns">
         <button id="endless" class="secondary">ENDLESS</button>
         <button id="howto" class="secondary">CONTROLS</button>
-      </div>
-      <div class="opts">
-        <div class="opt-row"><label>Graphics</label><div id="opt-quality" class="seg"></div></div>
+        <button id="opts" class="secondary">SETTINGS</button>
       </div>
       <div id="xbox-tip" class="tip hidden">
         <b>On Xbox:</b> if the controller moves a cursor instead of the rider, press and hold the
         Menu button <kbd>☰</kbd> (or select the controller icon in Edge's address bar) and choose
         <i>Use game controls</i>.
       </div>
-      <p id="pad-hint" class="small hidden">Controller: <kbd>D-pad</kbd> choose · <kbd>A</kbd> select · <kbd>Y</kbd> graphics</p>
+      <p id="pad-hint" class="small hidden">Controller: <kbd>D-pad</kbd> choose · <kbd>A</kbd> select · <kbd>B</kbd> back</p>
     </div>
 
     <div id="whatsnew" class="panel hidden"></div>
+
+    <div id="settings" class="panel hidden">
+      <h2>SETTINGS</h2>
+      <div class="opts">
+        <div class="opt-row"><label>Speed</label><div id="opt-units" class="seg"></div></div>
+        <div class="opt-row"><label>Graphics</label><div id="opt-quality" class="seg"></div></div>
+      </div>
+      <p class="small">Changing the graphics restarts the game.</p>
+      <button id="settings-back" class="secondary">BACK</button>
+    </div>
 
     <div id="help" class="panel hidden">
       <h2>CONTROLS</h2>
@@ -72,7 +80,7 @@
         <tr><td><kbd>Space</kbd> / <kbd>Shift</kbd></td><td>Hold to powerslide: steer to guide it, brake to scrub hard</td></tr>
         <tr><td><kbd>C</kbd></td><td>Camera</td></tr>
         <tr><td><kbd>R</kbd></td><td>Restart</td></tr>
-        <tr><td><kbd>M</kbd> <kbd>U</kbd> <kbd>P</kbd> <kbd>F</kbd></td><td>Mute · km/h/mph · Pause · FPS</td></tr>
+        <tr><td><kbd>M</kbd> <kbd>U</kbd> <kbd>P</kbd> <kbd>F</kbd></td><td>Mute · mph/km/h · Pause · FPS</td></tr>
       </table>
       <table class="pad">
         <tr><td>Left stick</td><td>Lean / carve</td></tr>
@@ -91,7 +99,7 @@
         <tr><td>↻ / ☰ (top right)</td><td>Restart · Pause menu</td></tr>
       </table>
       <p class="small">Tuck for speed, slide to scrub it before the bends. Stay in your lane, watch for cars and pass close for bonus points.</p>
-      <p class="small">Above about 72 km/h the board can get speed wobbles: tuck, stay smooth or throw a slide. Steer out of a slide to close it before you let go, or the wheels hook up and throw you.</p>
+      <p class="small">Above about 45 mph (72 km/h) the board can get speed wobbles: tuck, stay smooth or throw a slide. Steer out of a slide to close it before you let go, or the wheels hook up and throw you.</p>
       <button id="help-back" class="secondary">BACK</button>
     </div>
 

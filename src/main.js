@@ -79,7 +79,7 @@ const game = {
   wasSliding: false,
   best: 0, // endless best score
   showFps: false,
-  mph: store.get('powerslide.mph', false),
+  mph: store.get('powerslide.mph', true),
   muted: store.get('powerslide.muted', false),
   camMode: 0,
   runStartDist: 0,
@@ -92,7 +92,7 @@ const BEST_KEY = 'powerslide.best.endless';
 game.best = store.get(BEST_KEY, store.get('powerslide.best.pro', 0));
 
 // ---------------------------------------------------------------- world
-const PANELS = ['loading', 'title', 'help', 'whatsnew', 'intro', 'crash', 'finish', 'pause'];
+const PANELS = ['loading', 'title', 'help', 'whatsnew', 'settings', 'intro', 'crash', 'finish', 'pause'];
 function show(id) {
   for (const p of PANELS) $(p).classList.toggle('hidden', p !== id);
   $('hud').classList.toggle('hidden', !!id && id !== 'crash' && id !== 'finish' && id !== 'pause');
@@ -206,6 +206,23 @@ function renderMenu() {
     }),
   );
 }
+
+// Speed units: mph by default.
+const UNITS = [[true, 'MPH'], [false, 'KM/H']];
+$('opt-units').replaceChildren(
+  ...UNITS.map(([mph, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = () => setUnits(mph);
+    return b;
+  }),
+);
+function setUnits(mph) {
+  game.mph = mph;
+  store.set('powerslide.mph', mph);
+  [...$('opt-units').children].forEach((b, i) => b.classList.toggle('on', UNITS[i][0] === mph));
+}
+setUnits(game.mph);
 
 function setQuality(key) {
   if (key === settings.qualityChoice) return;
@@ -462,6 +479,9 @@ function back() {
   else if (!$('help').classList.contains('hidden')) {
     show('title');
     $('howto').focus();
+  } else if (!$('settings').classList.contains('hidden')) {
+    show('title');
+    $('opts').focus();
   } else if (!$('whatsnew').classList.contains('hidden')) {
     show('title');
     $('newsbtn')?.focus();
@@ -481,6 +501,11 @@ $('finish-menu').addEventListener('click', toTitle);
 $('intro-back').addEventListener('click', toTitle);
 $('endless').addEventListener('click', () => selectLevel(null));
 $('howto').addEventListener('click', () => show('help'));
+$('opts').addEventListener('click', () => show('settings'));
+$('settings-back').addEventListener('click', () => {
+  show('title');
+  $('opts').focus();
+});
 $('help-back').addEventListener('click', () => {
   show('title');
   $('howto').focus();
@@ -695,8 +720,7 @@ function frame(now) {
     store.set('powerslide.muted', game.muted);
   }
   if (input.wasPressed('KeyU')) {
-    game.mph = !game.mph;
-    store.set('powerslide.mph', game.mph);
+    setUnits(!game.mph);
   }
   if (input.wasPressed('KeyF')) {
     game.showFps = !game.showFps;
@@ -707,8 +731,6 @@ function frame(now) {
     togglePause();
   } else if ((input.wasPressed('KeyR') || pad(8)) && (game.mode === 'play' || game.mode === 'paused')) {
     restart();
-  } else if (game.mode === 'title' && pad(3)) {
-    setQuality(QUALITY_ORDER[(QUALITY_ORDER.indexOf(settings.qualityChoice) + 1) % QUALITY_ORDER.length]);
   } else if (game.mode !== 'play' && !(game.mode === 'crashed' && player.crashTime < 1)) {
     menuInput(dt);
   }
