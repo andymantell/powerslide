@@ -116,6 +116,29 @@
       </div>
     </div>
 
+    <div id="setup" class="panel wide hidden">
+      <p class="tag">Endless</p>
+      <h2>MAKE YOUR MOUNTAIN</h2>
+      <div id="setup-presets" class="seg presets"></div>
+      <div id="setup-groups"></div>
+      <div class="setup-seed">
+        <h3>Road code</h3>
+        <p class="small">The same code and settings always make the same road. Share it to race a friend on it.</p>
+        <div class="seed-row">
+          <input id="setup-seed" type="text" inputmode="numeric" maxlength="24" autocomplete="off" spellcheck="false" aria-label="Road code" />
+          <button id="setup-roll" class="secondary">NEW ROAD</button>
+          <button id="setup-share" class="secondary">SHARE</button>
+        </div>
+        <div class="es-row"><label>Each ride</label><div id="setup-newroad" class="seg"></div></div>
+      </div>
+      <p id="setup-best" class="small"></p>
+      <div class="btns setup-btns">
+        <button id="setup-ride">RIDE</button>
+        <button id="setup-reset" class="secondary">RESET</button>
+        <button id="setup-back" class="secondary">BACK</button>
+      </div>
+    </div>
+
     <div id="crash" class="panel hidden">
       <h2>BAIL!</h2>
       <p id="crash-reason"></p>
@@ -123,6 +146,7 @@
       <div class="btns">
         <button id="from-cp" class="hidden">CHECKPOINT</button>
         <button id="again">RIDE AGAIN</button>
+        <button id="crash-setup" class="secondary hidden">CHANGE</button>
         <button id="menu" class="secondary">MENU</button>
       </div>
     </div>

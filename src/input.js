@@ -6,6 +6,7 @@ export class Input {
     this.pressed = new Set();
     this.touch = { steer: 0, tuck: 0, air: 0, pushTime: 0, slide: false };
     addEventListener('keydown', (e) => {
+      if (e.target?.tagName === 'INPUT') return; // typing in a text box
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
       if (!this.keys.has(e.code)) this.pressed.add(e.code);
       this.keys.add(e.code);

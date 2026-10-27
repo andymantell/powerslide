@@ -23,7 +23,12 @@ export class Road {
     this.reset(seed, level);
   }
 
-  reset(seed = 1337, level = null) {
+  // shape (endless mode, see src/endless.js) scales the random rolls: steep
+  // multiplies the grade, corners how often bends come (0 = all straights,
+  // 2 = no straights), sharp how tight they are (0 = sweepers only, 2 = tight
+  // bends and hairpins) and grit how often grit washes onto the road.
+  reset(seed = 1337, level = null, shape = {}) {
+    this.shape = { steep: 1, corners: 1, sharp: 1, grit: 1, ...shape };
     this.rand = mulberry32(seed);
     this.noise = createNoise2D(seed + 7);
     if (!this.x) {
@@ -42,10 +47,10 @@ export class Road {
     this.queue = null;
     this.headingOver = 0; // furthest |heading| past MAX_HEADING, for the level checker
 
-    const grade = level ? level.pieces.find((p) => p.grade !== undefined)?.grade ?? 0.06 : 0.06;
+    const grade = level ? level.pieces.find((p) => p.grade !== undefined)?.grade ?? 0.06 : 0.06 * this.shape.steep;
     this.state = {
       x: 0, y: 0, z: 0, heading: 0, kappa: 0, kappaTarget: 0, segLeft: 120,
-      grade, gradeTarget: level ? grade : 0.07, gradeLeft: 200,
+      grade, gradeTarget: level ? grade : 0.07 * this.shape.steep, gradeLeft: 200,
     };
     if (level) {
       let len = 0;
@@ -100,15 +105,23 @@ export class Road {
       return;
     }
     if (s.gradeLeft === Infinity) s.gradeLeft = 0;
+    const { corners, sharp } = this.shape;
+    // Chances of a straight, big sweeper and tight bend (the rest are
+    // near-hairpins): 0.14, 0.44, 0.28, 0.14 with the default shape.
+    const pStraight = corners <= 1 ? 1 - 0.86 * corners : 0.14 * (2 - corners);
+    const wBig = 0.44 * (2 - sharp), wTight = 0.28, wHair = 0.14 * sharp;
+    const bendScale = (1 - pStraight) / (wBig + wTight + wHair);
+    const pBig = pStraight + wBig * bendScale;
+    const pTight = pBig + wTight * bendScale;
     const r = this.rand();
     let radius = Infinity;
     let len;
-    if (r < 0.14) {
-      len = 50 + this.rand() * 130;
-    } else if (r < 0.58) {
+    if (r < pStraight) {
+      len = (50 + this.rand() * 130) * (corners > 1 ? 1 / corners : 1);
+    } else if (r < pBig) {
       radius = 90 + this.rand() * 230; // big sweepers
       len = 90 + this.rand() * 200;
-    } else if (r < 0.86) {
+    } else if (r < pTight) {
       radius = 32 + this.rand() * 35; // tight bends
       len = 40 + this.rand() * 70;
     } else {
@@ -136,7 +149,7 @@ export class Road {
     if (s.segLeft <= 0) this.pickSegment();
     s.gradeLeft -= DS;
     if (s.gradeLeft <= 0) {
-      s.gradeTarget = 0.05 + this.rand() * 0.09;
+      s.gradeTarget = Math.min(0.3, (0.05 + this.rand() * 0.09) * this.shape.steep);
       s.gradeLeft = 150 + this.rand() * 300;
     }
     // Clothoid-style transition: curvature changes linearly with distance.
@@ -157,7 +170,7 @@ export class Road {
     // Grit collects on the inside of tight bends more than on straights.
     // Levels place their own grit.
     const chance = Math.abs(s.kappa) > 1 / 70 ? 0.006 : 0.0007;
-    if (!this.level && this.count > 500 && this.rand() < chance * DS) {
+    if (!this.level && this.count > 500 && this.rand() < chance * this.shape.grit * DS) {
       const inside = Math.sign(s.kappa) || (this.rand() < 0.5 ? -1 : 1);
       this.patches.push({
         s: (this.count - 1) * DS,

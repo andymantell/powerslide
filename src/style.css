@@ -244,3 +244,57 @@ button:focus-visible, button.focus { outline: 3px solid #fff; outline-offset: 2p
 #whatsnew ul { margin: 2px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.45; }
 #whatsnew li { margin: 3px 0; }
 #whatsnew .since { margin: -4px 0 10px; font-weight: 800; font-size: 17px; color: var(--accent); }
+
+/* Endless setup: presets, then sliders and choices in groups. */
+#setup { width: min(780px, calc(100vw - 32px)); padding-bottom: 0; }
+#setup .tag { margin-bottom: 0; }
+.presets { justify-content: center; margin: 8px 0 6px; }
+.presets button { padding: 8px 14px; font-size: 14px; }
+#setup-groups { text-align: left; }
+.es-group h3, .setup-seed h3 { margin: 12px 0 4px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+.es-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+.es-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; min-height: 36px; }
+.es-row > label { flex: 0 0 118px; font-size: 13px; line-height: 1.2; opacity: 0.9; }
+.es-row > label small { display: block; font-size: 11px; opacity: 0.7; }
+.es-row .seg { flex: 1; }
+button.slider {
+  flex: 1; margin: 0; padding: 6px 8px; display: flex; align-items: center; gap: 10px;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+  font-size: 13px; letter-spacing: 0; font-weight: 700; touch-action: pan-y; min-height: 36px;
+}
+button.slider .track { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.22); }
+button.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
+button.slider .knob {
+  position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+button.slider .val { flex: 0 0 96px; text-align: right; white-space: nowrap; }
+button.slider.changed .val { color: var(--accent); }
+.setup-seed { text-align: left; }
+.setup-seed p { margin: 0 0 6px; }
+.seed-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.seed-row input {
+  flex: 1 1 140px; min-width: 0; padding: 9px 12px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 18px;
+  letter-spacing: 2px; color: #fff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3);
+  user-select: text; -webkit-user-select: text;
+}
+.seed-row input:focus { outline: 2px solid var(--accent); }
+.seed-row button { margin: 0; padding: 10px 16px; font-size: 14px; }
+#setup-best { margin: 10px 0 0; min-height: 1em; }
+/* RIDE stays in reach at the bottom while the settings scroll. */
+.setup-btns {
+  position: sticky; bottom: 0; margin: 4px -36px 0; padding: 4px 36px 14px;
+  background: linear-gradient(rgba(12, 16, 24, 0), rgba(12, 16, 24, 0.92) 30%);
+}
+@media (max-width: 700px) {
+  #setup { width: calc(100vw - 20px); }
+  .es-rows { grid-template-columns: 1fr; }
+  .es-row > label { flex-basis: 96px; }
+  button.slider .val { flex-basis: 78px; }
+  .setup-btns { margin: 4px -14px 0; padding: 4px 14px 12px; flex-wrap: nowrap; gap: 8px; }
+  .setup-btns button { flex: 1; padding: 10px 6px; letter-spacing: 1px; }
+}
+@media (max-height: 500px) {
+  .setup-btns { margin: 4px -20px 0; padding: 4px 20px 10px; }
+  .es-row { margin: 3px 0; }
+}

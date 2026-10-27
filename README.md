@@ -53,7 +53,12 @@ order. Finishing a biome's last level opens the next biome. Each level has three
 stars: one for finishing, one for beating the target time and one for beating
 the target score (distance plus slide, close-pass and 180 bonuses). Later
 levels have checkpoints: crash after one and you can restart from it. Endless
-mode is the old random mountain pass, with its own best score.
+mode is the old random mountain pass, set up on its own screen first: presets,
+the road's steepness, corners and grit, rider physics (speed boost, grip,
+gravity, wind, wobbles, highsides), biome, road surface, weather and traffic.
+A road code (the seed) and a SHARE link let someone else ride the same road
+with the same settings. The setup is remembered, and each mix of settings
+keeps its own best score.
 
 Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,
 Pine Forest, Desert Canyon, City at Night, Coastal Cliffs and High Alpine Pass)
@@ -154,7 +159,7 @@ preset.
 - **Road** (`src/road.js`): the centreline is built from clothoid-style
   transitions between straights, big sweepers, tight bends and near-hairpins.
   A level supplies the pieces; endless mode rolls them at random, with a
-  varying 5–14% grade. The heading is kept within about ±66° of
+  varying 5–14% grade, scaled by the endless setup (`src/endless.js`). The heading is kept within about ±66° of
   downhill, so the road never crosses itself.
 - **Terrain** (`src/terrain.js`): the height is a world-space function of
   distance to the road. One side rises into the mountain and the other drops

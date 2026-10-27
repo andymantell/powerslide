@@ -19,8 +19,10 @@ import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
 import { registerOffline, keepSaves } from './pwa.js';
-import { store, loadSettings, QUALITY, QUALITY_ORDER, ENDLESS_TRAFFIC, autoQuality } from './settings.js';
+import { store, loadSettings, QUALITY, QUALITY_ORDER, autoQuality } from './settings.js';
 import { lookOf } from './biomes.js';
+import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, NORMAL } from './endless.js';
+import { setRoadSurface } from './roadmat.js';
 import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
 
 const $ = (id) => document.getElementById(id);
@@ -44,7 +46,17 @@ renderer.toneMappingExposure = 1.0;
 const params = new URLSearchParams(location.search);
 const wanted = params.get('level');
 const bootLevel = wanted === 'endless' ? null : BIOMES.flatMap((b) => b.levels).find((l) => l.id === wanted) || nextLevel();
-const look = lookOf(bootLevel && biomeOf(bootLevel));
+// Endless mode's setup (src/endless.js), remembered between visits. A shared
+// link's settings replace the saved ones.
+let endless = loadEndless();
+const shared = wanted === 'endless' && fromParams(params);
+if (shared) {
+  endless = shared;
+  saveEndless(endless);
+}
+// Endless rides in the biome its setup picks.
+const endlessLook = () => lookOf(derive(endless).biome);
+const look = bootLevel ? lookOf(biomeOf(bootLevel)) : endlessLook();
 const pick = (map, key) => map[key] || map.alpine;
 
 const scene = new THREE.Scene();
@@ -102,11 +114,15 @@ const game = {
   hintShown: false,
 };
 audio.muted = game.muted;
-const BEST_KEY = 'powerslide.best.endless';
-game.best = store.get(BEST_KEY, store.get('powerslide.best.pro', 0));
+// The endless best is kept for each mix of settings.
+const loadBest = () => {
+  const key = bestKey(endless);
+  return store.get(key, key === 'powerslide.best.endless' ? store.get('powerslide.best.pro', 0) : 0);
+};
+game.best = loadBest();
 
 // ---------------------------------------------------------------- world
-const PANELS = ['loading', 'title', 'help', 'whatsnew', 'settings', 'intro', 'crash', 'finish', 'pause'];
+const PANELS = ['loading', 'title', 'help', 'whatsnew', 'settings', 'intro', 'setup', 'crash', 'finish', 'pause'];
 function show(id) {
   for (const p of PANELS) $(p).classList.toggle('hidden', p !== id);
   $('hud').classList.toggle('hidden', !!id && id !== 'crash' && id !== 'finish' && id !== 'pause');
@@ -136,18 +152,26 @@ async function buildTiles() {
   game.mode = prevMode;
 }
 
-// Swaps in the road for a level (or a fresh random road for endless).
+let worldKey = null; // the endless setup the road on screen was made with
+const setupKey = () => JSON.stringify({ ...endless, newRoad: null });
+// Swaps in the road for a level, or for endless the road its setup makes.
 async function loadWorld(level) {
   game.level = level;
-  game.seed = level ? level.seed : Math.floor(Math.random() * 1e9);
-  road.reset(game.seed, level);
+  const mix = level ? NORMAL : derive(endless);
+  worldKey = level ? null : setupKey();
+  game.seed = level ? level.seed : mix.seed;
+  road.reset(game.seed, level, mix.shape);
   road.ensure(START_S + 7000);
   terrain.reset(game.seed + 11);
   grass.clear();
   roadMesh.clear();
   marks.clear();
   sparks.clear();
-  traffic.configure(level ? level.traffic : ENDLESS_TRAFFIC, game.seed);
+  traffic.configure(level ? level.traffic : mix.traffic, game.seed);
+  player.diff = mix.tuning;
+  Object.assign(player.mods, mix.mods);
+  setRoadSurface(roadMesh.roadMat, mix.surface);
+  scene.fog.density = Q.fog * mix.fog;
   player.reset(road.start);
   cam.init = false;
   roadMesh.update(player.s);
@@ -284,15 +308,209 @@ function showIntro() {
     if (p.bestTime !== null) {
       $('intro-best').append(stars(p.stars), ` Best ${fmtTime(p.bestTime)} · ${p.bestScore} points`);
     }
+    show('intro');
   } else {
-    $('intro-where').textContent = 'Endless';
-    $('intro-name').textContent = 'The Long Way Down';
-    $('intro-hint').textContent = 'A mountain road that never ends. Ride as far as you can.';
-    $('intro-targets').innerHTML = '';
-    $('intro-best').textContent = game.best ? `Best ${game.best} points` : '';
+    openSetup();
   }
-  show('intro');
 }
+
+// ---------------------------------------------------------------- endless setup
+// Sliders are buttons: drag or tap along them, or focus one with the D-pad and
+// press left / right. Choices are rows of buttons, like the settings screen.
+function renderSetup() {
+  const cur = presetOf(endless);
+  $('setup-presets').replaceChildren(
+    ...PRESETS.map((p) => {
+      const b = document.createElement('button');
+      b.textContent = p.name;
+      b.className = p === cur ? 'on' : '';
+      b.onclick = () => {
+        applyPreset(endless, p);
+        setupChanged();
+      };
+      return b;
+    }),
+  );
+  $('setup-groups').replaceChildren(
+    ...GROUPS.map((g) => {
+      const sec = document.createElement('div');
+      sec.className = 'es-group';
+      const rows = document.createElement('div');
+      rows.className = 'es-rows';
+      rows.append(...g.items.map(setupRow));
+      sec.append(Object.assign(document.createElement('h3'), { textContent: g.title }), rows);
+      return sec;
+    }),
+  );
+  $('setup-seed').value = endless.seed;
+  $('setup-newroad').replaceChildren(
+    ...[[true, 'New road'], [false, 'Same road']].map(([v, label]) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.className = endless.newRoad === v ? 'on' : '';
+      b.onclick = () => {
+        endless.newRoad = v;
+        setupChanged();
+      };
+      return b;
+    }),
+  );
+  game.best = loadBest();
+  $('setup-best').textContent = game.best ? `Best with these settings: ${game.best} points` : '';
+}
+
+function setupRow(it) {
+  const row = document.createElement('div');
+  row.className = 'es-row';
+  const label = document.createElement('label');
+  label.textContent = it.label;
+  if (it.note) label.append(Object.assign(document.createElement('small'), { textContent: it.note }));
+  row.append(label);
+  if (it.options) {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.append(
+      ...optionsOf(it).map(([v, text]) => {
+        const b = document.createElement('button');
+        b.textContent = text;
+        b.className = endless[it.id] === v ? 'on' : '';
+        b.onclick = () => {
+          setValue(endless, it.id, v);
+          setupChanged(b);
+        };
+        return b;
+      }),
+    );
+    row.append(seg);
+    return row;
+  }
+  const b = document.createElement('button');
+  b.className = 'slider';
+  b.dataset.id = it.id;
+  b.setAttribute('aria-label', it.label);
+  b.innerHTML = '<span class="track"><span class="fill"></span><span class="knob"></span></span><span class="val"></span>';
+  paintSlider(b, it);
+  const track = b.querySelector('.track');
+  const fromX = (e) => {
+    const r = track.getBoundingClientRect();
+    const t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const before = endless[it.id];
+    setValue(endless, it.id, it.min + t * (it.max - it.min));
+    if (endless[it.id] !== before) sliderChanged(b, it);
+  };
+  b.addEventListener('pointerdown', (e) => {
+    b.setPointerCapture?.(e.pointerId);
+    fromX(e);
+  });
+  b.addEventListener('pointermove', (e) => {
+    if (b.hasPointerCapture?.(e.pointerId)) fromX(e);
+  });
+  row.append(b);
+  return row;
+}
+
+function paintSlider(b, it) {
+  const v = endless[it.id];
+  const t = ((v - it.min) / (it.max - it.min)) * 100;
+  b.querySelector('.fill').style.width = `${t}%`;
+  b.querySelector('.knob').style.left = `${t}%`;
+  b.querySelector('.val').textContent = it.show(v);
+  b.classList.toggle('changed', v !== it.def);
+}
+
+// A slider moved: repaint just it (so a drag isn't interrupted), plus the
+// presets and best score that depend on it.
+function sliderChanged(b, it) {
+  paintSlider(b, it);
+  saveEndless(endless);
+  const cur = presetOf(endless);
+  [...$('setup-presets').children].forEach((p, i) => p.classList.toggle('on', PRESETS[i] === cur));
+  game.best = loadBest();
+  $('setup-best').textContent = game.best ? `Best with these settings: ${game.best} points` : '';
+}
+
+const SLIDERS = GROUPS.flatMap((g) => g.items).filter((it) => !it.options);
+function nudgeSlider(b, dir) {
+  const it = SLIDERS.find((x) => x.id === b.dataset.id);
+  sliderStep(endless, it.id, dir);
+  sliderChanged(b, it);
+}
+
+// Re-renders the screen and puts the highlight back on the same spot.
+function setupChanged(from) {
+  saveEndless(endless);
+  const all = [...$('setup').querySelectorAll('button')];
+  const at = all.indexOf(from || navEl);
+  renderSetup();
+  if (at >= 0 && navEl?.classList.contains('focus')) setFocus($('setup').querySelectorAll('button')[at], true);
+}
+
+function openSetup() {
+  game.mode = 'intro';
+  renderSetup();
+  show('setup');
+  setFocus($('setup-ride'));
+}
+
+$('setup-seed').addEventListener('change', () => {
+  const v = $('setup-seed').value.trim().slice(0, 24);
+  endless.seed = v || randomSeed();
+  // A typed-in code is a road you want to ride.
+  endless.newRoad = false;
+  setupChanged();
+});
+$('setup-seed').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === 'Escape') $('setup-seed').blur();
+});
+$('setup-roll').addEventListener('click', () => {
+  endless.seed = randomSeed();
+  setupChanged($('setup-roll'));
+});
+$('setup-share').addEventListener('click', async () => {
+  const url = shareUrl(endless);
+  try {
+    if (navigator.share && document.body.classList.contains('is-touch')) {
+      await navigator.share({ title: 'Powerslide', text: `Ride my Powerslide road (code ${endless.seed})`, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    toast('Link copied. Send it to a friend!');
+  } catch (e) {
+    if (e?.name !== 'AbortError') toast(`Road code ${endless.seed}`);
+  }
+});
+$('setup-reset').addEventListener('click', () => {
+  const seed = endless.seed;
+  endless = endlessDefaults();
+  endless.seed = seed;
+  setupChanged($('setup-reset'));
+  toast('Back to normal settings');
+});
+$('setup-back').addEventListener('click', () => back());
+$('setup-ride').addEventListener('click', () => rideEndless(true));
+// reroll: roll a new road code first, if the setup asks for a new road each ride.
+async function rideEndless(reroll) {
+  if (game.mode === 'loading') return;
+  if (reroll && endless.newRoad) endless.seed = randomSeed();
+  saveEndless(endless);
+  if (JSON.stringify(endlessLook()) !== JSON.stringify(look)) {
+    // Another biome's look: reload into it and set off straight away.
+    location.search = '?level=endless&go=1';
+    return;
+  }
+  game.best = loadBest();
+  // The road on screen is already this one: just go back to the top.
+  if (!game.level && worldKey === setupKey()) {
+    player.reset(road.start);
+    cam.init = false;
+    traffic.configure(derive(endless).traffic, game.seed);
+    await buildTiles();
+  } else {
+    await loadWorld(null);
+  }
+  startRun();
+}
+$('crash-setup').addEventListener('click', openSetup);
 
 renderMenu();
 if (settings.device === 'xbox') {
@@ -380,7 +598,7 @@ function endRun() {
     const isBest = sc > game.best;
     if (isBest) {
       game.best = sc;
-      store.set(BEST_KEY, sc);
+      store.set(bestKey(endless), sc);
     }
     $('crash-stats').innerHTML = `Score <b>${sc}</b>${isBest ? ' — new best!' : ''}<br>
       Distance <b>${((player.distance - game.runStartDist) / 1000).toFixed(2)} km</b><br>
@@ -389,6 +607,7 @@ function endRun() {
     $('again').textContent = 'RIDE AGAIN';
   }
   $('from-cp').classList.toggle('hidden', !game.checkpoint);
+  $('crash-setup').classList.toggle('hidden', !!game.level);
   $('again').classList.toggle('secondary', !!game.checkpoint);
   show('crash');
   if (game.checkpoint) setFocus($('from-cp'));
@@ -460,6 +679,11 @@ function moveFocus(dx, dy) {
     setFocus(cur || list[0], true);
     return;
   }
+  // Left and right move a focused slider rather than the focus.
+  if (dx && cur.classList.contains('slider')) {
+    nudgeSlider(cur, dx);
+    return;
+  }
   const r0 = cur.getBoundingClientRect();
   const cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
   let best = null, bestScore = Infinity;
@@ -481,6 +705,8 @@ function moveFocus(dx, dy) {
 
 const stickNav = { x: 0, y: 0, t: 0 };
 function menuInput(dt) {
+  // Typing a road code: leave the keys to the text box.
+  if (document.activeElement?.tagName === 'INPUT') return;
   const pressed = (c) => input.wasPressed(c);
   let dx = 0, dy = 0;
   if (pressed('ArrowLeft') || pressed('Pad14')) dx = -1;
@@ -512,7 +738,8 @@ function menuInput(dt) {
 }
 
 function back() {
-  if (game.mode === 'paused') togglePause();
+  if (!$('setup').classList.contains('hidden')) toTitle().then(() => setFocus($('endless')));
+  else if (game.mode === 'paused') togglePause();
   else if (game.mode === 'intro' || game.mode === 'finished' || (game.mode === 'crashed' && player.crashTime > 1)) toTitle();
   else if (!$('help').classList.contains('hidden')) {
     show('title');
@@ -537,7 +764,7 @@ $('next').addEventListener('click', () => {
 });
 $('finish-menu').addEventListener('click', toTitle);
 $('intro-back').addEventListener('click', toTitle);
-$('endless').addEventListener('click', () => selectLevel(null));
+$('endless').addEventListener('click', () => game.mode !== 'loading' && openSetup());
 $('howto').addEventListener('click', () => show('help'));
 $('opts').addEventListener('click', () => show('settings'));
 $('settings-back').addEventListener('click', () => {
@@ -906,7 +1133,14 @@ async function boot() {
   // Warm up: settle the rider pose and a few cars.
   if (traffic.density > 0) for (let i = 0; i < 4; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
   player.animate(0.016);
-  if (wanted) showIntro();
+  // Tidy a share link or a biome reload out of the address bar, so reloading
+  // the page later doesn't bring them back.
+  if (wanted === 'endless' && location.search !== '?level=endless') history.replaceState(null, '', '?level=endless');
+  if (wanted === 'endless' && params.get('go')) {
+    game.mode = 'intro';
+    rideEndless(false);
+  }
+  else if (wanted) showIntro();
   else toTitle();
 }
 

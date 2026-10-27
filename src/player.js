@@ -96,6 +96,11 @@ export class Player {
   constructor(scene, road, terrain, diff = TUNING) {
     this.scene = scene;
     this.diff = diff;
+    // Endless mode's custom settings (src/endless.js) scale the model:
+    // gravity multiplies g, wind blows down the road (m/s, - = headwind),
+    // rolling multiplies rolling resistance and boost is a thrust (m/s²)
+    // that comes in with the tuck. These defaults leave the physics alone.
+    this.mods = { gravity: 1, wind: 0, rolling: 1, boost: 0 };
     this.road = road;
     this.terrain = terrain;
     this.model = new RiderModel();
@@ -256,22 +261,28 @@ export class Player {
     this.weight += clamp(wantWeight - this.weight, -dt * 3, dt * 3);
 
     // ---- Forces along the road (as accelerations).
+    const mods = this.mods;
+    const g = G * mods.gravity;
     const cosGrade = 1 / Math.sqrt(1 + f.grade * f.grade);
-    const gAlong = G * f.grade * cosGrade;
+    const gAlong = g * f.grade * cosGrade;
     let ax = f.dirX * gAlong;
     let az = f.dirZ * gAlong;
     const cda = lerp(lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck), CDA_AIRBRAKE, this.airbrake) + (this.slideMode ? CDA_SLIDE : 0);
     const dragK = (0.5 * RHO * cda) / MASS;
-    ax -= dragK * speed * this.vel.x;
-    az -= dragK * speed * this.vel.y;
+    // Drag acts on the speed through the air, which wind changes.
+    const airX = this.vel.x - f.dirX * mods.wind, airZ = this.vel.y - f.dirZ * mods.wind;
+    const air = Math.hypot(airX, airZ);
+    ax -= dragK * air * airX;
+    az -= dragK * air * airZ;
 
     // Along the deck: rolling resistance, footbrake, pushing.
     const onGravel = Math.abs(this.d) > HALF_WIDTH;
     this.dirt = road.dirtAt(this.s, this.d);
-    const crr = CRR + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
-    let long = -crr * G * cosGrade * Math.sign(vLong0) - FOOTBRAKE * this.brake * Math.sign(vLong0) + pushAcc;
+    const crr = CRR * mods.rolling + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
+    const boost = mods.boost * this.tuck;
+    let long = -crr * g * cosGrade * Math.sign(vLong0) - FOOTBRAKE * this.brake * Math.sign(vLong0) + pushAcc + boost;
     // Don't let resistance reverse the board.
-    if (pushAcc === 0 && Math.abs(vLong0) < Math.abs(long) * dt && long * vLong0 < 0) long = -vLong0 / dt;
+    if (pushAcc === 0 && boost === 0 && Math.abs(vLong0) < Math.abs(long) * dt && long * vLong0 < 0) long = -vLong0 / dt;
     ax += ux * long;
     az += uz * long;
     // A glove on the road scrapes against the direction of travel.
@@ -329,7 +340,7 @@ export class Player {
     this.steerRear = -Math.atan(tanRoll * (this.fakie ? SIN_FRONT : SIN_REAR));
 
     // ---- Wheels: grip impulses at each truck, solved iteratively.
-    const N = MASS * G * cosGrade;
+    const N = MASS * g * cosGrade;
     const share = 0.3 * this.weight;
     const gripScale = (onGravel ? 0.75 : 1) * lerp(1, d.dirtGrip, this.dirt);
     let r = this.yawRate;

@@ -22,7 +22,10 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
     uCentre: { value: new THREE.Color(markings.centre) },
     uEdge: { value: new THREE.Color(markings.edge) },
     uMark: { value: new THREE.Vector4(markings.centreOn, markings.centrePeriod, markings.centreWidth, markings.edgeWidth) },
+    // Surface look (see setRoadSurface): tone, bump, wet.
+    uSurface: { value: new THREE.Vector3(1, 1, 0) },
   };
+  mat.userData.uniforms = uniforms;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
@@ -35,6 +38,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         uniform sampler2D tAspA, tAspN, tGravA;
         uniform vec3 uCentre, uEdge;
         uniform vec4 uMark;
+        uniform vec3 uSurface;
         varying vec2 vRoad;
         float rHash(float n) { return fract(sin(n) * 43758.5453); }
         float rNoise(float x) { float i = floor(x); float f = fract(x); return mix(rHash(i), rHash(i + 1.0), f * f * (3.0 - 2.0 * f)); }
@@ -76,6 +80,12 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         vec3 grav = texture2D(tGravA, vec2(ru, rs) * 0.45).rgb;
         rcol = mix(rcol * mix(1.0, 0.85, smoothstep(${(HALF_WIDTH - 0.6).toFixed(3)}, ${HALF_WIDTH.toFixed(3)}, au)), grav, verge);
         rough = mix(rough, 0.95, verge);
+        // Fresh or worn tarmac, and a wet road: darker and shiny, most of all
+        // where it's smoothest.
+        float onRoad = 1.0 - verge;
+        rcol *= mix(1.0, uSurface.x, onRoad);
+        rcol *= mix(1.0, 0.55, uSurface.z * onRoad);
+        rough = mix(rough, 0.28 + (rough - 0.6) * 0.5, uSurface.z * onRoad);
         diffuseColor.rgb *= rcol;
         `,
       )
@@ -84,7 +94,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         '#include <normal_fragment_maps>',
         `{
           vec3 tn = texture2D(tAspN, vec2(ru, rs) * 0.75).xyz * 2.0 - 1.0;
-          tn.xy *= (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7);
+          tn.xy *= (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7) * mix(1.0, uSurface.y, 1.0 - verge);
           // Tangent frame from screen-space derivatives of the road UVs.
           vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition);
           vec2 st0 = dFdx(vRoad), st1 = dFdy(vRoad);
@@ -100,4 +110,10 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
   };
   mat.customProgramCacheKey = () => 'road';
   return mat;
+}
+
+// tone: brightness of the asphalt (fresh tarmac is darker), bump: how coarse
+// it looks, wet: 0..1 rain on the road.
+export function setRoadSurface(mat, { tone = 1, bump = 1, wet = 0 } = {}) {
+  mat.userData.uniforms.uSurface.value.set(tone, bump, wet);
 }
