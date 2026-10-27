@@ -44,6 +44,7 @@ const views = {
   forest: { back: -10, up: 3, ahead: 0, lookUp: 3, side: 25 },
   verge: { back: 0, up: 0.9, ahead: 14, lookUp: 0.4, side: 3.5 },
   cutting: { target: 'cutting' },
+  distant: { target: 'distant' },
   boulder: { target: 'boulder', back: 4, up: 1.5, ahead: 0, lookUp: 0.5, side: 1 },
 };
 for (const [name, v] of Object.entries(views)) {
@@ -75,6 +76,23 @@ for (const [name, v] of Object.entries(views)) {
         v = { ...v, back: best.s * 4, up: best.s * 1.5, lookUp: best.s * 0.5, side: best.s * 1.5 };
       }
     }
+    if (v.pr) {
+      // Mimic dynamic resolution dropping the render scale.
+      renderer.setPixelRatio(+v.pr);
+      P.post?.setPixelRatio?.(+v.pr);
+    }
+    if (v.target === 'distant') {
+      // Look across the valley at the hillside 150-400 m away, where trees are impostors.
+      const side = terrain.heightAt(p.x + rx * 200, p.z + rz * 200) < terrain.heightAt(p.x - rx * 200, p.z - rz * 200) ? 1 : -1;
+      const tx = p.x + rx * side * 260 + fx * 120, tz = p.z + rz * side * 260 + fz * 120;
+      camera.position.set(p.x, p.y + 4, p.z);
+      camera.lookAt(tx, terrain.heightAt(tx, tz) + 10, tz);
+      camera.fov = 40;
+      camera.updateProjectionMatrix();
+      P.renderFrame();
+      return;
+    }
+
     if (v.target === 'cutting') {
       // Find the rockiest road cut ahead and look at it from the far lane.
       const { road } = P;
@@ -109,7 +127,7 @@ for (const [name, v] of Object.entries(views)) {
     camera.fov = 60;
     camera.updateProjectionMatrix();
     for (let i = 0; i < 1; i++) { P.renderFrame ? P.renderFrame() : renderer.render(scene, camera); await new Promise((r) => setTimeout(r, 50)); }
-  }, v);
+  }, { ...v, pr: process.env.SHOT_PR ? +process.env.SHOT_PR : 0 });
   await page.screenshot({ path: `${out}/${name}.png`, timeout: 590000 });
   console.log('shot', name);
 }

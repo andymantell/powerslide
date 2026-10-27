@@ -13,6 +13,7 @@ const MAX_FULL = 1200;
 const MAX_IMP = 24000;
 const IMP_W = 256;
 const IMP_H = 512;
+const IMP_VIEWS = 4; // baked azimuths per variant
 
 // Mipmapping averages alpha away, so distant cards would thin out and
 // vanish under alpha testing; scale alpha back up with the mip level.
@@ -57,6 +58,7 @@ export class Forest {
     this.scene = scene;
     this.renderer = renderer;
     this.fullRadius = q.treeLodRadius ?? 90;
+    this.antialias = !!q.antialias;
     this.variants = [];
     this.ready = false;
     this.lastX = Infinity;
@@ -128,56 +130,109 @@ export class Forest {
     this.dirty = true;
   }
 
-  // Side-on renders of each variant under flat light: the impostor shader
-  // relights them with fanned normals so they still read as round crowns.
+  // Side-on renders of each variant from several sides: colour under flat
+  // light (with the baked crown AO), plus a matching normal map so the
+  // impostor shader can light them like the full trees.
   bakeImpostors() {
     const r = this.renderer;
     const scene = new THREE.Scene();
     scene.add(new THREE.AmbientLight('#ffffff', Math.PI));
-    const rt = new THREE.WebGLRenderTarget(IMP_W * this.variants.length, IMP_H, { samples: 4 });
+    // Mipmapped, so distant impostors filter smoothly instead of sparkling.
+    const cols = this.variants.length * IMP_VIEWS;
+    const opts = { samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter };
+    const rt = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
+    const rtN = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
     rt.texture.colorSpace = THREE.SRGBColorSpace;
     const prev = { target: r.getRenderTarget(), tone: r.toneMapping, clear: r.getClearAlpha() };
     const clearCol = r.getClearColor(new THREE.Color());
-    r.setRenderTarget(rt);
     r.toneMapping = THREE.NoToneMapping;
-    r.setClearColor('#2e4228', 0);
-    r.clear();
+    // Bake-camera-space normals, 0..1 encoded; foliage cut out like the colour pass.
+    const normalMat = (map) =>
+      new THREE.ShaderMaterial({
+        defines: map ? { USE_CUT: '' } : {},
+        uniforms: { map: { value: map } },
+        side: THREE.DoubleSide,
+        vertexShader: `varying vec2 vUv; varying vec3 vN;
+          void main() { vUv = uv; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform sampler2D map; varying vec2 vUv; varying vec3 vN;
+          void main() {
+            #ifdef USE_CUT
+              vec2 dt = max(abs(dFdx(vUv)), abs(dFdy(vUv))) * 512.0;
+              if (texture2D(map, vUv).a * (1.0 + max(0.0, log2(max(dt.x, dt.y))) * 0.35) < 0.45) discard;
+            #endif
+            gl_FragColor = vec4(normalize(vN) * 0.5 + 0.5, 1.0);
+          }`,
+      });
+    const normF = normalMat(this.foliageMat.map);
+    const normT = normalMat(null);
     const basicF = new THREE.MeshBasicMaterial({ map: this.foliageMat.map, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide });
     basicF.onBeforeCompile = (s) => boostAlpha(s);
     const basicT = new THREE.MeshBasicMaterial({ map: this.barkMat.map });
-    this.variants.forEach((v, i) => {
-      scene.clear();
-      scene.add(new THREE.AmbientLight('#ffffff', Math.PI));
-      scene.add(new THREE.Mesh(v.foliage.geometry, basicF), new THREE.Mesh(v.trunk.geometry, basicT));
-      const half = Math.max(v.W * 0.5, v.H * 0.25) * 1.02;
-      v.impW = half * 2;
-      const cam = new THREE.OrthographicCamera(-half, half, v.H * 1.02, 0, 0.1, 100);
-      cam.position.set(0, 0, 40);
-      r.setViewport(i * IMP_W, 0, IMP_W, IMP_H);
-      r.setScissor(i * IMP_W, 0, IMP_W, IMP_H);
-      r.setScissorTest(true);
-      r.render(scene, cam);
-    });
+    // Each target is filled in one go: switching away from a multisampled
+    // target resolves and discards it, which would wipe earlier columns.
+    // Clear colours bleed into the mips at the edges, so use a foliage green
+    // and a viewer-facing normal.
+    for (const [target, mf, mt, clear] of [[rt, basicF, basicT, '#2e4228'], [rtN, normF, normT, new THREE.Color(0.5, 0.5, 1)]]) {
+      r.setRenderTarget(target);
+      r.setClearColor(clear, 0);
+      r.setScissorTest(false);
+      r.clear();
+      this.variants.forEach((v, i) => {
+        scene.clear();
+        scene.add(new THREE.AmbientLight('#ffffff', Math.PI));
+        const tree = new THREE.Group();
+        tree.add(new THREE.Mesh(v.foliage.geometry, mf), new THREE.Mesh(v.trunk.geometry, mt));
+        scene.add(tree);
+        const half = Math.max(v.W * 0.5, v.H * 0.25) * 1.02;
+        v.impW = half * 2;
+        const cam = new THREE.OrthographicCamera(-half, half, v.H * 1.02, 0, 0.1, 100);
+        cam.position.set(0, 0, 40);
+        // The same tree from several sides, so impostors don't all show one
+        // silhouette and they turn as the rider passes. View a looks from
+        // azimuth a * 2pi / IMP_VIEWS in the tree's own frame.
+        for (let a = 0; a < IMP_VIEWS; a++) {
+          tree.rotation.y = (-a / IMP_VIEWS) * Math.PI * 2;
+          const x = (i * IMP_VIEWS + a) * IMP_W;
+          r.setViewport(x, 0, IMP_W, IMP_H);
+          r.setScissor(x, 0, IMP_W, IMP_H);
+          r.setScissorTest(true);
+          r.render(scene, cam);
+        }
+      });
+    }
     r.setScissorTest(false);
     r.setRenderTarget(prev.target);
     r.setViewport(0, 0, r.domElement.width / r.getPixelRatio(), r.domElement.height / r.getPixelRatio());
     r.toneMapping = prev.tone;
     r.setClearColor(clearCol, prev.clear);
-    basicF.dispose();
-    basicT.dispose();
-    rt.texture.generateMipmaps = true;
+    for (const m of [basicF, basicT, normF, normT]) m.dispose();
+    this.impTargets = [rt, rtN]; // kept for debugging views
 
     const n = this.variants.length;
     this.variants.forEach((v, i) => {
       const geo = new THREE.PlaneGeometry(v.impW, v.H * 1.02);
       geo.translate(0, v.H * 0.51, 0);
-      const uv = geo.attributes.uv;
-      for (let k = 0; k < uv.count; k++) uv.setX(k, (i + uv.getX(k)) / n);
-      const mat = new THREE.MeshStandardMaterial({ map: rt.texture, alphaTest: 0.5, roughness: 0.9, alphaToCoverage: false });
+      const mat = new THREE.MeshStandardMaterial({ map: rt.texture, alphaTest: 0.5, roughness: 1, alphaToCoverage: this.antialias });
       const halfW = (v.impW / 2).toFixed(3);
       mat.onBeforeCompile = (s) => {
         boostAlpha(s, IMP_H);
+        s.uniforms.tImpN = { value: rtN.texture };
+        s.fragmentShader = s.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform sampler2D tImpN;\nvarying vec3 vBbR, vBbF;')
+          .replace(
+            '#include <normal_fragment_maps>',
+            `{
+              // Baked normal: x right, y up, z towards the viewer.
+              vec3 bn = texture2D(tImpN, vMapUv).xyz * 2.0 - 1.0;
+              vec3 wn = normalize(vBbR * bn.x + vec3(0.0, bn.y, 0.0) + vBbF * max(bn.z, 0.15));
+              // Soften: a flat card can't self-shadow, so full-strength
+              // normals read frosty compared with the real trees.
+              wn = normalize(mix(vBbF, wn, 0.8));
+              normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz);
+            }`,
+          );
         s.vertexShader = s.vertexShader
+          .replace('#include <common>', '#include <common>\nvarying vec3 vBbR, vBbF;')
           .replace(
             '#include <defaultnormal_vertex>',
             `#include <defaultnormal_vertex>
@@ -185,8 +240,13 @@ export class Forest {
             vec3 bbF = cameraPosition - bbC; bbF.y = 0.0; bbF = normalize(bbF);
             vec3 bbR = vec3(bbF.z, 0.0, -bbF.x);
             float bbS = length(instanceMatrix[0].xyz);
-            vec3 bbN = normalize(bbR * (position.x / ${halfW}) * 0.9 + bbF * 0.6 + vec3(0.0, 0.35, 0.0));
-            transformedNormal = normalize((viewMatrix * vec4(bbN, 0.0)).xyz);`,
+            // Pick the baked view nearest the camera's direction in the tree's own frame.
+            float bbA = atan(dot(bbF, normalize(instanceMatrix[0].xyz)), dot(bbF, normalize(instanceMatrix[2].xyz)));
+            float bbV = mod(floor(bbA / ${(2 * Math.PI / IMP_VIEWS).toFixed(5)} + 0.5) + ${IMP_VIEWS}.0, ${IMP_VIEWS}.0);
+            vMapUv.x = (${i * IMP_VIEWS}.0 + bbV + uv.x) / ${n * IMP_VIEWS}.0;
+            vBbR = bbR;
+            vBbF = bbF;
+            transformedNormal = normalize((viewMatrix * vec4(bbF, 0.0)).xyz);`,
           )
           .replace(
             '#include <project_vertex>',
@@ -194,7 +254,7 @@ export class Forest {
             gl_Position = projectionMatrix * mvPosition;`,
           );
       };
-      mat.customProgramCacheKey = () => `impostor-${halfW}`;
+      mat.customProgramCacheKey = () => `impostor-${i}-${halfW}`;
       const m = new THREE.InstancedMesh(geo, mat, MAX_IMP);
       m.count = 0;
       m.frustumCulled = false;
@@ -248,7 +308,8 @@ export class Forest {
           v.foliage.setColorAt(full[k], c);
           full[k]++;
         } else if (imp[k] < MAX_IMP) {
-          m.compose(p.set(x, arr[i + 1], z), q.identity(), s.set(sc, sc, sc));
+          q.setFromAxisAngle(up, arr[i + 4]);
+          m.compose(p.set(x, arr[i + 1], z), q, s.set(sc, sc, sc));
           v.imp.setMatrixAt(imp[k], m);
           v.imp.setColorAt(imp[k], c);
           imp[k]++;

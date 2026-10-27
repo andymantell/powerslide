@@ -144,7 +144,7 @@ preset.
   and how far off centre the rider sits, across every pose and the steps between.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
-  vista, trees, forest, verge, cutting, boulder) for before/after comparisons.
+  vista, trees, forest, verge, cutting, distant, boulder; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.
 
 ## How it works
 
