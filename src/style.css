@@ -60,9 +60,11 @@ html, body {
   position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
   background: var(--panel); backdrop-filter: blur(6px);
   padding: 28px 36px; border-radius: 14px; text-align: center;
-  max-width: min(560px, calc(100vw - 32px));
+  /* Sized by the content up to max-width. Without max-content, left: 50% caps
+     the shrink-to-fit width at half the screen, which squeezes text on phones. */
+  width: max-content; max-width: min(560px, calc(100vw - 32px));
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  max-height: calc(100vh - 24px); overflow-y: auto;
+  max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto;
 }
 h1 { margin: 0; font-size: 56px; font-style: italic; letter-spacing: 3px; color: var(--accent); }
 h2 { margin: 0 0 8px; font-size: 40px; font-style: italic; color: var(--accent); }
@@ -103,7 +105,18 @@ button:hover { filter: brightness(1.1); }
   #stats { gap: 12px; left: 12px; top: 12px; }
   #stats span { font-size: 18px; }
   h1 { font-size: 40px; }
-  .panel { padding: 20px; }
+  h2 { font-size: 30px; }
+  .panel, .panel.wide { padding: 18px 14px; max-width: calc(100vw - 20px); }
+  .btns button { padding: 10px 20px; font-size: 17px; }
+}
+/* Phones on their side: short screens, so tighter headings and spacing. */
+@media (max-height: 500px) {
+  h1 { font-size: 34px; }
+  h2 { font-size: 28px; margin-bottom: 4px; }
+  .tag { margin: 2px 0 10px; }
+  .panel { padding: 14px 20px; max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
+  .btns button { margin-top: 8px; padding: 8px 20px; font-size: 16px; }
+  #whatsnew .guide { max-height: 50vh; }
 }
 
 .opts { margin: 14px auto 4px; display: inline-block; text-align: left; }
