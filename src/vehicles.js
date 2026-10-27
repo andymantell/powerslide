@@ -148,7 +148,7 @@ export class VehicleFleet {
     );
     this.pools = new THREE.InstancedMesh(
       flat.clone().translate(0, 0, -0.5), // reaches forward (-z) from the lamps
-      new THREE.MeshBasicMaterial({ map: beamTexture(), color: '#fff0d0', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, fog: true }),
+      new THREE.MeshBasicMaterial({ map: beamTexture(), color: '#fff0d0', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, fog: false }),
       CAP * 4,
     );
     this.pools.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(CAP * 12).fill(1), 3);
@@ -304,7 +304,9 @@ VehicleFleet.prototype.drawExtras = function drawExtras(cars, camera) {
       _s.set(c.cls === 'bike' ? 4.5 : 7, 1, reach);
       _m.compose(_p, _q, _s);
       pools.setMatrixAt(np, _m);
-      const k = lit.has(c) ? 0.6 : 1;
+      // Fog would tint the whole quad (even its black edges) towards the fog
+      // colour and show its outline, so additive pools fade with distance here.
+      const k = (lit.has(c) ? 0.6 : 1) * fogFade(this.scene?.fog, Math.hypot(_p.x - cp.x, _p.y - cp.y, _p.z - cp.z));
       pools.setColorAt(np++, _c.setRGB(night * k, night * k, night * k));
     }
     // Lamp glows: two heads and two tails (one each on a bike).
@@ -356,6 +358,13 @@ function blobTexture() {
     }
     g.putImageData(img, 0, 0);
   });
+}
+
+// How much of a light survives the fog at distance d (1 = all of it).
+function fogFade(fog, d) {
+  if (!fog) return 1;
+  if (fog.isFogExp2) return Math.exp(-((fog.density * d) ** 2));
+  return 1 - Math.min(1, Math.max(0, (d - fog.near) / (fog.far - fog.near)));
 }
 
 // A headlamp beam on the road: bright near the car, spreading and fading out.
