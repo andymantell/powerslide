@@ -374,30 +374,37 @@ def helmet():
 
 
 def shoe():
-    """Low skate shoe, origin at the ankle, toe along +X (rig facing)."""
+    """Low skate shoe, origin at the ankle, toe along +X (rig facing), sole
+    0.05 below. Rings along the foot with a rounded heel and toe, so nothing
+    sticks out behind the ankle."""
     bm = bmesh.new()
-    sole_r = 0.0
-    prof = []  # (x along foot, half width, top height)
-    for k in range(13):
-        t = k / 12
-        x = -0.07 + t * 0.29
-        w = 0.042 + 0.012 * math.sin(t * math.pi * 0.9)
-        if t > 0.85:
-            w *= math.sqrt(max(0.0, 1 - ((t - 0.85) / 0.15) ** 2)) * 0.9 + 0.1
-        top = 0.075 - 0.045 * max(0.0, (t - 0.35) / 0.65) ** 0.8
-        prof.append((x, w, top))
+    sole = -0.05
+    heel, toe = -0.055, 0.2
+    n, m = 20, 16
     rings = []
-    for x, w, top in prof:
+    for k in range(n + 1):
+        t = k / n
+        x = heel + t * (toe - heel)
+        # Half width: narrow heel, wide forefoot, rounded toe.
+        w = 0.036 + 0.014 * math.sin(min(1.0, t / 0.75) * math.pi * 0.6)
+        # Upper: collar just above the ankle, sloping down to a low toe box.
+        top = 0.03 - 0.036 * max(0.0, (t - 0.3) / 0.7) ** 0.9
+        # Round the ends off in plan and in height (heel 3 cm, toe 4 cm).
+        d = min(x - heel, toe - x)
+        r = 0.03 if x - heel < toe - x else 0.045
+        e = math.sqrt(max(0.0, 1 - (max(0.0, r - d) / r) ** 2))
+        e = max(e, 0.15)
+        h = top - sole
         ring = []
-        for k in range(12):
-            a = k / 12 * math.tau
-            y = math.cos(a) * w
-            z = (math.sin(a) * 0.5 + 0.5) * (top + 0.02) - 0.07
-            ring.append(bm.verts.new((x, y, max(z, -0.07))))
+        for j in range(m):
+            a = j / m * math.tau
+            y = math.cos(a) * w * e
+            z = sole + h * (0.5 + 0.5 * math.sin(a) * e) if math.sin(a) > 0 else sole + h * 0.5 * (1 + math.sin(a))
+            ring.append(bm.verts.new((x, y, max(z, sole))))
         rings.append(ring)
-    for i in range(len(rings) - 1):
-        for k in range(12):
-            bm.faces.new((rings[i][k], rings[i][(k + 1) % 12], rings[i + 1][(k + 1) % 12], rings[i + 1][k]))
+    for i in range(n):
+        for j in range(m):
+            bm.faces.new((rings[i][j], rings[i][(j + 1) % m], rings[i + 1][(j + 1) % m], rings[i + 1][j]))
     bm.faces.new(list(reversed(rings[0])))
     bm.faces.new(rings[-1])
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
@@ -410,7 +417,7 @@ def shoe():
     me.materials.append(mat('shoeSole', (0.85, 0.83, 0.78), 0.8))
     for p in me.polygons:
         p.use_smooth = True
-        if p.center.z < -0.055:
+        if p.center.z < sole + 0.012:
             p.material_index = 1
     return o
 
@@ -468,8 +475,7 @@ if __name__ == '__main__':
     bpy.context.scene.collection.objects.link(s2)
     for o, side in ((s, 'F'), (s2, 'R')):
         o.name = 'shoe' + side
-        # Heel back from the ankle, sole on the deck.
-        attach(rig, o, 'foot' + side, J['foot' + side] + R(-0.045, 0.02, 0))
+        attach(rig, o, 'foot' + side, J['foot' + side])
     g = glove()
     g2 = g.copy()
     bpy.context.scene.collection.objects.link(g2)
