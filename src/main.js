@@ -243,7 +243,7 @@ async function toTitle() {
   renderMenu();
   show('title');
   const next = $('biomes').querySelector('.tile.next');
-  if (next) next.focus();
+  setFocus(next);
 }
 
 async function selectLevel(level) {
@@ -375,7 +375,7 @@ function endRun() {
   $('from-cp').classList.toggle('hidden', !game.checkpoint);
   $('again').classList.toggle('secondary', !!game.checkpoint);
   show('crash');
-  if (game.checkpoint) $('from-cp').focus();
+  if (game.checkpoint) setFocus($('from-cp'));
 }
 
 function finishRun() {
@@ -412,18 +412,36 @@ function panelButtons() {
   return [...panel.querySelectorAll('button'), ...update].filter((b) => !b.disabled && b.offsetParent !== null);
 }
 
+// The highlight is our own .focus class, not :focus-visible: Safari hides the
+// focus ring after the screen has been touched, which left iPad controller
+// players with no idea where they were.
+let navEl = null;
+const navOn = () => !matchMedia('(hover: none)').matches || document.body.classList.contains('has-pad');
+function setFocus(b, force = false) {
+  if (!b || (!force && !navOn())) return;
+  if (navEl && navEl !== b) navEl.classList.remove('focus');
+  navEl = b;
+  b.classList.add('focus');
+  b.focus({ preventScroll: true });
+  b.scrollIntoView({ block: 'nearest' });
+}
+function currentFocus(list) {
+  if (list.includes(navEl)) return navEl;
+  return list.includes(document.activeElement) ? document.activeElement : null;
+}
+// A touch or click hides the highlight; the next controller press brings it back.
+addEventListener('pointerdown', () => navEl?.classList.remove('focus'), true);
+
 function focusFirst(panel) {
-  if (matchMedia('(hover: none)').matches && !document.body.classList.contains('has-pad')) return;
-  const b = [...panel.querySelectorAll('button')].find((x) => !x.disabled && x.offsetParent !== null);
-  b?.focus({ preventScroll: true });
+  setFocus([...panel.querySelectorAll('button')].find((x) => !x.disabled && x.offsetParent !== null));
 }
 
 function moveFocus(dx, dy) {
   const list = panelButtons();
   if (!list.length) return;
-  const cur = list.includes(document.activeElement) ? document.activeElement : null;
-  if (!cur) {
-    list[0].focus();
+  const cur = currentFocus(list);
+  if (!cur || !cur.classList.contains('focus')) {
+    setFocus(cur || list[0], true);
     return;
   }
   const r0 = cur.getBoundingClientRect();
@@ -442,10 +460,7 @@ function moveFocus(dx, dy) {
       best = b;
     }
   }
-  if (best) {
-    best.focus();
-    best.scrollIntoView({ block: 'nearest' });
-  }
+  if (best) setFocus(best, true);
 }
 
 const stickNav = { x: 0, y: 0, t: 0 };
@@ -472,23 +487,26 @@ function menuInput(dt) {
   }
   if (dx || dy) moveFocus(dx, dy);
   const list = panelButtons();
-  const focused = list.includes(document.activeElement) ? document.activeElement : null;
-  // Enter on a focused button is a native click already.
-  if (pressed('Pad0') || ((pressed('Enter') || pressed('NumpadEnter')) && !focused)) (focused || list[0])?.click();
+  const focused = currentFocus(list);
+  // Enter on a focused button is a native click already. With nothing
+  // highlighted, A shows the highlight first rather than pressing blind.
+  if (pressed('Pad0') && !focused?.classList.contains('focus')) setFocus(focused || list[0], true);
+  else if (pressed('Pad0') || ((pressed('Enter') || pressed('NumpadEnter')) && !focused)) (focused || list[0])?.click();
   if (pressed('Pad1') || pressed('Escape')) back();
 }
 
 function back() {
-  if (game.mode === 'intro' || game.mode === 'finished' || (game.mode === 'crashed' && player.crashTime > 1)) toTitle();
+  if (game.mode === 'paused') togglePause();
+  else if (game.mode === 'intro' || game.mode === 'finished' || (game.mode === 'crashed' && player.crashTime > 1)) toTitle();
   else if (!$('help').classList.contains('hidden')) {
     show('title');
-    $('howto').focus();
+    setFocus($('howto'));
   } else if (!$('settings').classList.contains('hidden')) {
     show('title');
-    $('opts').focus();
+    setFocus($('opts'));
   } else if (!$('whatsnew').classList.contains('hidden')) {
     show('title');
-    $('newsbtn')?.focus();
+    setFocus($('newsbtn'));
   }
 }
 
@@ -508,11 +526,11 @@ $('howto').addEventListener('click', () => show('help'));
 $('opts').addEventListener('click', () => show('settings'));
 $('settings-back').addEventListener('click', () => {
   show('title');
-  $('opts').focus();
+  setFocus($('opts'));
 });
 $('help-back').addEventListener('click', () => {
   show('title');
-  $('howto').focus();
+  setFocus($('howto'));
 });
 $('resume').addEventListener('click', () => togglePause());
 $('quit').addEventListener('click', () => {
@@ -891,7 +909,7 @@ watchForUpdates({
   showNews: () => show('whatsnew'),
   hideNews: () => {
     show('title');
-    $('newsbtn')?.focus();
+    setFocus($('newsbtn'));
   },
   onMenu: () => game.mode === 'title' && !$('title').classList.contains('hidden'),
 });

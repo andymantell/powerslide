@@ -162,6 +162,11 @@ export class Input {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) {
       if (!gp) continue;
+      // Safari can hand over a pad without a gamepadconnected event.
+      if (!this.padConnected) {
+        this.padConnected = true;
+        this.onPad?.(true);
+      }
       const ax = gp.axes[0] || 0;
       // Deadzone plus a gentle curve for fine control at speed.
       const dz = 0.12;
