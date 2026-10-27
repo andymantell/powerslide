@@ -38,38 +38,121 @@ def rbox(sx, sy, sz, x=0, y=0, z=0, kind=PLASTER, col='#8f8b82', rz=0, ry=0, bev
     return finish(o, kind, col)
 
 
-def stack(x, y, w, d, h, layers, rng, z0=0, lean=0.0):
-    """A pile of granite pancakes: each layer a little smaller and shifted."""
+_TEX = {}
+
+
+def rock(sx, sy, sz, x=0, y=0, z=0, col='#8f8b82', rx=0, ry=0, rz=0, seed=0, rough=0.28, detail=1, warp=0.0):
+    """A weathered granite lump: a rounded block pushed about by noise, so
+    no two are alike and none have straight edges. Base roughly at z."""
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    o = bpy.context.active_object
+    o.scale = (sx, sy, sz)
+    bpy.ops.object.transform_apply(scale=True)
+    # Rounded-off block (weathered edges, flat-ish faces), then enough
+    # vertices for the noise to roughen.
+    b = o.modifiers.new('b', 'BEVEL')
+    b.width = min(sx, sy, sz) * (0.45 if warp else 0.32)
+    b.segments = 2 if detail else 1
+    bpy.ops.object.modifier_apply(modifier='b')
+    if detail:
+        m = o.modifiers.new('s', 'SUBSURF')
+        m.subdivision_type = 'SIMPLE'
+        m.levels = detail
+        m.render_levels = detail
+        bpy.ops.object.modifier_apply(modifier='s')
+    if warp:
+        # Big, slow bulges and hollows over the whole block, so it reads as
+        # a weathered lump rather than a box.
+        t = bpy.data.textures.new('w', 'CLOUDS')
+        t.noise_scale = max(sx, sy, sz) * 0.45
+        t.noise_depth = 1
+        t.noise_basis = 'BLENDER_ORIGINAL'
+        o.location = (seed * 5.1, seed * 2.9, seed * 0.7)
+        bpy.ops.object.transform_apply(location=True)
+        w = o.modifiers.new('w', 'DISPLACE')
+        w.texture = t
+        w.texture_coords = 'GLOBAL'
+        w.strength = warp * max(sx, sy, sz)
+        w.mid_level = 0.5
+        bpy.ops.object.modifier_apply(modifier='w')
+        for v in o.data.vertices:
+            v.co.x -= seed * 5.1
+            v.co.y -= seed * 2.9
+            v.co.z -= seed * 0.7
+        o.location = (0, 0, 0)
+    key = (seed % 7)
+    if key not in _TEX:
+        t = bpy.data.textures.new(f'n{key}', 'CLOUDS')
+        t.noise_scale = 0.55
+        t.noise_depth = 2
+        t.noise_basis = 'VORONOI_F1' if key % 2 else 'BLENDER_ORIGINAL'
+        _TEX[key] = t
+    d = o.modifiers.new('d', 'DISPLACE')
+    d.texture = _TEX[key]
+    d.texture_coords = 'GLOBAL'
+    d.strength = rough * min(sx, sy, sz) * 1.6
+    d.mid_level = 0.5
+    # Offset the noise per rock so shared textures still differ.
+    o.location = (seed * 3.7, seed * 1.3, 0)
+    bpy.ops.object.transform_apply(location=True)
+    bpy.ops.object.modifier_apply(modifier='d')
+    if warp:
+        # Shed the vertices the shape no longer needs.
+        dm = o.modifiers.new('x', 'DECIMATE')
+        dm.ratio = 0.3
+        bpy.ops.object.modifier_apply(modifier='x')
+    for v in o.data.vertices:
+        v.co.x -= seed * 3.7
+        v.co.y -= seed * 1.3
+        v.co.z += sz / 2
+    o.location = (x, y, z)
+    o.rotation_euler = (rx, ry, rz)
+    return finish(o, PLASTER, col)
+
+
+def pile(x, y, w, d, h, rng, z0=0):
+    """A tor stack: heavy weathered slabs, each tilted and slipped off the
+    one below, the joints eaten back."""
     z = z0
+    cx, cy = x, y
+    layers = max(2, int(h / (w * 0.22)) + int(rng.random() * 2))
     for k in range(layers):
-        t = 1 - 0.13 * k
-        lh = h / layers * (0.8 + rng.random() * 0.4)
-        rbox(w * t * (0.85 + rng.random() * 0.3), d * t * (0.85 + rng.random() * 0.3), lh,
-             x + (rng.random() - 0.5) * w * 0.15 + lean * k, y + (rng.random() - 0.5) * d * 0.15, z,
-             col=rng.choice(GRANITE), rz=(rng.random() - 0.5) * 0.25, bevel=min(lh, w) * 0.3)
-        # Split blocks on the wider layers.
-        if w * t > 4 and rng.random() < 0.6:
-            rbox(w * t * 0.4, d * t * 0.5, lh * 0.9, x + w * t * 0.45, y + (rng.random() - 0.5) * d * 0.3, z,
-                 col=rng.choice(GRANITE), rz=rng.random() * 0.4, bevel=lh * 0.3)
-        z += lh * 0.97
+        t = 1 - 0.12 * k
+        lh = h / layers * (0.75 + rng.random() * 0.6)
+        n = 1 if w * t < 4 or rng.random() < 0.4 else 2
+        for j in range(n):
+            ww = w * t * (0.6 + rng.random() * 0.45) / (1 if n == 1 else 1.6)
+            dd = d * t * (0.7 + rng.random() * 0.4)
+            ox = (j - (n - 1) / 2) * ww * 0.8
+            rock(ww, dd, lh * 1.15, cx + ox + (rng.random() - 0.5) * w * 0.12, cy + (rng.random() - 0.5) * d * 0.12, z - lh * 0.12,
+                 col=rng.choice(GRANITE), rx=(rng.random() - 0.5) * 0.1, ry=(rng.random() - 0.5) * 0.14,
+                 rz=(rng.random() - 0.5) * 0.5, seed=rng.randrange(1000), rough=0.1 + rng.random() * 0.06, detail=2, warp=0.2)
+        cx += (rng.random() - 0.5) * w * 0.15
+        z += lh * 0.92
 
 
 def tor(name, size, seed):
-    """A granite tor: a few stacks on a rubble skirt (clitter)."""
+    """A granite tor: a few weathered piles on a rubble skirt (clitter)."""
     rng = random.Random(seed)
     s = size
-    stack(-s * 0.25, 0, s * 0.42, s * 0.36, s * 0.55, 5, rng)
-    stack(s * 0.22, s * 0.05, s * 0.34, s * 0.3, s * 0.4, 4, rng)
+    pile(-s * 0.25, 0, s * 0.42, s * 0.36, s * 0.55, rng)
+    pile(s * 0.22, s * 0.05, s * 0.34, s * 0.3, s * 0.42, rng)
     if s > 12:
-        stack(s * 0.02, -s * 0.18, s * 0.22, s * 0.2, s * 0.28, 3, rng)
+        pile(s * 0.02, -s * 0.2, s * 0.24, s * 0.22, s * 0.3, rng)
+        # Big tumbled blocks at the foot.
+        for k in range(4):
+            a = rng.random() * math.tau
+            b = s * (0.1 + rng.random() * 0.07)
+            rock(b * 1.5, b * 1.1, b, math.cos(a) * s * 0.42, math.sin(a) * s * 0.3, -b * 0.2, col=rng.choice(GRANITE),
+                 rx=rng.random() * 0.5, rz=rng.random() * 3, seed=rng.randrange(1000), warp=0.2)
     # Grassy mound under it, so it sits on the moor.
     ball(s * 0.6, 0, 0, -s * 0.12, sx=1.1, sy=0.9, sz=0.32, kind=PAINT, col='#6f7350', segs=14)
-    for k in range(int(s * 1.4)):
+    for k in range(int(s * 1.2)):
         a = rng.random() * math.tau
         r = s * (0.45 + rng.random() * 0.5)
         b = 0.4 + rng.random() * s * 0.06
-        rbox(b * 1.4, b, b * 0.8, math.cos(a) * r, math.sin(a) * r * 0.85, -b * 0.25,
-             col=rng.choice(GRANITE), rz=rng.random() * 3, bevel=b * 0.35)
+        rock(b * 1.4, b, b * 0.8, math.cos(a) * r, math.sin(a) * r * 0.85, -b * 0.3, col=rng.choice(GRANITE),
+             rx=rng.random() * 0.6, rz=rng.random() * 3, seed=rng.randrange(1000), detail=0)
     return build(name)
 
 
@@ -104,27 +187,39 @@ def pony(name, coat='#6b4a33', mane='#2a1f18', blaze=None):
     return build(name)
 
 
+def drystone(L, h, rng, x0=0, wobble=0.12, gaps=False):
+    """A dry-stone wall along X from x0 - L/2 to x0 + L/2: courses of rough,
+    odd-sized stones, a ragged top, and the odd tumble."""
+    x = x0 - L / 2
+    while x < x0 + L / 2 - 0.2:
+        top = h * (0.75 + rng.random() * 0.35)
+        if gaps and rng.random() < 0.18:
+            top *= 0.35 + rng.random() * 0.3
+        w = 0.45 + rng.random() * 0.5
+        z = -0.3
+        while z < top - 0.15:
+            sh = 0.22 + rng.random() * 0.2
+            rock(w * (0.85 + rng.random() * 0.3), 0.55 + rng.random() * 0.2, sh, x + w / 2, (rng.random() - 0.5) * wobble, z,
+                 col=rng.choice(GRANITE), rx=(rng.random() - 0.5) * 0.25, ry=(rng.random() - 0.5) * 0.3, rz=(rng.random() - 0.5) * 0.3,
+                 seed=rng.randrange(1000), rough=0.3, detail=0)
+            z += sh * 0.85
+        x += w * 0.92
+
+
 def fieldwall():
-    """4 m of dry-stone field wall along X, centred on the origin."""
-    rng = random.Random(4)
-    box(4.0, 0.75, 1.0, 0, 0, -0.4, MASONRY, WALLSTONE)
-    for k in range(7):
-        x = -1.75 + k * 0.58
-        rbox(0.6, 0.55, 0.32, x, (rng.random() - 0.5) * 0.08, 0.58, col=rng.choice(GRANITE), rz=(rng.random() - 0.5) * 0.3, bevel=0.1)
+    """4 m of rough dry-stone field wall along X, centred on the origin."""
+    drystone(4.0, 1.1, random.Random(4), gaps=True)
     return build('fieldwall')
 
 
 def ruinwall(name, seed):
     """A low, broken length of an old cottage wall."""
     rng = random.Random(seed)
-    x = -3.0
-    while x < 3.0:
-        w = 0.8 + rng.random() * 1.2
-        h = 0.3 + rng.random() * 1.4
-        box(w, 0.7, h + 0.3, x + w / 2, 0, -0.3, MASONRY, rng.choice(GRANITE))
-        x += w
-    for k in range(5):
-        rbox(0.5, 0.4, 0.3, (rng.random() - 0.5) * 6, 0.7 + rng.random() * 0.6, -0.05, col=rng.choice(GRANITE), rz=rng.random() * 3, bevel=0.1)
+    drystone(6.0, 1.4, rng, gaps=True, wobble=0.2)
+    for k in range(6):
+        b = 0.3 + rng.random() * 0.3
+        rock(b * 1.4, b, b * 0.8, (rng.random() - 0.5) * 6, 0.7 + rng.random() * 0.8, -0.1, col=rng.choice(GRANITE),
+             rz=rng.random() * 3, seed=rng.randrange(1000), detail=0)
     return build(name)
 
 
@@ -408,10 +503,10 @@ def clapper():
     for x in piers:
         z = -1.6
         for k in range(4):
-            rbox(1.4 - k * 0.1, 1.6, 0.45, x + (rng.random() - 0.5) * 0.15, 0, z, col=rng.choice(GRANITE), bevel=0.12)
+            rock(1.4 - k * 0.1, 1.6, 0.5, x + (rng.random() - 0.5) * 0.15, 0, z, col=rng.choice(GRANITE), rz=(rng.random() - 0.5) * 0.3, seed=rng.randrange(1000), rough=0.25, detail=1)
             z += 0.44
     for a, b in ((-6.5, -4.5), (-4.5, -1.5), (-1.5, 1.5), (1.5, 4.5), (4.5, 6.5)):
-        rbox(b - a + 0.6, 1.5, 0.35, (a + b) / 2, (rng.random() - 0.5) * 0.1, 0.16, col=rng.choice(GRANITE), bevel=0.1)
+        rock(b - a + 0.6, 1.5, 0.4, (a + b) / 2, (rng.random() - 0.5) * 0.1, 0.12, col=rng.choice(GRANITE), ry=(rng.random() - 0.5) * 0.06, seed=rng.randrange(1000), rough=0.12)
     return build('clapper')
 
 
@@ -436,7 +531,7 @@ def spoil():
         a = rng.random() * math.tau
         r = rng.random() * 12
         b = 0.4 + rng.random() * 0.9
-        rbox(b * 1.3, b, b, math.cos(a) * r, math.sin(a) * r * 0.6, 1.5 - r * 0.25, col=rng.choice(GRANITE), rz=rng.random() * 3, bevel=b * 0.3)
+        rock(b * 1.3, b, b, math.cos(a) * r, math.sin(a) * r * 0.6, 1.5 - r * 0.25, col=rng.choice(GRANITE), rz=rng.random() * 3, seed=rng.randrange(1000), detail=0)
     return build('spoil')
 
 

@@ -973,7 +973,18 @@ const BUILDS = {
       const d = side * (RAIL_OFFSET + 0.4);
       for (const k of [-1, 1]) {
         const c = road.sample(s + k * 7, {});
-        geo.box(c.x + c.rightX * d, c.z + c.rightZ * d, c.y - 0.8, c.y + 1.15, new THREE.Vector3(c.dirX, 0, c.dirZ), 3.2, new THREE.Vector3(c.rightX, 0, c.rightZ), 0.35, MASONRY, '#7f7a70');
+        // Rough stones in courses, ragged at the top.
+        const a1 = { x: c.dirX, z: c.dirZ }, a2 = { x: c.rightX, z: c.rightZ };
+        for (let y = -0.8; y < 1.0; y += 0.3) {
+          for (let u = -3.2; u < 3.1;) {
+            const l = 0.45 + this.rand() * 0.45;
+            const m = Math.min(u + l, 3.2);
+            const o = (u + m) / 2;
+            const ctr = new THREE.Vector3(c.x + c.rightX * d + c.dirX * o, c.y + y, c.z + c.rightZ * d + c.dirZ * o);
+            lump(geo, ctr, a1, a2, (m - u) / 2 + 0.03, 0.36, 0.34 + (y > 0.8 ? this.rand() * 0.15 : 0), STONES[Math.floor(this.rand() * STONES.length)], this.rand);
+            u = m;
+          }
+        }
       }
     }
     this.mesh(geo);
@@ -1068,25 +1079,24 @@ function edgeSides(job) {
 // One side of a run of wall or hedge bank, following the ground: it stands
 // on whichever is lower, the road or the field, and rises above the higher.
 function edgeRun(geo, job, side, kind) {
+  if (kind === 'wall') return wallRun.call(this, geo, job, side);
   const road = this.road;
   const t = this.terrain;
-  const hedge = kind === 'hedge';
   const d0 = side * (RAIL_OFFSET - 0.05);
-  const w = hedge ? 1.9 : 0.75;
+  const w = 1.9;
   const d1 = d0 + side * w;
   const f = {};
   const greens = ['#4d6a33', '#567438', '#46602f', '#5d7a3c'];
-  const ring = (s, k) => {
+  const ring = (s) => {
     road.sample(s, f);
     const g = t.heightAt(f.x + f.rightX * (d0 + d1) / 2, f.z + f.rightZ * (d0 + d1) / 2);
     const base = Math.min(f.y, g) - 0.8;
-    const top = Math.max(f.y + (hedge ? 1.3 : 1.05), g + (hedge ? 1.0 : 0.85));
+    const top = Math.max(f.y + 1.3, g + 1.0);
     const n = this.rand();
     const at = (d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
     return {
       a: at(d0, base), b: at(d0 + side * 0.08, top), c: at(d1 - side * 0.08, top), e: at(d1, base),
-      h: hedge ? [at(d0 + side * 0.1, top), at(d0 + side * 0.5, top + 0.9 + n * 0.5), at(d1 - side * 0.5, top + 1.0 + n * 0.4), at(d1 - side * 0.1, top)] : null,
-      cap: hedge ? null : [at(d0 - side * 0.05, top), at(d0 - side * 0.05, top + 0.22), at(d1 + side * 0.05, top + 0.22), at(d1 + side * 0.05, top)],
+      h: [at(d0 + side * 0.1, top), at(d0 + side * 0.5, top + 0.9 + n * 0.5), at(d1 - side * 0.5, top + 1.0 + n * 0.4), at(d1 - side * 0.1, top)],
     };
   };
   const step = 2;
@@ -1094,14 +1104,117 @@ function edgeRun(geo, job, side, kind) {
   for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
     const cur = ring(s);
     const faces = [[prev.a, prev.b, cur.b, cur.a], [prev.b, prev.c, cur.c, cur.b], [prev.c, prev.e, cur.e, cur.c]];
-    const stone = hedge ? '#6e7362' : '#7f7a70';
-    for (const [p, q, r, u] of faces) quadOut(geo, p, q, r, u, side, MASONRY, stone);
-    const ext = hedge ? prev.h.map((v, i) => [v, cur.h[i]]) : prev.cap.map((v, i) => [v, cur.cap[i]]);
-    const kindTop = hedge ? PAINT : MASONRY;
-    const colTop = hedge ? greens[Math.floor(this.rand() * greens.length)] : '#8a857a';
-    for (let i = 0; i < ext.length - 1; i++) quadOut(geo, ext[i][0], ext[i + 1][0], ext[i + 1][1], ext[i][1], side, kindTop, colTop);
+    for (const [p, q, r, u] of faces) quadOut(geo, p, q, r, u, side, MASONRY, '#6e7362');
+    const col = greens[Math.floor(this.rand() * greens.length)];
+    for (let i = 0; i < 3; i++) quadOut(geo, prev.h[i], prev.h[i + 1], cur.h[i + 1], cur.h[i], side, PAINT, col);
     prev = cur;
   }
+}
+
+// Granite greys, a few with moss in them.
+const STONES = ['#7f7a70', '#878275', '#767268', '#8d887c', '#6f6c64', '#7c786b', '#66655c', '#959082', '#6d705f'];
+
+// A dry-stone lane wall: lumpy faces in odd greys, a ragged top of rough
+// coping stones, and here and there a slumped stretch with its stones
+// tumbled into the grass.
+function wallRun(geo, job, side) {
+  const road = this.road;
+  const t = this.terrain;
+  const rand = this.rand;
+  const d0 = side * (RAIL_OFFSET - 0.05);
+  const w = 0.75;
+  const f = {};
+  const greys = STONES;
+  const p1 = rand() * 6.28, p2 = rand() * 6.28;
+  const slumps = [];
+  for (let s = job.s0 + 8; s < job.s1 - 8; s += 6) {
+    if (rand() < 0.12) {
+      slumps.push([s, 1.5 + rand() * 3, 0.3 + rand() * 0.35]);
+      s += 12;
+    }
+  }
+  const drop = (s) => {
+    let d = 0;
+    for (const [c, l, h] of slumps) d = Math.max(d, h * (1 - smooth(l, l + 1.5, Math.abs(s - c))));
+    return d;
+  };
+  // Each ring is the wall's section: up the road face in courses, across
+  // the top, down the field face. Every point is nudged in or out a little
+  // so the faces come out as lumpy, faceted stone.
+  const ROWS = 4;
+  const ring = (s) => {
+    road.sample(s, f);
+    const mid = d0 + side * w / 2;
+    const g = t.heightAt(f.x + f.rightX * mid, f.z + f.rightZ * mid);
+    const base = Math.min(f.y, g) - 0.8;
+    const sag = drop(s);
+    const top = Math.max(f.y + 0.95, g + 0.75) + 0.08 * Math.sin(s * 0.21 + p1) + 0.06 * Math.sin(s * 0.57 + p2) - sag;
+    const at = (d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
+    const face = (d, low, inward) => {
+      const pts = [at(d, base)];
+      for (let r = 0; r <= ROWS; r++) {
+        const y = low + ((top - low) * r) / ROWS;
+        const lean = (0.1 * r) / ROWS; // a little batter: narrower at the top
+        const j = r === ROWS ? 0 : (rand() - 0.5) * 0.1;
+        pts.push(at(d + inward * (lean + j), y + (r && r < ROWS ? (rand() - 0.5) * 0.06 : 0)));
+      }
+      return pts;
+    };
+    const road1 = face(d0, f.y - 0.05, side);
+    const field = face(d0 + side * w, g - 0.05, -side).reverse();
+    return { pts: [...road1, ...field], m: at(mid, top), c: at(mid, (base + top) / 2), sag, rx: f.rightX, rz: f.rightZ };
+  };
+  const step = 0.6;
+  let prev = ring(job.s0);
+  let cols = prev.pts.map(() => greys[Math.floor(rand() * greys.length)]);
+  for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
+    const cur = ring(s);
+    // A stone runs on into the next column about half the time.
+    cols = cols.map((c) => (rand() < 0.45 ? c : greys[Math.floor(rand() * greys.length)]));
+    const inside = new THREE.Vector3().lerpVectors(prev.c, cur.c, 0.5);
+    for (let i = 0; i < cur.pts.length - 1; i++) geo.quad(prev.pts[i], prev.pts[i + 1], cur.pts[i + 1], cur.pts[i], PLASTER, cols[i], inside);
+    // Rough stones along the top, fewer where the wall has slumped.
+    const ax = { x: cur.m.x - prev.m.x, z: cur.m.z - prev.m.z };
+    const al = Math.hypot(ax.x, ax.z) || 1;
+    ax.x /= al;
+    ax.z /= al;
+    if (!(prev.sag > 0.15 && rand() < 0.6)) {
+      const c = new THREE.Vector3().lerpVectors(prev.m, cur.m, 0.4 + rand() * 0.2);
+      c.y -= 0.08;
+      const yaw = (rand() - 0.5) * 0.5;
+      const cs = Math.cos(yaw), sn = Math.sin(yaw);
+      const a1 = { x: ax.x * cs - ax.z * sn, z: ax.x * sn + ax.z * cs };
+      const a2 = { x: -a1.z, z: a1.x };
+      lump(geo, c, a1, a2, step * (0.4 + rand() * 0.25), w * (0.3 + rand() * 0.15), 0.12 + rand() * 0.14, greys[Math.floor(rand() * greys.length)], rand);
+    }
+    // Stones from a slump lie in the grass beyond the wall, the odd one on the verge.
+    if (prev.sag > 0.2 && rand() < 0.6) {
+      const out = rand() < 0.75 ? side * (w / 2 + 0.5 + rand() * 1.4) : -side * (w / 2 + 0.3);
+      this.rock(cur.m.x + cur.rx * out, cur.m.z + cur.rz * out, 0.2 + rand() * 0.25);
+    }
+    prev = cur;
+  }
+}
+
+// A rough stone: a box with jittered corners, narrower at the top, flat
+// shaded. c is the middle of its base, a1 and a2 unit horizontal axes.
+function lump(geo, c, a1, a2, hx, hz, h, col, rand) {
+  const pts = [];
+  for (const y of [0, 1]) {
+    for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const shrink = y ? 0.75 + rand() * 0.2 : 1;
+      const x = hx * u * shrink + (rand() - 0.5) * 0.1;
+      const z = hz * v * shrink + (rand() - 0.5) * 0.1;
+      pts.push(new THREE.Vector3(c.x + a1.x * x + a2.x * z, c.y + y * h * (0.6 + rand() * 0.7), c.z + a1.z * x + a2.z * z));
+    }
+  }
+  const mid = new THREE.Vector3(c.x, c.y + h * 0.45, c.z);
+  const [a, b, cc, d, e, f, g, k] = pts;
+  geo.quad(e, f, g, k, PLASTER, col, mid);
+  geo.quad(a, b, f, e, PLASTER, col, mid);
+  geo.quad(b, cc, g, f, PLASTER, col, mid);
+  geo.quad(cc, d, k, g, PLASTER, col, mid);
+  geo.quad(d, a, e, k, PLASTER, col, mid);
 }
 
 // A quad facing up or away from the road's centre line, whichever its
