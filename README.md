@@ -62,8 +62,11 @@ show as coming soon.
 There is one difficulty. The levels set how hard a run is, and three hazards
 are always on:
 
-- **Speed wobbles** above about 72 km/h, worse when you ride upright or steer
-  jerkily. Tuck and stay smooth, or throw a slide to kill them.
+- **Speed wobbles** above about 72 km/h. They build gradually with speed and
+  settle rather than running away: a smooth tuck keeps them small up to about
+  110 km/h, riding upright or steering jerkily makes them worse, and only
+  fighting them hard or riding far too fast throws you. Throw a slide to kill
+  them.
 - **Highsides:** letting go of a slide while the board is still well sideways
   at speed throws you. Steer out of the slide to close it down first. A warning
   shows when releasing would highside.

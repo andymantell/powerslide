@@ -420,20 +420,23 @@ export class Player {
     this.model.spinWheels((this.vel.x * ux + this.vel.y * uz) * dt);
   }
 
-  // Speed wobbles (Pro): the trucks start to oscillate above a threshold
-  // speed. Energy builds faster when upright, with weight on the back foot or
-  // with jerky inputs; tucking with weight forward and smooth lines keep it
-  // calm, and throwing a slide kills it. Returns the deck roll it adds.
+  // Speed wobbles: above a threshold speed the trucks start to shimmy, and
+  // the shimmy settles at a level set by how far over you are and how you
+  // stand: a tuck with weight forward keeps it small, riding upright or air
+  // braking lets it grow. Jerky steering fights it and pumps it up; only
+  // fighting it hard, or riding far over the threshold, throws you off.
+  // Throwing a slide kills it. Returns the deck roll it adds.
   updateWobble(dt, v) {
     const d = this.diff;
     const steerRate = Math.abs(this.steer - this.prevSteer) / dt;
     this.prevSteer = this.steer;
     if (!d.wobble) return 0;
     const over = v - d.wobbleSpeed - this.weight * 3;
-    const stance = 1.2 - 0.7 * this.tuck + 0.3 * this.airbrake;
-    const grow = over > 0 ? over * 0.035 * stance * (1 + steerRate * 0.8) : 0;
-    const decay = 0.25 + (over < 0 ? 0.8 : 0) + (this.slideMode ? 2 : 0);
-    this.wobble = Math.max(0, this.wobble + (grow - decay * this.wobble) * dt);
+    const stance = 1 - 0.45 * this.tuck + 0.15 * this.airbrake;
+    const target = this.slideMode ? 0 : Math.max(0, over / 12) * stance;
+    const rate = target > this.wobble ? 0.6 : 1.5;
+    const fight = over > 0 ? Math.max(0, steerRate - 3) * 0.1 * Math.min(1, over / 3) : 0;
+    this.wobble = Math.max(0, this.wobble + ((target - this.wobble) * rate + fight) * dt);
     if (this.wobble > 1) {
       this.crash('Speed wobbles threw you off');
       return 0;
@@ -441,6 +444,7 @@ export class Player {
     this.wobblePhase += dt * Math.PI * 2 * (6 + v * 0.1);
     return Math.sin(this.wobblePhase) * this.wobble * 0.012;
   }
+
 
   // While sliding, the rider steers the path by weighting toes or heels: the
   // sideways pull the wheels give is replaced by one the stick asks for (a

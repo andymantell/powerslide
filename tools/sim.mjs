@@ -211,11 +211,24 @@ console.log('\n== A strong speed wobble at 85 km/h (flat, held for 1 s)');
   console.log(`yaw swing ±${(((maxYaw - minYaw) / 2) * 57.3).toFixed(1)}°, sliding frames ${slid}/60, lateral drift ${p.pos.x.toFixed(2)} m`);
 }
 
-console.log('\n== Speed wobbles on 12% upright vs tucked');
-for (const [name, inp] of [['upright', {}], ['tucked', { tuck: 1 }]]) {
-  const p = make(0.12, 15);
-  const crash = run(p, 40, (pp) => ({ ...inp, steer: keepLane(pp) }));
-  console.log(`${name}: ${crash !== null ? `crashed at ${crash.toFixed(1)} s (${p.crashReason}) at ${fmt(p.speed)}` : `fine, ${fmt(p.speed)}, wobble ${p.wobble.toFixed(2)}`}`);
+console.log('\n== Speed wobbles: 40 s at a held speed (wobble 1 throws you; warning shows above 0.3)');
+for (const kmh of [80, 95, 110, 125]) {
+  const row = [];
+  for (const [name, inp, steer] of [
+    ['tucked, smooth', { tuck: 1 }, (p) => keepLane(p)],
+    ['upright, smooth', {}, (p) => keepLane(p)],
+    ['tucked, jerky', { tuck: 1 }, (p, t) => keepLane(p) + (Math.sin(t * 9) > 0 ? 0.6 : -0.6)],
+  ]) {
+    const p = make(0, kmh / 3.6);
+    let peak = 0;
+    const crash = run(p, 40, (pp, t) => {
+      pp.vel.setLength(kmh / 3.6); // hold the speed and stay on the road
+      pp.pos.x = 0;
+      return { ...inp, steer: steer(pp, t) };
+    }, (pp) => (peak = Math.max(peak, pp.wobble)));
+    row.push(`${name} ${crash !== null ? `CRASH ${crash.toFixed(1)} s${p.crashReason.startsWith('Speed') ? '' : ' (' + p.crashReason + ')'}` : `peak ${peak.toFixed(2)}`}`);
+  }
+  console.log(`${String(kmh).padStart(3)} km/h: ${row.join('  |  ')}`);
 }
 
 console.log('\n== Running into the edge of the road (rail on the left, gravel verge on the right)');
