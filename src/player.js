@@ -26,6 +26,7 @@
 
 import * as THREE from 'three';
 import { RiderModel } from './rider.js';
+import { Ragdoll, LooseBoard } from './ragdoll.js';
 import { DS, HALF_WIDTH, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
 import { RoadMesh } from './roadmesh.js';
 import { clamp, lerp } from './noise.js';
@@ -88,6 +89,7 @@ const _axles = [
 const _n = new THREE.Vector3();
 const _qa = new THREE.Quaternion();
 const _qb = new THREE.Quaternion();
+const _rv = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 
 export class Player {
@@ -159,6 +161,7 @@ export class Player {
       this.model.board.quaternion.identity();
       this.boardLoose = false;
     }
+    this.ragdoll = this.looseBoard = null;
     this.model.root.quaternion.identity();
     this.applyTransform();
   }
@@ -502,66 +505,34 @@ export class Player {
     this.crashed = true;
     this.crashReason = reason;
     this.crashTime = 0;
+    this.impactsSeen = 0;
     this.events.push('crash');
     this.shake = 1;
     const v = this.vel;
     if (impact) v.set(impact.x, impact.z);
-    this.body = {
-      vel: new THREE.Vector3(v.x, 1.5 + this.speed * 0.08, v.y),
-      spin: new THREE.Vector3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 8),
-    };
-    // Board shoots off on its own.
+    // The rider goes limp and tumbles; the board shoots off on its own.
+    const world = { road: this.road, terrain: this.terrain };
+    const vel = new THREE.Vector3(v.x, 0, v.y);
+    this.ragdoll = new Ragdoll(this.model, world, vel, this.s);
     const board = this.model.board;
     this.scene.attach(board);
     this.boardLoose = true;
-    this.boardVel = new THREE.Vector3(v.x * 1.05, 0.8, v.y * 1.05);
-    this.boardSpin = (Math.random() - 0.5) * 10;
-  }
-
-  groundAt(x, z, s) {
-    const p = this.road.project(x, z, s, this.proj);
-    if (Math.abs(p.d) < GRAVEL_EDGE) return { y: p.y, s: p.s };
-    return { y: Math.max(p.y - 3, this.terrain.heightAt(x, z)), s: p.s };
+    this.looseBoard = new LooseBoard(board, world, vel, this.s);
   }
 
   updateCrash(dt) {
     this.crashTime += dt;
-    const b = this.body;
-    const root = this.model.root;
-    b.vel.y -= G * dt;
-    root.position.addScaledVector(b.vel, dt);
-    const g = this.groundAt(root.position.x, root.position.z, this.s);
-    this.s = g.s;
-    if (root.position.y < g.y + 0.25) {
-      root.position.y = g.y + 0.25;
-      if (b.vel.y < 0) b.vel.y *= -0.3;
-      // Sliding on leathers.
-      const h = Math.hypot(b.vel.x, b.vel.z);
-      const dec = Math.min(h, 0.6 * G * dt);
-      if (h > 0) {
-        b.vel.x -= (b.vel.x / h) * dec;
-        b.vel.z -= (b.vel.z / h) * dec;
-      }
-      b.spin.multiplyScalar(1 - Math.min(1, dt * 2.5));
-    }
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(b.spin.x * dt, b.spin.y * dt, b.spin.z * dt));
-    root.quaternion.premultiply(q);
-    this.pos.copy(root.position);
-    this.vel.set(b.vel.x, b.vel.z);
-
-    const board = this.model.board;
-    this.boardVel.y -= G * dt;
-    board.position.addScaledVector(this.boardVel, dt);
-    const gb = this.groundAt(board.position.x, board.position.z, this.s);
-    if (board.position.y < gb.y) {
-      board.position.y = gb.y;
-      this.boardVel.y = Math.abs(this.boardVel.y) * 0.2;
-      this.boardVel.x *= 1 - dt * 0.6;
-      this.boardVel.z *= 1 - dt * 0.6;
-      this.boardSpin *= 1 - dt * 0.8;
-    }
-    board.rotateY(this.boardSpin * dt);
-    this.model.pose({ crouch: 0.6, limp: Math.min(1, this.crashTime * 3) });
+    const r = this.ragdoll;
+    r.update(dt);
+    this.s = r.s;
+    this.pos.copy(r.hip);
+    r.velocity(_rv);
+    this.vel.set(_rv.x, _rv.z);
+    this.looseBoard.update(dt);
+    // A jolt each time the body slams down.
+    if (r.impacts > this.impactsSeen) this.shake = Math.max(this.shake, 0.5);
+    this.impactsSeen = r.impacts;
+    this.shake = Math.max(0, this.shake - dt * 1.5);
   }
 
   animate(dt) {

@@ -636,8 +636,11 @@ function updateCamera(dt, t) {
     lookH = 0.9;
   }
   if (player.crashed) {
-    dist = 7;
-    height = 3;
+    // Pull back and watch the tumble.
+    dist = 5;
+    height = 2.3;
+    lookAhead = 0;
+    lookH = 0.2;
   }
   const target = _v.set(p.x - fx * dist, p.y + height, p.z - fz * dist);
   // Keep the camera above the ground.
@@ -745,7 +748,7 @@ let time = 0;
 
 function frame(now) {
   requestAnimationFrame(frame);
-  let dt = Math.min(0.05, (now - last) / 1000);
+  let dt = debug.dt || Math.min(0.05, (now - last) / 1000);
   last = now;
   if (game.mode === 'loading' || debug.freeze) return;
 
@@ -799,7 +802,7 @@ function frame(now) {
       game.slidePts = 0;
       game.combo = 0;
     }
-    if (player.crashed && game.mode === 'play' && player.crashTime > 2.2) endRun();
+    if (player.crashed && game.mode === 'play' && player.crashTime > 3) endRun();
     if (game.level && game.mode === 'play' && !player.crashed) {
       const cps = road.checkpoints;
       if (game.cpNext < cps.length && player.s >= cps[game.cpNext]) {
@@ -911,7 +914,7 @@ requestAnimationFrame(frame);
 boot();
 
 // Exposed for debugging in the console.
-const debug = { freeze: false };
+const debug = { freeze: false, dt: 0 }; // dt: a fixed frame time, for screenshots
 // Updates: offer a reload when a newer build is live, with what's new (src/version.js).
 watchForUpdates({
   inRun: () => game.mode === 'play' || game.mode === 'paused',

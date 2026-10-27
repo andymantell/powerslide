@@ -141,8 +141,9 @@ function bendDir(a, b, c, fallback, out) {
 }
 
 // The head's orientation: the helmet is modelled facing +X and RiderPose's
-// head angles turn a head that faces -Z.
+// head angles turn a head that faces -Z. A ragdoll sets headQ outright.
 function headQuat(pose, out) {
+  if (pose.headQ) return out.copy(pose.headQ);
   _e.set(pose.headPitch, pose.headYaw, pose.headRoll ?? 0, 'YXZ');
   return out.setFromEuler(_e).multiply(HEAD_TURN);
 }
@@ -182,6 +183,10 @@ const handFrame = (s) => {
 };
 const footFrame = (s) => (p, out) => {
   out.pos.copy(p.joints['foot' + s]);
+  if (p['footQ' + s]) {
+    out.q.copy(p['footQ' + s]);
+    return out;
+  }
   _e.set(0, p['footYaw' + s], p['footRoll' + s], 'ZYX');
   out.q.setFromEuler(_e).multiply(FOOT_TURN);
   return out;

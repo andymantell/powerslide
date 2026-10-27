@@ -2,6 +2,7 @@
   {
     "date": "2026-10-27",
     "items": [
+      "New: crashes are way more fun! The rider goes floppy and tumbles down the road or into the grass, and the board skids off on its own",
       "Fixed: hitting the guardrail or riding off into the gravel at speed now crashes you, like it would for real. A gentle scrape along the rail is still OK",
       "Fixed: faraway trees on iPad no longer show up as dark rectangles",
       "Fixed: the menus work with a controller on iPad. Move with the D-pad or stick, A to pick, B to go back, and you can always see which button you're on",
