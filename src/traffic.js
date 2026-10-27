@@ -54,20 +54,29 @@ const TYPES = {
   tipper: { kind: 'lorry', paint: LORRY_PAINT, trim: [['#e08a1c', 2], ['#c9b531', 1], ['#7d8288', 2], ['#8d1b1b', 1]], speed: [9, 14], name: 'a tipper lorry' },
   bus: { kind: 'bus', paint: BUS_PAINT, trim: [['#f1f1ee', 1]], speed: [9, 14], name: 'a bus' },
   tractor: { kind: 'tractor', paint: TRACTOR_PAINT, trim: [['#3a3c40', 1]], rims: [['#c9b531', 3], ['#b8241c', 2], ['#5a5d61', 1]], speed: [6, 9], name: 'a tractor' },
+  police: { sound: 'police', kind: 'car', paint: [['#f1f1ee', 3], ['#c9ccd0', 1]], trim: [['#141516', 1]], speed: [16, 23], wheels: { alloy: ['alloy'] }, name: 'a police car', emergency: true },
+  ambulance: { sound: 'ambulance', kind: 'van', paint: [['#e6e23a', 1]], trim: [['#141516', 1]], speed: [15, 21], name: 'an ambulance', emergency: true },
+  fire: { sound: 'fire', kind: 'lorry', paint: [['#c4161c', 1]], trim: [['#c4161c', 1]], rims: [['#c9ccd0', 1]], speed: [13, 18], name: 'a fire engine', emergency: true },
+  icecream: { sound: 'icecream', kind: 'van', paint: [['#f6f3ea', 3], ['#f4c6d6', 1], ['#bfe3f2', 1]], trim: [['#e86fa0', 2], ['#4fa3d9', 2], ['#7cc576', 1]], speed: [9, 13], name: 'an ice cream van' },
+  horsebox: { sound: 'horsebox', kind: 'lorry', paint: [['#f4f4f2', 3], ['#1d3557', 1], ['#24402f', 1]], trim: [['#f4f4f2', 2], ['#7c6d4e', 1], ['#24402f', 1], ['#1d3557', 1]], speed: [9, 13], name: 'a horsebox' },
+  decker: { kind: 'bus', paint: [['#c4161c', 3], ['#1f4f8f', 1], ['#2d6a3e', 1]], trim: [['#f1f1ee', 1]], speed: [9, 13], name: 'a double-decker bus' },
+  supercar: { kind: 'car', paint: [['#e2b33a', 2], ['#c22a1f', 3], ['#2fa84f', 1], ['#f1f1ee', 1], ['#0c0c0e', 2], ['#d95d1a', 2], ['#7ab6d8', 1]], trim: [['#141516', 1]], rims: [['#16171a', 2], ['#3a3c40', 1], ['#c9ccd0', 1]], speed: [19, 28], wheels: { alloy: ['alloy2'] }, name: 'a supercar' },
+  roadster: { kind: 'car', paint: [['#c22a1f', 3], ['#1d3557', 2], ['#24402f', 2], ['#f1f1ee', 1], ['#c9ccd0', 1]], trim: [['#b9bcc0', 2], ['#141516', 1]], speed: [16, 23], wheels: { alloy: ['alloy', 'steel'] }, name: 'a sports car' },
+  gt: { kind: 'car', paint: [['#1d3557', 2], ['#7d8288', 2], ['#0c0c0e', 2], ['#8d1b1b', 2], ['#2a5f3a', 1], ['#f1f1ee', 1], ['#d95d1a', 1]], trim: [['#141516', 2], ['#b9bcc0', 1]], speed: [17, 25], wheels: { alloy: ['alloy2', 'alloy'] }, name: 'a sports car' },
   bike_sport: { kind: 'bike', paint: BIKE_PAINT, trim: TRIM_LEATHERS, speed: [16, 25], name: 'a motorbike' },
   bike_tourer: { kind: 'bike', paint: BIKE_PAINT, trim: TRIM_LEATHERS, speed: [14, 21], name: 'a motorbike' },
 };
 
 // Each biome's traffic, as relative weights.
 const MIXES = {
-  alpine: { hatch: 4, saloon: 3, estate: 4, suv: 4, city: 2, coupe: 1, van: 2, camper: 2, pickup: 1, minibus: 1, lorry: 1, tipper: 1, bike_sport: 1.5, bike_tourer: 2 },
-  dartmoor: { hatch: 3, estate: 3, suv: 2, utility: 4, pickup: 3, tractor: 3, van: 2, camper: 2, city: 2, saloon: 1, minibus: 1, bike_tourer: 1.5, bike_sport: 0.5, tipper: 0.5 },
-  suburbs: { city: 4, hatch: 5, saloon: 3, estate: 3, suv: 3, van: 3, minibus: 1, coupe: 1, pickup: 0.5, lorry: 1, bike_tourer: 1, bike_sport: 0.5, taxi: 0.5 },
-  forest: { hatch: 3, estate: 4, suv: 4, pickup: 3, utility: 2, van: 2, lorry: 2, tipper: 2, camper: 1, bike_tourer: 1, saloon: 2 },
-  canyon: { pickup: 5, suv: 4, coupe: 2, saloon: 2, camper: 3, lorry: 2, tipper: 1, bike_tourer: 2, bike_sport: 2, hatch: 1 },
-  city: { taxi: 5, saloon: 3, hatch: 3, city: 3, bus: 2, van: 2, suv: 2, coupe: 1, lorry: 1, bike_sport: 2, bike_tourer: 1.5, minibus: 1 },
-  coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, bike_tourer: 2, bike_sport: 1, saloon: 2 },
-  pass: { suv: 3, estate: 3, hatch: 2, camper: 3, coupe: 2, bike_sport: 3, bike_tourer: 3, lorry: 1, minibus: 1, saloon: 1 },
+  alpine: { hatch: 4, saloon: 3, estate: 4, suv: 4, city: 2, coupe: 1, van: 2, camper: 2, pickup: 1, minibus: 1, lorry: 1, tipper: 1, bike_sport: 1.5, bike_tourer: 2, police: 0.3, ambulance: 0.25, fire: 0.15, icecream: 0.3, supercar: 0.5, roadster: 1, gt: 0.6 },
+  dartmoor: { hatch: 3, estate: 3, suv: 2, utility: 4, pickup: 3, tractor: 3, van: 2, camper: 2, city: 2, saloon: 1, minibus: 1, bike_tourer: 1.5, bike_sport: 0.5, tipper: 0.5, horsebox: 1.2, police: 0.25, ambulance: 0.25, fire: 0.1, icecream: 0.4, roadster: 0.6, gt: 0.3 },
+  suburbs: { city: 4, hatch: 5, saloon: 3, estate: 3, suv: 3, van: 3, minibus: 1, coupe: 1, pickup: 0.5, lorry: 1, bike_tourer: 1, bike_sport: 0.5, taxi: 0.5, icecream: 1, decker: 0.6, police: 0.5, ambulance: 0.4, fire: 0.25, roadster: 0.4, gt: 0.4, supercar: 0.2 },
+  forest: { hatch: 3, estate: 4, suv: 4, pickup: 3, utility: 2, van: 2, lorry: 2, tipper: 2, camper: 1, bike_tourer: 1, saloon: 2, horsebox: 0.3, police: 0.25, ambulance: 0.2, fire: 0.2, gt: 0.4 },
+  canyon: { pickup: 5, suv: 4, coupe: 2, saloon: 2, camper: 3, lorry: 2, tipper: 1, bike_tourer: 2, bike_sport: 2, hatch: 1, gt: 1.5, supercar: 1, roadster: 0.6, police: 0.4, ambulance: 0.2, fire: 0.15 },
+  city: { taxi: 5, saloon: 3, hatch: 3, city: 3, bus: 2, van: 2, suv: 2, coupe: 1, lorry: 1, bike_sport: 2, bike_tourer: 1.5, minibus: 1, decker: 2, police: 1, ambulance: 0.7, fire: 0.4, supercar: 1, gt: 0.8, roadster: 0.4 },
+  coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, bike_tourer: 2, bike_sport: 1, saloon: 2, icecream: 1, roadster: 1.5, gt: 0.8, supercar: 0.8, police: 0.3, ambulance: 0.25, fire: 0.1 },
+  pass: { suv: 3, estate: 3, hatch: 2, camper: 3, coupe: 2, bike_sport: 3, bike_tourer: 3, lorry: 1, minibus: 1, saloon: 1, supercar: 1.5, gt: 1, roadster: 1, police: 0.3, ambulance: 0.25, fire: 0.1 },
 };
 
 const VERB = { car: 'a car', van: 'a van', lorry: 'a lorry', bus: 'a bus', tractor: 'a tractor', bike: 'a motorbike' };
@@ -174,7 +183,10 @@ export class Traffic {
     const type = this.pickType(dir);
     const T = TYPES[type];
     const meta = this.fleet.meta(type) || { L: 4.4, W: 1.8, kind: T.kind };
-    const s = dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380;
+    // Emergency vehicles mostly have their blue lights on. Going your way,
+    // they come from behind and overtake you.
+    const siren = !!T.emergency && r() < 0.75;
+    const s = siren && dir > 0 ? playerS - 130 - r() * 60 : dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380;
     // Keep a sensible gap to vehicles already in that lane.
     for (const c of this.cars) if (c.dir === dir && Math.abs(c.s - s) < 30 + (c.L + meta.L) * 1.5) return;
     const paintHex = this.pickPaint(type, T.paint);
@@ -194,7 +206,12 @@ export class Traffic {
       dir,
       // Bikes ride a little towards the middle of the lane.
       lane: dir * this.side * (LANE_WIDTH / 2 - (bike ? 0.35 : 0)),
-      vmax: (v0 + r() * (v1 - v0)) * (dir > 0 ? 0.9 : 1) * this.speedScale,
+      home: dir * this.side * (LANE_WIDTH / 2 - (bike ? 0.35 : 0)),
+      laneRate: 0,
+      overtaking: false,
+      siren,
+      flash: r(),
+      vmax: (v0 + r() * (v1 - v0)) * (dir > 0 ? 0.9 : 1) * this.speedScale * (siren ? 1.3 : 1),
       v: 0,
       passed: false,
       minGap: Infinity,
@@ -227,10 +244,12 @@ export class Traffic {
     const half = Math.min(car.L * 0.32, 3.2);
     const sf = car.s + car.dir * half;
     const sr = car.s - car.dir * half;
+    // During a lane change the nose leads: offset the axles along the move.
+    const lead = car.laneRate * car.dir * half / Math.max(4, car.v);
     let fr = this.road.sample(sf, f);
-    const fx = fr.x + fr.rightX * car.lane, fz = fr.z + fr.rightZ * car.lane, fy = fr.y;
+    const fx = fr.x + fr.rightX * (car.lane + lead), fz = fr.z + fr.rightZ * (car.lane + lead), fy = fr.y;
     fr = this.road.sample(sr, f);
-    const rx = fr.x + fr.rightX * car.lane, rz = fr.z + fr.rightZ * car.lane, ry = fr.y;
+    const rx = fr.x + fr.rightX * (car.lane - lead), rz = fr.z + fr.rightZ * (car.lane - lead), ry = fr.y;
     const dx = fx - rx, dz = fz - rz;
     const len = Math.hypot(dx, dz) || 1;
     car.x = (fx + rx) / 2;
@@ -249,6 +268,7 @@ export class Traffic {
 
   update(dt, player, events) {
     const ps = player.s;
+    this.dt = dt;
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && this.density > 0) {
       this.spawnTimer = (1.4 + this.rand() * 2.2) / this.density;
@@ -268,17 +288,31 @@ export class Traffic {
       const k = Math.abs(f.kappa);
       const latG = c.cls === 'lorry' || c.cls === 'bus' ? 0.22 : c.cls === 'bike' ? 0.42 : 0.32;
       if (k > 1e-4) vt = Math.min(vt, Math.sqrt((latG * G) / k));
-      // Follow the vehicle ahead in the same lane.
+      // Follow the vehicle ahead in the same lane; pull over for a siren behind.
+      let blocker = null;
+      let pullOver = false;
       for (const o of this.cars) {
         if (o === c || o.dir !== c.dir) continue;
         const gap = (o.s - c.s) * c.dir - (o.L + c.L) / 2;
-        if (gap > 0 && gap < 36) vt = Math.min(vt, o.v * (gap < 12 ? 0.7 : 1));
+        if (Math.abs(o.lane - c.lane) < 1.6 && gap > 0 && gap < 36) {
+          vt = Math.min(vt, o.v * (gap < 12 ? 0.7 : 1));
+          if (!blocker || gap < blocker.gap) blocker = { gap, v: o.v };
+        }
+        if (o.siren && gap < 0 && gap > -70 && !c.siren) pullOver = true;
       }
       // Slow down for a rider stopped/slow in their lane ahead.
       const gapP = (ps - c.s) * c.dir - c.L / 2;
-      if (gapP > 0 && gapP < 33 && Math.abs(player.d - c.lane) < 2.2 && !player.crashed) {
+      const riderAhead = gapP > 0 && gapP < 33 && Math.abs(player.d - c.lane) < 2.2 && !player.crashed;
+      if (riderAhead && c.dir > 0 && (!blocker || gapP < blocker.gap)) blocker = { gap: gapP, v: player.speed, rider: true };
+      if (riderAhead && !(c.siren && c.overtaking)) {
         vt = Math.min(vt, Math.max(0, player.speed * (c.dir > 0 ? 1 : 0) + (gapP - 6) * 0.3));
       }
+      if (c.siren) vt = this.overtake(c, blocker, player, vt);
+      else if (pullOver) {
+        // Let the blue lights through: tuck in towards the verge and ease off.
+        vt *= 0.6;
+        this.steerTo(c, c.home * 1.3, dt);
+      } else this.steerTo(c, c.home, dt);
       c.braking = vt < c.v - 0.3;
       const accel = c.cls === 'lorry' || c.cls === 'bus' || c.cls === 'tractor' ? 1.1 : c.cls === 'bike' ? 3.5 : 2.2;
       c.v += clamp(vt - c.v, -6 * dt, accel * dt);
@@ -289,7 +323,12 @@ export class Traffic {
       if (c.beacon >= 0) {
         c.beacon += dt;
         c.lamps.amber = (c.beacon % 0.9) < 0.3 ? 4 : 0.1;
-      } else c.lamps.amber = 0.3 + night;
+      } else if (c.siren) {
+        // Blue lights: a quick double flash.
+        c.flash += dt;
+        const ph = c.flash % 0.7;
+        c.lamps.amber = ph < 0.08 || (ph > 0.16 && ph < 0.24) ? 6 : 0.15;
+      } else c.lamps.amber = TYPES[c.type].emergency ? 0.15 : 0.3 + night;
 
       if (c.s < ps - 220 || c.s > ps + 1000) {
         this.cars.splice(i, 1);
@@ -297,6 +336,37 @@ export class Traffic {
       }
       if (!player.crashed) this.interact(c, player, events);
     }
+  }
+
+  // Eases a vehicle towards a lateral position (m from the centreline).
+  steerTo(c, target, dt) {
+    const want = clamp((target - c.lane) * 1.6, -1.8, 1.8);
+    c.laneRate += clamp(want - c.laneRate, -3 * dt, 3 * dt);
+    c.lane += c.laneRate * dt;
+  }
+
+  // An emergency vehicle stuck behind something swings out into the other
+  // lane (which may be yours) to get past, then tucks back in. It holds back
+  // if oncoming traffic, or a rider close ahead, is in the way.
+  overtake(c, blocker, player, vt) {
+    const dt = this.dt;
+    const other = -c.home;
+    if (c.overtaking) {
+      // Back in once clear of whatever it was passing (rel: how far ahead it still is).
+      const inWay = (rel, len) => rel > -(len + c.L) / 2 - 8 && rel < 55;
+      const passing = this.cars.some((o) => o !== c && o.dir === c.dir && Math.abs(o.lane - c.home) < 1.6 && inWay((o.s - c.s) * c.dir, o.L));
+      const rider = c.dir > 0 && Math.abs(player.d - c.home) < 1.8 && inWay((player.s - c.s) * c.dir, 1);
+      if (!passing && !rider) c.overtaking = false;
+    } else if (blocker && blocker.gap < 30 && blocker.v < c.v + 1) {
+      // Is the other lane clear far enough ahead?
+      const clear = !this.cars.some((o) => o !== c && o.dir !== c.dir && ((o.s - c.s) * c.dir) > -10 && ((o.s - c.s) * c.dir) < 90);
+      const riderGap = (player.s - c.s) * c.dir;
+      const riderInWay = c.dir < 0 && riderGap > 0 && riderGap < 45 && Math.abs(player.d - other) < 1.8;
+      if (clear && !riderInWay) c.overtaking = true;
+    }
+    this.steerTo(c, c.overtaking ? other * 0.95 : c.home, dt);
+    // Out in the other lane it can use its full speed.
+    return c.overtaking && Math.abs(c.lane - other) < 1 ? c.vmax : vt;
   }
 
   // Draws the traffic; call once a frame after update.

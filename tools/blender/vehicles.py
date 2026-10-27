@@ -233,6 +233,9 @@ def body(B, s, lod):
             us.update(round(x, 4) for x in s[k])
     for a, b in s.get('windows', []):
         us.update((round(a, 4), round(b, 4)))
+    for band in s.get('bands', []):
+        us.update((round(band[0], 4), round(band[1], 4)))
+    us.update(round(x, 4) for x in s.get('stations', []))
     us = sorted(x for x in us if 0 <= x <= L)
     dedup = [us[0]]
     for x in us[1:]:
@@ -320,6 +323,10 @@ def body(B, s, lod):
             for band in s.get('bands', []):  # bumpers, rubbing strips
                 if band[0] <= um <= band[1] and band[2] <= z <= band[3]:
                     return band[4], band[5] if len(band) > 5 else None
+            if s.get('livery'):
+                hit = s['livery'](um, z)
+                if hit:
+                    return hit
             return 'paint', None
         if zone == 'glassbelt':
             if g > 0.5 and (in_ranges(um, windows)):
@@ -504,6 +511,25 @@ def tube(B, m, c, pts, r, verts=8):
             p.use_smooth = len(p.vertices) == 4
         B.add_object(o, m, c)
         bpy.data.objects.remove(o)
+
+
+def limb(B, m, c, a, b, rx, ry, seg=(10, 7)):
+    """An ellipsoid spanning a..b (cross-section radii rx across, ry deep)."""
+    a, b = Vector(a), Vector(b)
+    d = b - a
+    half = d.length / 2 + min(rx, ry) * 0.6
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=1, location=(0, 0, 0), segments=seg[0], ring_count=seg[1])
+    o = bpy.context.active_object
+    o.scale = (rx, ry, half)
+    bpy.ops.object.transform_apply(scale=True)
+    o.rotation_mode = 'QUATERNION'
+    o.rotation_quaternion = d.to_track_quat('Z', 'Y')
+    o.location = (a + b) / 2
+    bpy.ops.object.transform_apply(rotation=True, location=True)
+    for p in o.data.polygons:
+        p.use_smooth = True
+    B.add_object(o, m, c)
+    bpy.data.objects.remove(o)
 
 
 def y_of(s, u):
@@ -1096,11 +1122,233 @@ def spec_bus():
     return s
 
 
+# ---------------------------------------------------------------- batch 2
+BLUE = (0.05, 0.25, 1.0)  # blue lamps: green between head and tail, so they flash on the amber channel
+HIVIS_Y = (0.85, 0.8, 0.05)
+HIVIS_G = (0.1, 0.5, 0.15)
+POLICE_B = (0.03, 0.12, 0.55)
+FIRE_Y = (0.9, 0.75, 0.1)
+WHITE = (0.85, 0.85, 0.83)
+
+
+def battenburg(u0, u1, z0, z1, a, b, size=0.6, rows=2):
+    """Checked livery between u0..u1 and z0..z1 in colours a and b."""
+    h = (z1 - z0) / rows
+
+    def f(u, z):
+        if u0 <= u <= u1 and z0 <= z <= z1:
+            i = int((u - u0) / size) + int((z - z0) / h)
+            return 'detail', (a if i % 2 == 0 else b)
+        return None
+    return f
+
+
+def checks(u0, u1, size=0.6):
+    return [u0 + k * size for k in range(int((u1 - u0) / size) + 1)] + [u1]
+
+
+def lightbar(B, s, u, z, lod, w=1.1):
+    """Roof light bar: two blue lamps on a black base."""
+    L = s.get('L_full', s['L'])
+    y = L / 2 - u
+    box(B, 'detail', BLACK, (w, 0.28, 0.05), (0, y, z + 0.025))
+    for sx in (-1, 1):
+        box(B, 'lamp', BLUE, (w * 0.42, 0.24, 0.1), (sx * w * 0.26, y, z + 0.1), 0.03 if lod == 0 else 0, 2)
+
+
+def spec_police():
+    s = spec_estate()
+    s.update(name='police')
+    L = s['L']
+    s['livery'] = battenburg(0.15, L - 0.15, 0.48, 0.86, POLICE_B, HIVIS_Y)
+    s['stations'] = checks(0.15, L - 0.15)
+    s['rows'] = sorted(set(s['rows'] + [0.48, 0.67, 0.86]))
+    s['lightbar'] = (2.9, None)
+    s['rails'] = None
+    return s
+
+
+def spec_ambulance():
+    s = spec_van()
+    s.update(name='ambulance', H=2.7)
+    L = s['L']
+    s['top'] = [(0, 0.82), (0.12, 0.98), (0.75, 1.18), (0.9, 1.22), (1.5, 2.3), (1.7, 2.62), (5.15, 2.66), (5.3, 2.6)]
+    s['windows'] = [(1.52, 2.3)]
+    s['ladder'] = False
+    s['livery'] = battenburg(2.4, L - 0.1, 0.55, 1.15, HIVIS_G, HIVIS_Y, 0.5)
+    s['stations'] = checks(2.4, L - 0.1, 0.5)
+    s['rows'] = sorted(set(s['rows'] + [0.55, 0.85, 1.15]))
+    s['front'] = s['front'] + [(0.0, 1.01, 0.45, 0.6, 'detail', HIVIS_G)]
+    s['lightbar'] = (1.9, None)
+    s['beacons'] = [(L - 0.15, 2.66)]
+    return s
+
+
+def spec_fire():
+    s = spec_box_lorry()
+    s.update(name='fire', H=3.3, L=8.4)
+    L = s['L']
+    s['wheels'] = car_wheels(L, 1.2, 2.3, 0.48, 1.98, w=0.28)
+    for w in s['wheels']:
+        w['style'] = 'truck'
+    # A long crew cab.
+    s['L_cab'] = 3.1
+    s['top'] = [(0, 2.5), (0.12, 2.64), (0.3, 2.7), (3.0, 2.7), (3.1, 2.62)]
+    s['belt'] = [(0, 1.5), (0.4, 1.55), (3.1, 1.55)]
+    s['sill'] = [(0, 0.55), (0.3, 0.5), (3.1, 0.55)]
+    s['plan'] = [(0, 0.94), (0.3, 1), (3.1, 1)]
+    s['windows'] = [(0.25, 1.3), (1.5, 2.9)]
+    s['seams'] = [1.4]
+    s['bands'] = [(0, 3.1, 0.45, 0.7, 'detail', GREY), (0, 3.1, 1.25, 1.36, 'detail', FIRE_Y)]
+    s['box'] = (3.2, L, 2.95, 0.95)
+    s['lockers'] = True
+    s['lightbar'] = (0.5, None)
+    s['fireladder'] = True
+    return s
+
+
+def spec_icecream():
+    s = spec_van()
+    s.update(name='icecream', H=3.1)
+    L = s['L']
+    s['top'] = [(0, 0.82), (0.12, 0.98), (0.75, 1.18), (0.9, 1.22), (1.5, 2.3), (1.62, 2.6), (1.9, 2.72), (5.2, 2.72), (5.3, 2.62)]
+    s['windows'] = [(1.52, 2.3)]
+    s['ladder'] = False
+    # Serving hatch on the kerb side, with a pastel stripe along the body.
+    s['windows'] = [(1.52, 2.3), (2.7, 4.2)]
+    s['bands'] = [(0, L, 0.3, 0.48, 'detail', BLACK), (0.3, L - 0.1, 0.62, 0.78, 'trim', None)]
+    s['rows'] = sorted(set(s['rows'] + [0.62, 0.78]))
+    s['cone'] = (1.6, 2.72)
+    return s
+
+
+def spec_horsebox():
+    s = spec_box_lorry()
+    s.update(name='horsebox', H=3.2)
+    L = s['L']
+    s['box'] = (2.25, L, 3.2, 0.95)
+    s['horse'] = True
+    return s
+
+
+def spec_decker():
+    """Double-decker bus: lower windows are bands below the belt, the upper
+    deck is the greenhouse."""
+    s = spec_bus()
+    L = 10.4
+    s.update(name='decker', L=L, H=4.35)
+    s['wheels'] = car_wheels(L, 2.3, 2.6, 0.5, 2.1, w=0.28)
+    for w in s['wheels']:
+        w['style'] = 'truck'
+    s['top'] = [(0, 4.1), (0.3, 4.32), (0.7, 4.38), (L - 0.4, 4.38), (L, 4.2)]
+    s['belt'] = [(0, 2.55), (L, 2.55)]
+    s['sill'] = [(0, 0.32), (0.3, 0.28), (L - 0.3, 0.28), (L, 0.36)]
+    s['windows'] = [(0.25, 1.9), (2.0, 3.6), (3.7, 5.3), (5.4, 7.0), (7.1, 8.7), (8.8, 10.1)]
+    lower = [(2.6, 3.9), (4.0, 5.4), (5.5, 6.9), (7.0, 8.4), (8.5, 10.0)]
+    s['bands'] = [(0, L, 0.28, 0.45, 'detail', GREY)] + [(a, b, 1.25, 2.2, 'glass', None) for a, b in lower] + [(1.65, 2.5, 0.45, 2.3, 'glass', None)]
+    s['rows'] = [0.5, 0.7, 1.0, 1.25, 1.6, 2.2, 2.35]
+    s['front'] = [(0.0, 0.94, 2.65, 3.9, 'glass', None), (0.0, 0.94, 1.15, 2.35, 'glass', None), (0.0, 0.8, 3.92, 4.18, 'lamp', SIGN),
+                  (0.68, 0.94, 0.55, 0.75, 'lamp', HEAD), (0.0, 1.01, 0.0, 0.42, 'detail', GREY)]
+    s['rear'] = [(0.8, 1.01, 0.6, 1.4, 'lamp', TAIL), (0.0, 1.01, 0.0, 0.45, 'detail', GREY), (0.1, 0.9, 2.8, 3.9, 'glass', None)]
+    s['door'] = (1.65, 2.5)
+    s['decker'] = True
+    return s
+
+
+def spec_supercar():
+    L, W = 4.55, 1.98
+    s = dict(kind='car', name='supercar', L=L, W=W, H=1.16)
+    s['wheels'] = [{'u': 1.05, 'r': 0.33, 'z': 0.33, 'w': 0.24, 'x': 0.84}, {'u': L - 0.95, 'r': 0.355, 'z': 0.355, 'w': 0.3, 'x': 0.82}]
+    s['top'] = [(0, 0.46), (0.1, 0.56), (0.9, 0.7), (1.3, 0.78), (2.05, 1.12), (2.4, 1.16), (2.85, 1.1), (3.6, 0.98), (4.4, 0.95), (4.55, 0.88)]
+    s['belt'] = [(0, 0.44), (0.12, 0.54), (1.3, 0.76), (2.1, 0.86), (3.5, 0.94), (4.55, 0.86)]
+    s['sill'] = [(0, 0.16), (0.3, 0.12), (L - 0.3, 0.13), (L, 0.2)]
+    s['plan'] = [(0, 0.86), (0.7, 0.96), (1.5, 0.97), (2.4, 0.94), (3.4, 1.0), (L, 0.95)]
+    s['roofw'] = 0.6
+    s['bulge'] = 0.05
+    s['windscreen'] = (1.32, 2.05)
+    s['rearscreen'] = (2.9, 3.55)
+    s['windows'] = [(2.1, 2.85)]
+    s['seams'] = [1.3, 2.9]
+    s['seamroof'] = True
+    s['rows'] = [0.24, 0.36, 0.48, 0.58, 0.68, 0.78]
+    s['front'] = [(0.5, 1.01, 0.4, 0.5, 'lamp', HEAD), (0.0, 0.7, 0.14, 0.32, 'detail', BLACK), (0.0, 1.01, 0.0, 0.14, 'detail', BLACK)]
+    s['rear'] = [(0.3, 1.01, 0.72, 0.8, 'lamp', TAIL), (0.0, 1.01, 0.0, 0.42, 'detail', BLACK), (0.0, 0.8, 0.5, 0.68, 'detail', GREY)]
+    s['lamps'] = [lamp_spec(0, 0.28, 0.4, 0.5, HEAD), lamp_spec(L - 0.1, L, 0.72, 0.82, TAIL)]
+    # Side air intakes behind the doors.
+    s['bands'] = [(2.95, 3.45, 0.42, 0.7, 'detail', BLACK), (0, L, 0.12, 0.2, 'detail', BLACK)]
+    s['plates'] = (0.3, 0.6)
+    s['mirror'] = (2.1, 0.86)
+    s['handles'] = []
+    s['wing'] = True
+    s['archr'] = 0.05
+    s['liner'] = 0.32
+    return s
+
+
+def spec_roadster():
+    """Open two-seater: no roof, a framed screen and two heads."""
+    L, W = 3.95, 1.74
+    s = dict(kind='car', name='roadster', L=L, W=W, H=1.22)
+    s['wheels'] = car_wheels(L, 0.82, 0.7, 0.31, 1.5, w=0.21)
+    s['top'] = [(0, 0.55), (0.12, 0.64), (1.4, 0.82), (1.6, 0.86), (3.3, 0.88), (3.85, 0.82), (3.95, 0.75)]
+    s['belt'] = [(0, 0.53), (0.12, 0.62), (1.4, 0.8), (1.6, 0.84), (3.3, 0.86), (3.95, 0.74)]
+    s['sill'] = [(0, 0.2), (0.3, 0.16), (L - 0.3, 0.16), (L, 0.24)]
+    s['plan'] = [(0, 0.86), (0.6, 0.98), (1.2, 1), (3.0, 1), (L, 0.93)]
+    s['glass'] = False
+    s['windscreen'] = None
+    s['rearscreen'] = None
+    s['windows'] = []
+    s['seams'] = [1.55, 2.6]
+    s['rows'] = [0.3, 0.44, 0.56, 0.66, 0.74]
+    s['front'] = std_front((0.56, 0.68), (0.3, 0.5), 0.3, lamp_x=0.55)
+    s['rear'] = std_rear((0.66, 0.78), 0.36, 0.55)
+    s['lamps'] = [lamp_spec(0, 0.22, 0.56, 0.68, HEAD), lamp_spec(L - 0.1, L, 0.66, 0.78, TAIL)]
+    s['bands'] = [(0, 0.3, 0.16, 0.28, 'detail', BLACK), (L - 0.3, L, 0.16, 0.34, 'detail', BLACK)]
+    # Cockpit cut-out: interior colour over the seats.
+    s['roofzones'] = [(1.62, 2.75, 'detail', LEATHER)]
+    s['plates'] = (0.4, 0.55)
+    s['mirror'] = (1.65, 0.86)
+    s['handles'] = []
+    s['open'] = (1.62, 2.75)
+    return s
+
+
+def spec_gt():
+    """Long-bonnet fastback GT."""
+    L, W = 4.75, 1.92
+    s = dict(kind='car', name='gt', L=L, W=W, H=1.33)
+    s['wheels'] = car_wheels(L, 0.95, 0.85, 0.34, 1.62, w=0.25)
+    s['top'] = [(0, 0.6), (0.12, 0.7), (1.5, 0.86), (1.85, 0.9), (2.5, 1.29), (2.8, 1.33), (3.2, 1.28), (4.4, 0.96), (4.75, 0.9)]
+    s['belt'] = [(0, 0.58), (0.12, 0.68), (1.85, 0.88), (2.6, 0.92), (4.2, 0.96), (4.75, 0.9)]
+    s['sill'] = [(0, 0.22), (0.3, 0.17), (L - 0.3, 0.17), (L, 0.26)]
+    s['plan'] = [(0, 0.85), (0.6, 0.96), (1.4, 0.98), (3.0, 0.99), (3.7, 1.0), (L, 0.94)]
+    s['roofw'] = 0.7
+    s['bulge'] = 0.045
+    s['windscreen'] = (1.88, 2.5)
+    s['rearscreen'] = (3.25, 4.25)
+    s['windows'] = [(2.55, 3.2)]
+    s['seams'] = [1.86, 3.25]
+    s['seamroof'] = True
+    s['rows'] = [0.3, 0.44, 0.56, 0.66, 0.76, 0.84]
+    s['front'] = std_front((0.58, 0.7), (0.3, 0.56), 0.3, lamp_x=0.55)
+    s['rear'] = std_rear((0.76, 0.9), 0.4, 0.4)
+    s['lamps'] = [lamp_spec(0, 0.25, 0.58, 0.7, HEAD), lamp_spec(L - 0.12, L, 0.76, 0.9, TAIL)]
+    s['bands'] = [(0, 0.3, 0.17, 0.28, 'detail', BLACK), (L - 0.3, L, 0.17, 0.36, 'detail', BLACK)]
+    s['plates'] = (0.4, 0.58)
+    s['mirror'] = (2.6, 0.92)
+    s['handles'] = [3.0]
+    s['spoiler'] = 'boot'
+    s['exhausts'] = True
+    return s
+
+
 SPECS = {
     'city': spec_city, 'hatch': spec_hatch, 'saloon': spec_saloon, 'estate': spec_estate, 'coupe': spec_coupe,
     'suv': spec_suv, 'utility': spec_utility, 'pickup': spec_pickup, 'taxi': spec_taxi,
     'van': spec_van, 'minibus': spec_minibus, 'camper': spec_camper,
     'lorry': spec_box_lorry, 'tipper': spec_tipper, 'bus': spec_bus,
+    'police': spec_police, 'ambulance': spec_ambulance, 'fire': spec_fire, 'icecream': spec_icecream,
+    'horsebox': spec_horsebox, 'decker': spec_decker, 'supercar': spec_supercar, 'roadster': spec_roadster, 'gt': spec_gt,
 }
 
 
@@ -1234,20 +1482,80 @@ def build_lofted(s, lod):
         box(B, 'detail', BLACK, (0.03, 0.03, 2.3), (W / 2 + 0.005, yf((u0 + u1) / 2), 1.55))
     if s['kind'] == 'bus':
         # Route number board on the back and a roof pod.
-        box(B, 'trim', None, (W * 0.7, 2.8, 0.18), (0, yf(Lf - 2.0), 3.12), 0.05 if lod == 0 else 0, 2)
+        box(B, 'trim', None, (W * 0.7, 2.8, 0.18), (0, yf(Lf - 2.0), interp(s['top'], Lf - 2.0) + 0.07), 0.05 if lod == 0 else 0, 2)
+    if s.get('lightbar'):
+        u, z = s['lightbar']
+        z = interp(s['top'], u) if z is None else z
+        lightbar(B, dict(s, L_full=Lf), u, z, lod, 1.15 if s['kind'] != 'lorry' else 1.6)
+    for u, z in s.get('beacons', []):
+        for sx in (-1, 1):
+            box(B, 'lamp', BLUE, (0.14, 0.1, 0.12), (sx * (W / 2 - 0.15), yf(u), z + 0.06), 0.02 if lod == 0 else 0, 1)
+    if s.get('lockers') and lod == 0:
+        u0, u1, zt, zf = s['box']
+        for k in range(4):
+            uu = u0 + 0.3 + k * (u1 - u0 - 0.6) / 4
+            for sx in (-1, 1):
+                for j in range(9):
+                    box(B, 'detail', GREY, (0.012, (u1 - u0 - 0.6) / 4 - 0.1, 0.012), (sx * (W / 2 + 0.025), yf(uu + (u1 - u0 - 0.6) / 8), zf + 0.4 + j * 0.17))
+        for sx in (-1, 1):
+            box(B, 'detail', FIRE_Y, (0.012, u1 - u0, 0.1), (sx * (W / 2 + 0.03), yf((u0 + u1) / 2), zf + 0.2))
+    if s.get('fireladder'):
+        u0, u1, zt, zf = s['box']
+        z = zt + 0.25
+        for sx in (-1, 1):
+            tube(B, 'detail', CHROME, [(sx * 0.45, yf(u0 - 2.2), z), (sx * 0.45, yf(u1 - 0.2), z)], 0.035, 6 if lod == 0 else 4)
+        if lod == 0:
+            for k in range(int((u1 - u0 + 2.0) / 0.3)):
+                tube(B, 'detail', CHROME, [(-0.45, yf(u0 - 2.1 + k * 0.3), z), (0.45, yf(u0 - 2.1 + k * 0.3), z)], 0.018, 4)
+        box(B, 'detail', GREY, (0.3, 0.6, 0.25), (0, yf(u1 - 0.5), zt + 0.12))
+    if s.get('cone'):
+        u, z = s['cone']
+        cyl(B, 'detail', (0.82, 0.6, 0.3), 0.22, 0.75, (0, yf(u), z + 0.4), (math.pi, 0, 0), 12 if lod == 0 else 6, r2=0.02)
+        sphere(B, 'detail', (0.95, 0.75, 0.82), 0.25, (0, yf(u), z + 0.85), segs=12 if lod == 0 else 8, rings=8 if lod == 0 else 5)
+        sphere(B, 'detail', (0.55, 0.05, 0.08), 0.06, (0, yf(u), z + 1.1), segs=8, rings=5)
+    if s.get('horse'):
+        u0, u1, zt, zf = s['box']
+        for sx in (-1, 1):
+            for k in range(3):
+                box(B, 'glass', None, (0.02, 0.6, 0.35), (sx * (W / 2 + 0.03), yf(u0 + 0.8 + k * 1.6), zt - 0.45))
+            box(B, 'detail', BLACK, (0.02, u1 - u0 - 0.2, 0.06), (sx * (W / 2 + 0.03), yf((u0 + u1) / 2), zf + 0.6))
+        # Ramp outline on the back.
+        box(B, 'detail', BLACK, (W - 0.2, 0.03, 0.04), (0, yf(u1) - 0.03, zf + 1.6))
+    if s.get('wing'):
+        u = Lf - 0.2
+        z = interp(s['top'], u)
+        box(B, 'detail', BLACK, (W * 0.85, 0.28, 0.025), (0, yf(u), z + 0.22), 0.01 if lod == 0 else 0, 1, rot=(0.12, 0, 0))
+        for sx in (-1, 1):
+            box(B, 'detail', BLACK, (0.03, 0.12, 0.22), (sx * W * 0.32, yf(u), z + 0.1))
+    if s.get('exhausts') or s.get('wing'):
+        for sx in (-1, 1):
+            cyl(B, 'detail', CHROME, 0.045, 0.12, (sx * 0.45, yf(Lf) + 0.02, 0.28), (math.pi / 2, 0, 0), 10 if lod == 0 else 6)
+    if s.get('open'):
+        u0, u1 = s['open']
+        zb = interp(s['belt'], u0)
+        # Framed screen, roll hoops and two heads.
+        box(B, 'detail', BLACK, (W * 0.8, 0.04, 0.03), (0, yf(u0 - 0.02), zb + 0.32), rot=(-0.5, 0, 0))
+        box(B, 'glass', None, (W * 0.78, 0.01, 0.3), (0, yf(u0 - 0.1), zb + 0.17), rot=(-0.5, 0, 0))
+        for sx in (-1, 1):
+            sphere(B, 'detail', (0.45, 0.32, 0.25), 0.1, (sx * 0.38, yf(u0 + 0.75), zb + 0.42), (1, 1.05, 1.15), 10 if lod == 0 else 6, 6 if lod == 0 else 4)
+            sphere(B, 'detail', (0.12, 0.08, 0.05) if sx < 0 else (0.5, 0.35, 0.15), 0.105, (sx * 0.38, yf(u0 + 0.78), zb + 0.47), (1, 1.05, 0.7), 10 if lod == 0 else 6, 6 if lod == 0 else 4)
+            box(B, 'detail', (0.2, 0.25, 0.35) if sx < 0 else (0.6, 0.15, 0.12), (0.36, 0.2, 0.3), (sx * 0.38, yf(u0 + 0.8), zb + 0.15), 0.06 if lod == 0 else 0, 1)
+            tube(B, 'paint', None, [(sx * 0.38 - 0.16, yf(u1 - 0.05), zb), (sx * 0.38 - 0.12, yf(u1 - 0.05), zb + 0.3), (sx * 0.38 + 0.12, yf(u1 - 0.05), zb + 0.3), (sx * 0.38 + 0.16, yf(u1 - 0.05), zb)], 0.025, 6 if lod == 0 else 4)
+        box(B, 'detail', BLACK, (W * 0.72, 0.3, 0.12), (0, yf(u0 + 0.2), zb - 0.02))  # dash
     # Dark interior and a driver behind the screen.
-    if s['kind'] in ('car', 'van') and lod == 0:
+    if s['kind'] in ('car', 'van') and lod == 0 and not s.get('open'):
         ws = s['windscreen']
         u_d = (ws[1] + 0.55) if ws else 1.0
         zb = interp(s['belt'], u_d)
         z_top = interp(s['top'], u_d)
         w = hw_at(u_d)
         interior(B, dict(s, L=Lf), ws[1] - 0.1, (s['rearscreen'][0] if s.get('rearscreen') else Lf) - 0.2, zb - 0.25, z_top - 0.08, w * 0.88)
-        driver(B, dict(s, L=Lf), u_d + 0.15, zb + 0.05, -0.38 if s.get('uk') else 0.38)
+        driver(B, dict(s, L=Lf), u_d + 0.15, min(zb + 0.05, z_top - 0.58), -0.38 if s.get('uk') else 0.38)
     if s.get('cabover') or s['kind'] == 'bus':
         if lod == 0:
             u_d = 0.7 if s['kind'] != 'bus' else 0.8
-            interior(B, dict(s, L=Lf), 0.25, s['L'] - 0.15 if s['kind'] != 'bus' else Lf - 0.3, interp(s['belt'], 0.4) - 0.2, 2.6, W / 2 * 0.9)
+            z0, z1 = (0.7, interp(s['top'], 2.0) - 0.25) if s['kind'] == 'bus' else (interp(s['belt'], 0.4) - 0.2, 2.6)
+            interior(B, dict(s, L=Lf), 0.25, s['L'] - 0.15 if s['kind'] != 'bus' else Lf - 0.3, z0, z1, W / 2 * 0.9)
             driver(B, dict(s, L=Lf), u_d, interp(s['belt'], u_d) + 0.1, 0.5)
     return B
 
@@ -1346,27 +1654,32 @@ def build_bike(lod, style):
     tube(B, 'detail', BLACK, [(-0.36, yf(hb_y), hb_z), (0.36, yf(hb_y), hb_z)], 0.018, 6)
     for sx in (-1, 1):
         box(B, 'detail', BLACK, (0.08, 0.04, 0.06), (sx * 0.3, yf(hb_y - 0.05), hb_z + 0.12), 0.01 if lod == 0 else 0)
-    # Rider: leathers in trim colour, helmet in paint, dark boots and gloves.
-    lean = 0.75 if style == 'sport' else 0.35  # forward lean, rad from upright
-    hip = Vector((0, yf(1.5), 1.0))
-    sh = hip + Vector((0, math.sin(lean), math.cos(lean))) * 0.55
-    head = sh + Vector((0, math.sin(lean * 0.6) * 0.18, 0.2))
-    tube(B, 'trim', None, [tuple(hip), tuple(sh)], 0.17, sv)
-    sphere(B, 'trim', None, 0.17, tuple(sh), (1.05, 0.85, 0.9), sv, 6)
-    sphere(B, 'paint', None, 0.15, tuple(head), (0.95, 1.1, 1.0), 14 if lod == 0 else 8, 8 if lod == 0 else 5)
-    box(B, 'glass', None, (0.2, 0.05, 0.07), tuple(head + Vector((0, 0.13, 0.0))), 0.02 if lod == 0 else 0, 1, rot=(-0.2, 0, 0))
+    # Rider: leathers in trim colour, helmet in paint, dark boots and gloves,
+    # built from overlapping ellipsoids so the body reads as one soft shape.
+    seg = (12, 8) if lod == 0 else (7, 5)
+    lean = 0.8 if style == 'sport' else 0.38  # forward lean, rad from upright
+    hip = Vector((0, yf(1.52), 1.02))
+    up = Vector((0, math.sin(lean), math.cos(lean)))
+    sh = hip + up * 0.52
+    head = sh + up * 0.2 + Vector((0, 0.06, 0.06 if style == 'sport' else 0.03))
+    limb(B, 'trim', None, hip - up * 0.04, sh + up * 0.06, 0.2, 0.15, seg)  # torso, deeper than wide
+    limb(B, 'trim', None, hip + Vector((0, -0.04, -0.02)), hip + Vector((0, 0.05, 0.06)), 0.19, 0.17, seg)  # seat
+    sphere(B, 'paint', None, 0.145, tuple(head), (0.95, 1.08, 1.0), 14 if lod == 0 else 8, 9 if lod == 0 else 5)
+    # Visor: a dark band across the front of the helmet.
+    sphere(B, 'glass', None, 0.13, tuple(head + Vector((0, 0.045, -0.005))), (0.92, 1.0, 0.5), 12 if lod == 0 else 7, 6 if lod == 0 else 4)
     for sx in (-1, 1):
-        shp = sh + Vector((sx * 0.2, 0, -0.03))
+        shp = sh + Vector((sx * 0.19, -0.02, -0.04))
         hand = Vector((sx * 0.3, yf(hb_y - 0.04), hb_z + 0.03))
-        elbow = (shp + hand) / 2 + Vector((sx * 0.07, 0, -0.06))
-        tube(B, 'trim', None, [tuple(shp), tuple(elbow), tuple(hand)], 0.055, 6 if lod == 0 else 4)
-        sphere(B, 'detail', BLACK, 0.06, tuple(hand), segs=8, rings=5)
-        hp = hip + Vector((sx * 0.15, 0, 0))
-        knee = Vector((sx * 0.22, yf(1.1), 0.82 if style == 'sport' else 0.75))
-        foot = Vector((sx * 0.18, yf(1.35), 0.38))
-        tube(B, 'trim', None, [tuple(hp), tuple(knee)], 0.08, 6 if lod == 0 else 4)
-        tube(B, 'detail', LEATHER, [tuple(knee), tuple(foot)], 0.065, 6 if lod == 0 else 4)
-        box(B, 'detail', BLACK, (0.1, 0.24, 0.1), tuple(foot + Vector((0, 0.06, -0.03))))
+        elbow = shp + (hand - shp) * 0.5 + Vector((sx * 0.08, -0.02, -0.08 if style == 'sport' else -0.04))
+        limb(B, 'trim', None, shp, elbow, 0.07, 0.07, seg)
+        limb(B, 'trim', None, elbow, hand, 0.06, 0.06, seg)
+        sphere(B, 'detail', BLACK, 0.055, tuple(hand), (1, 1.2, 0.9), 8, 5)
+        hp = hip + Vector((sx * 0.13, 0.02, 0))
+        knee = Vector((sx * 0.21, yf(1.12), 0.84 if style == 'sport' else 0.74))
+        foot = Vector((sx * 0.17, yf(1.38), 0.42))
+        limb(B, 'trim', None, hp, knee, 0.095, 0.095, seg)
+        limb(B, 'detail', LEATHER, knee, foot, 0.07, 0.07, seg)
+        box(B, 'detail', BLACK, (0.1, 0.25, 0.11), tuple(foot + Vector((0, 0.06, -0.04))), 0.03 if lod == 0 else 0, 1)
     return s, B
 
 
