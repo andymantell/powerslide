@@ -11,7 +11,8 @@
     "ragdoll": "node tools/ragdoll-check.mjs",
     "icons": "node tools/icons.mjs",
     "levels": "node tools/levels.mjs",
-    "sounds": "node tools/audio-check.mjs http://localhost:4173/ sounds"
+    "sounds": "node tools/audio-check.mjs http://localhost:4173/ sounds",
+    "clips": "node tools/sound-clips.mjs http://localhost:4173/ sounds/clips"
   },
   "dependencies": {
     "three": "^0.186.1"

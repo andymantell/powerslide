@@ -267,7 +267,8 @@ level's `sky`, and code can change them at any time with
 `audio.setTimeOfDay(hours or 'dawn' / 'day' / 'dusk' / 'night')`;
 `audio.setEcho({ time, feedback, mix })` sets an echo (null goes back to the
 biome's). `npm run sounds` records each biome headless into `sounds/` to
-listen to (needs `npm run build && npx vite preview` running).
+listen to, and `npm run clips` records every sound on its own into
+`sounds/clips/` (both need `npm run build && npx vite preview` running).
 
 ## How it works
 
