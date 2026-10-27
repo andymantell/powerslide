@@ -218,15 +218,24 @@ export class Forest {
         for (let a = 0; a < IMP_VIEWS; a++) {
           tree.rotation.y = (-a / IMP_VIEWS) * Math.PI * 2;
           const x = (i * IMP_VIEWS + a) * IMP_W;
-          r.setViewport(x, 0, IMP_W, IMP_H);
-          r.setScissor(x, 0, IMP_W, IMP_H);
-          r.setScissorTest(true);
+          // Set the column on the target itself: renderer.setViewport scales
+          // by the device pixel ratio even for render targets, which on the
+          // iPad (ratio 1.5 to 2) zoomed each tree into its neighbours and
+          // drew distant trees as dark rectangles.
+          target.viewport.set(x, 0, IMP_W, IMP_H);
+          target.scissor.set(x, 0, IMP_W, IMP_H);
+          target.scissorTest = true;
+          r.setRenderTarget(target);
           r.clearDepth();
           r.render(scene, cam);
         }
       });
     }
-    r.setScissorTest(false);
+    for (const t of [rt, rtN]) {
+      t.viewport.set(0, 0, t.width, t.height);
+      t.scissor.set(0, 0, t.width, t.height);
+      t.scissorTest = false;
+    }
     r.setRenderTarget(prev.target);
     r.setViewport(0, 0, r.domElement.width / r.getPixelRatio(), r.domElement.height / r.getPixelRatio());
     r.toneMapping = prev.tone;

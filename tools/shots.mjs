@@ -22,7 +22,8 @@ const only = process.argv[5] ? process.argv[5].split(',') : null;
 fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+// SHOT_DPR mimics a high-density screen such as the iPad's (2).
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: +(process.env.SHOT_DPR || 1) });
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[page]', m.text()); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript((q) => {
