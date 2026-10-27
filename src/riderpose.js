@@ -28,6 +28,8 @@ const SLIDE_TWIST_HEEL = -0.9;
 const PIVOT_Y = -0.06; // trucks' roll axis, relative to the deck top
 const ANKLE = 0.05; // ankle above the sole
 const GROUND = -DECK_HEIGHT;
+const HAND_LEAN = 0.1; // extra body lean towards a planted glove
+const GLOVE = 0.045; // palm centre above the road with the puck down
 
 export const JOINT_NAMES = [
   'hip', 'hipF', 'hipR', 'kneeF', 'kneeR', 'footF', 'footR', 'chest', 'neck', 'head',
@@ -41,6 +43,7 @@ const _n = new THREE.Vector3();
 const _f = new THREE.Vector3();
 const _s = new THREE.Vector3();
 const _pole = new THREE.Vector3();
+const _g = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 const _qx = new THREE.Quaternion();
 const X = new THREE.Vector3(1, 0, 0);
@@ -71,6 +74,9 @@ export class RiderPose {
     this.torsoDir = new THREE.Vector3(0, 1, 0);
     this.bodyUp = new THREE.Vector3(0, 1, 0); // the whole-body lean, before the torso bends
     this.chestFacing = new THREE.Vector3(1, 0, 0); // which way the chest points
+    this.plantF = 0; // how far each hand is planted flat on the road
+    this.plantR = 0;
+    this.plantDir = new THREE.Vector3(1, 0, 0); // a planted hand's fingers
   }
 
   // p (all optional):
@@ -80,19 +86,24 @@ export class RiderPose {
   //  weight  -1..1 weight shift (+ = onto the front foot)
   //  crouch, tuck, spread (air brake), brake (footbrake), push 0..1
   //  pushPhase 0..1 through one push stroke
-  //  slideHand -1/0/1 which hand goes down, handAmount 0..1, handTarget (Vector3, rig space)
+  //  slideHand -1/0/1 which hand goes down (+ = toe side), handAmount 0..1:
+  //          a hand-down slide, the rider dropped low with the glove's puck on
+  //          the road beside the board
   //  lookYaw (rad), fakie (head looks the other way), limp 0..1 (crashed)
   solve(p) {
     const J = this.joints;
     const roll = p.roll ?? 0;
-    const lean = p.lean ?? 0;
+    // A planted hand holds the body further over than the wheels alone could.
+    const hand = p.slideHand ? Math.min(1, p.handAmount ?? 1) : 0;
+    const hs = p.slideHand > 0 ? 1 : -1;
+    const lean = (p.lean ?? 0) + hs * hand * HAND_LEAN;
     const pitch = p.pitch ?? 0;
     const tuck = p.tuck ?? 0;
     const spread = p.spread ?? 0;
     const push = p.push ?? 0;
     const brake = p.brake ?? 0;
     const limp = p.limp ?? 0;
-    const crouch = Math.min(1, (p.crouch ?? 0.15) + push * 0.35);
+    const crouch = Math.min(1, (p.crouch ?? 0.15) + push * 0.35 + hand * hand);
     const weight = p.weight ?? 0;
 
     // Feet planted on the rolling deck.
@@ -102,7 +113,7 @@ export class RiderPose {
 
     // The body leans as one about the line through the feet (the balance
     // model in player.js decides the angle); hips drop as the rider bends.
-    const bend = Math.max(crouch, tuck * 0.85);
+    const bend = Math.max(crouch, tuck * 0.85) + hand * 0.15;
     const hipH = 0.82 - bend * 0.42 - tuck * 0.05;
     _q.setFromAxisAngle(Z, -lean);
     _qx.setFromAxisAngle(X, -pitch);
@@ -143,18 +154,15 @@ export class RiderPose {
       J.footR.lerp(_b, lift);
       this.footRollR = -roll * (1 - lift);
     }
-    // Knees bend the way the toes point.
-    _pole.set(Math.cos(FOOT_TURN_F), 0, -Math.sin(FOOT_TURN_F)).applyQuaternion(_q);
-    twoBoneIK(J.hipF, J.footF, THIGH, SHIN, _pole, J.kneeF, J.footF);
-    _pole.set(Math.cos(FOOT_TURN_R), 0, -Math.sin(FOOT_TURN_R)).applyQuaternion(_q);
-    twoBoneIK(J.hipR, J.footR, THIGH, SHIN, _pole, J.kneeR, J.footR);
-
     // Torso: upright, folding over the front knee in a tuck, standing tall and
     // leaning back into the wind for an air brake.
     const t = this.torsoDir.set(0, 1, 0).addScaledVector(_f, 0.15 + bend * 0.25);
     t.lerp(_a.set(0, 0.4, -0.92), tuck);
     t.lerp(_a.set(0.04, 1, 0.18), spread);
     t.lerp(_a.set(0.35, 1, -0.25), push * 0.6);
+    // Hand down: chest out over the planted glove, facing the road on the toe
+    // side, sitting back on the heel side.
+    t.lerp(hs > 0 ? _a.set(0.55, 0.8, -0.2) : _a.set(-0.35, 0.9, -0.1), hand);
     t.normalize().applyQuaternion(_q);
     if (limp) t.lerp(_a.set(0.9, 0.2, 0.2), limp).normalize();
     J.chest.copy(J.hip).addScaledVector(t, 0.5);
@@ -169,6 +177,26 @@ export class RiderPose {
     _n.multiplyScalar(0.19);
     J.shF.copy(J.chest).add(_n).addScaledVector(t, -0.03);
     J.shR.copy(J.chest).sub(_n).addScaledVector(t, -0.03);
+
+    // A planted hand has to reach the road: if the arm can't, the whole body
+    // sinks towards the glove (the knees take it up) until it can.
+    const glove = _g;
+    if (hand > 0) {
+      const sh = hs > 0 ? J.shF : J.shR;
+      glove.set(sh.x + hs * 0.12, GROUND + GLOVE, sh.z - 0.08);
+      _b.subVectors(glove, sh);
+      const short = (_b.length() - (UPPER_ARM + FOREARM) * 0.97) * hand;
+      if (short > 0) {
+        _b.setLength(short);
+        for (const k of ['hip', 'hipF', 'hipR', 'chest', 'neck', 'head', 'shF', 'shR']) J[k].add(_b);
+      }
+    }
+
+    // Knees bend the way the toes point.
+    _pole.set(Math.cos(FOOT_TURN_F), 0, -Math.sin(FOOT_TURN_F)).applyQuaternion(_q);
+    twoBoneIK(J.hipF, J.footF, THIGH, SHIN, _pole, J.kneeF, J.footF);
+    _pole.set(Math.cos(FOOT_TURN_R), 0, -Math.sin(FOOT_TURN_R)).applyQuaternion(_q);
+    twoBoneIK(J.hipR, J.footR, THIGH, SHIN, _pole, J.kneeR, J.footR);
 
     // Hands: relaxed by the sides, behind the back in a tuck, wide for the air
     // brake, swinging for balance while pushing, and puck down in a slide.
@@ -202,16 +230,18 @@ export class RiderPose {
       handF.lerp(_a.copy(J.shF).add(_n.set(0.3, -0.42, -0.1 + sw)), push * 0.7);
       handR.lerp(_a.copy(J.shR).add(_n.set(0.25, -0.45, 0.05 - sw)), push * 0.7);
     }
-    if (p.handTarget && p.slideHand) {
+    if (hand > 0) {
       // One hand down on the road, the other out wide for balance.
-      const k = p.handAmount ?? 1;
-      const [down, free, sh, side] = p.slideHand > 0 ? [handF, handR, J.shR, 1] : [handR, handF, J.shF, -1];
+      const [down, free, sh, side] = hs > 0 ? [handF, handR, J.shR, 1] : [handR, handF, J.shF, -1];
       // The hand on its way down swings out round the knee.
-      const arc = Math.sin(Math.PI * k);
-      down.lerp(p.handTarget, k).addScaledVector(_s, -side * 0.2 * arc).addScaledVector(this.chestFacing, 0.15 * arc);
-      free.lerp(_a.copy(sh).addScaledVector(_s, side * 0.32).addScaledVector(this.chestFacing, 0.2).addScaledVector(t, -0.2), k);
-      free.addScaledVector(_s, side * 0.15 * arc).addScaledVector(this.chestFacing, 0.1 * arc);
+      const arc = Math.sin(Math.PI * hand);
+      down.lerp(glove, hand).addScaledVector(_s, -side * 0.2 * arc).addScaledVector(this.chestFacing, 0.15 * arc);
+      free.lerp(_a.copy(sh).addScaledVector(_s, side * 0.32).addScaledVector(this.chestFacing, 0.2).addScaledVector(t, -0.2), hand);
+      free.addScaledVector(_s, side * 0.15 * arc).addScaledVector(this.chestFacing, 0.2 * arc);
     }
+    this.plantF = hs > 0 ? hand : 0;
+    this.plantR = hs > 0 ? 0 : hand;
+    this.plantDir.set(hs * 0.7, 0, -0.7).normalize();
     if (limp) {
       handF.lerp(_a.copy(J.chest).add(_n.set(0.4, 0.3, -0.3)), limp);
       handR.lerp(_a.copy(J.chest).add(_n.set(0.4, 0.2, 0.3)), limp);

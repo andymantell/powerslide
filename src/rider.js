@@ -167,6 +167,19 @@ const limb = (a, b, c, from, to, fallback, at = from) => (p, out) => {
 const facing = (p) => p.chestFacing;
 const behind = (p) => _r.copy(p.chestFacing).negate();
 const clav = (p) => _r.copy(p.joints.chest).addScaledVector(p.torsoDir, -0.03);
+// A planted hand bends flat at the wrist, fingers out along the road and the
+// puck on the palm down on the tarmac.
+const PALM_REF = new THREE.Vector3(0, 1, 0);
+const _pq = new THREE.Quaternion();
+const handFrame = (s) => {
+  const arm = limb('sh' + s, 'el' + s, 'ha' + s, 'el' + s, 'ha' + s, behind, 'ha' + s);
+  return (p, out) => {
+    arm(p, out);
+    const k = p['plant' + s] ?? 0;
+    if (k > 0) out.q.slerp(frameQuat(p.plantDir, PALM_REF, _pq), k);
+    return out;
+  };
+};
 const footFrame = (s) => (p, out) => {
   out.pos.copy(p.joints['foot' + s]);
   _e.set(0, p['footYaw' + s], p['footRoll' + s], 'ZYX');
@@ -205,11 +218,11 @@ export const RIDER_RIG = {
   clavF: (p, out) => aim(clav(p), p.joints.shF, _s.copy(p.torsoDir), out),
   upperArmF: limb('shF', 'elF', 'haF', 'shF', 'elF', behind),
   forearmF: limb('shF', 'elF', 'haF', 'elF', 'haF', behind),
-  handF: limb('shF', 'elF', 'haF', 'elF', 'haF', behind, 'haF'),
+  handF: handFrame('F'),
   clavR: (p, out) => aim(clav(p), p.joints.shR, _s.copy(p.torsoDir), out),
   upperArmR: limb('shR', 'elR', 'haR', 'shR', 'elR', behind),
   forearmR: limb('shR', 'elR', 'haR', 'elR', 'haR', behind),
-  handR: limb('shR', 'elR', 'haR', 'elR', 'haR', behind, 'haR'),
+  handR: handFrame('R'),
 };
 
 // The bind pose of rider.glb as a RiderPose: joints at the bone heads,

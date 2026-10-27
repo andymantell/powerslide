@@ -7,6 +7,7 @@ import { Traffic } from './traffic.js';
 import { Input } from './input.js';
 import { Audio } from './audio.js';
 import { SlideMarks } from './marks.js';
+import { Sparks } from './sparks.js';
 import { createSky, SUN_DIR } from './sky.js';
 import { Post } from './post.js';
 import { texturesReady } from './ground.js';
@@ -55,6 +56,7 @@ const traffic = new Traffic(scene, road);
 const input = new Input();
 const audio = new Audio();
 const marks = new SlideMarks(scene);
+const sparks = new Sparks(scene, Q.sparks);
 
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
@@ -75,6 +77,7 @@ const game = {
   combo: 0,
   comboTimer: 0,
   slidePts: 0,
+  slideHand: false,
   slideStartSpeed: 0,
   wasSliding: false,
   best: 0, // endless best score
@@ -132,6 +135,7 @@ async function loadWorld(level) {
   grass.clear();
   roadMesh.clear();
   marks.clear();
+  sparks.clear();
   traffic.configure(level ? level.traffic : ENDLESS_TRAFFIC, game.seed);
   player.reset(road.start);
   cam.init = false;
@@ -700,6 +704,7 @@ function runOut() {
 
 // ---------------------------------------------------------------- loop
 const wheelPos = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+const glovePos = new THREE.Vector3();
 const trafficEvents = [];
 let last = performance.now();
 let time = 0;
@@ -794,14 +799,18 @@ function frame(now) {
     // Slide scoring: banked when the wheels hook back up.
     const slidingNow = !player.crashed && (player.slideMode || player.sliding) && player.speed > 3;
     if (slidingNow) {
-      if (!game.wasSliding) game.slideStartSpeed = player.speed;
+      if (!game.wasSliding) {
+        game.slideStartSpeed = player.speed;
+        game.slideHand = false;
+      }
+      game.slideHand ||= player.slideMode && player.handDown;
       game.slidePts += player.speed * dt * 4 * Math.abs(Math.sin(player.slip));
     } else if (game.wasSliding && !player.crashed) {
       const pts = Math.round(game.slidePts);
       if (pts >= 25) {
         game.bonus += pts;
         const unit = game.mph ? 'mph' : 'km/h';
-        popup(`SLIDE +${pts}`, `${fmtSpeed(game.slideStartSpeed)} → ${fmtSpeed(player.speed)} ${unit}`);
+        popup(`${game.slideHand ? 'HAND-DOWN' : 'SLIDE'} +${pts}`, `${fmtSpeed(game.slideStartSpeed)} → ${fmtSpeed(player.speed)} ${unit}`);
       }
       game.slidePts = 0;
     }
@@ -830,6 +839,8 @@ function frame(now) {
   }
   const markSliding = !player.crashed && player.speed > 2 && (player.slideMode || player.sliding) && Math.abs(Math.sin(player.slip)) > 0.2;
   marks.update(dt, markSliding, wheelPos, Math.min(1, player.speed / 15), player.vel);
+  const glove = player.gloveOnRoad(glovePos);
+  sparks.update(dt, glove, player.vel, glove ? glove.y - 0.05 : 0);
 
   road.ensure(player.s + 7000);
   roadMesh.update(player.s);
@@ -887,4 +898,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });

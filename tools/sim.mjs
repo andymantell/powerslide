@@ -120,10 +120,15 @@ console.log('\n== Powerslide from 60 km/h on 8%');
   console.log(`let go fully sideways at ${fmt(at)}: ${c2 !== null ? 'CRASH: ' + q.crashReason : 'rode away'}`);
 }
 
+// Throwing a slide while steering puts a hand down, so these throw it straight
+// and steer once it's going.
+const throwStraight = (p) => run(p, 0.05, { slide: true, steer: 0 });
+
 console.log('\n== Steering mid-slide (50 km/h on 6%, 1.2 s): sideways travel');
 for (const steer of [-1, 0, 1]) {
   const p = make(0.06, 50 / 3.6);
-  run(p, 1.2, { slide: true, steer });
+  throwStraight(p);
+  run(p, 1.15, { slide: true, steer });
   console.log(`steer ${String(steer).padStart(2)}: moved ${p.pos.x.toFixed(2).padStart(6)} m across, ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
 }
 {
@@ -135,7 +140,8 @@ for (const steer of [-1, 0, 1]) {
 console.log('\n== Letting go of a slide keeps your line (50 km/h on 6%, 1.5 s slide, then 1.5 s)');
 for (const steer of [-0.5, 0, 0.5]) {
   const p = make(0.06, 50 / 3.6);
-  run(p, 1.5, { slide: true, steer });
+  throwStraight(p);
+  run(p, 1.45, { slide: true, steer });
   const before = Math.atan2(p.vel.x, -p.vel.y);
   let swing = 0;
   const crash = run(p, 1.5, { steer: 0 }, (pp) => {
@@ -148,13 +154,32 @@ console.log('\n== 180 to fakie: open the slide wide, then let go (30 km/h, flat)
 {
   const p = make(0.0, 30 / 3.6);
   let fakie = false;
-  run(p, 0.8, { slide: true, steer: 1, down: true }, (pp) => (fakie ||= pp.events.includes('fakie')));
+  throwStraight(p);
+  run(p, 0.75, { slide: true, steer: 1, down: true }, (pp) => (fakie ||= pp.events.includes('fakie')));
   // Let go past sideways: the rider carries it round instead of back.
   for (let t = 0; t < 1.2 && !fakie; t += DT) {
     p.update(DT, { slide: false, steer: 0 });
     fakie ||= p.events.includes('fakie');
   }
   console.log(`slip after release ${(p.slip * 57.3).toFixed(0)}°, fakie ${p.fakie}, speed ${fmt(p.speed)}`);
+}
+
+console.log('\n== Slides holding a turn (50 km/h on 6%, 1.2 s): thrown straight vs mid-carve');
+for (const steer of [0.4, 0.8]) {
+  for (const hand of [false, true]) {
+    const p = make(0.06, 50 / 3.6);
+    if (hand) run(p, 0.4, { steer }); // carving when it's thrown: hand down
+    else throwStraight(p);
+    const h0 = Math.atan2(p.vel.x, -p.vel.y);
+    let maxSlip = 0;
+    const crash = run(p, 1.2, { slide: true, steer }, (pp) => (maxSlip = Math.max(maxSlip, Math.abs(pp.slip))));
+    const turned = Math.atan2(p.vel.x, -p.vel.y) - h0;
+    p.animate(DT);
+    const glove = p.gloveOnRoad(new THREE.Vector3());
+    const gap = glove ? `glove ${(glove.y - p.pos.y).toFixed(2)} m above road` : 'no glove down';
+    const end = crash !== null ? 'CRASH: ' + p.crashReason : p.highsideRisk ? 'letting go now highsides' : 'safe to let go';
+    console.log(`steer ${steer} ${p.handDown ? 'hand down' : 'stood up '}: path turned ${(turned * 57.3).toFixed(0).padStart(3)}°, ${fmt(p.speed)}, max slip ${(maxSlip * 57.3).toFixed(0)}°, ${gap}, ${end}`);
+  }
 }
 
 console.log('\n== Pushing from a standstill on the flat (one tap per second)');

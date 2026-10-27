@@ -34,6 +34,8 @@ export class Input {
   // progressively and back stands the rider up into an air brake. A quick tap
   // is one push. A sudden flick back throws a powerslide, held until the finger
   // lifts or comes forward again; a second finger held down does the same.
+  // A slow drag back stays the air brake. Flicked while steering, the slide
+  // becomes a hand-down slide to the inside of the turn (see Player).
   // Lifting the finger centres the steering but holds the tuck or air brake;
   // the next touch carries on from that hold until the finger moves.
   setupTouch() {

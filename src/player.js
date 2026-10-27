@@ -19,12 +19,13 @@
 //   tuck  0..1    progressive tuck (touch); `up` = full tuck when fast, or push when slow
 //   air   0..1    air brake: stand tall with arms spread
 //   push  bool    kick while true (a touch tap holds it for one stroke)
-//   slide bool    hold to throw and hold a powerslide
+//   slide bool    hold to throw and hold a powerslide: stood up on both feet
+//                 when riding straight, hand down to the inside when turning
 //   down  bool    brake: air brake at speed, footbrake when slow
 //   downAmount 0..1 how hard (analogue trigger)
 
 import * as THREE from 'three';
-import { RiderModel, DECK_HEIGHT } from './rider.js';
+import { RiderModel } from './rider.js';
 import { DS, HALF_WIDTH, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
 import { RoadMesh } from './roadmesh.js';
 import { clamp, lerp } from './noise.js';
@@ -44,6 +45,13 @@ const CRR = 0.008; // high-rebound race urethane on asphalt
 const SLIDE_ANGLE = 0.7; // rad: default slide angle to travel (~40°)
 const SLIDE_STEER = 0.45; // g of path steering available mid-slide
 const SLIDE_PULL = 0.08; // share of the wheels' natural sideways pull kept mid-slide
+// Hand-down slide: thrown while carving, the glove's puck on the road takes
+// some weight, so the board can hang out further and the path bends harder.
+const HAND_TURNING = 0.3; // steer (or ~0.2 rad of carve lean) that counts as turning
+const HAND_ANGLE = 0.95; // rad: default slide angle with a hand down (~55°)
+const HAND_STEER = 0.65; // g of path steering available
+const HAND_DRAG = 0.6; // m/s², the puck scraping
+const HAND_HIGHSIDE = 0.3; // rad of extra slip before letting go highsides
 const STEP = 1 / 120;
 
 // A typical downhill setup: 48° front and a calmer 42° rear baseplate.
@@ -95,7 +103,6 @@ export class Player {
     this.frame = {};
     this.proj = {};
     this.events = [];
-    this.handLocal = new THREE.Vector3();
     this.reset(400);
   }
 
@@ -119,6 +126,8 @@ export class Player {
     this.sliding = false; // wheels currently sliding
     this.slideMode = false; // rider is throwing a slide
     this.slideDir = 1;
+    this.handDown = false; // this slide has a hand on the road
+    this.handSide = 1; // which hand, in rig space (+ = toe side)
     this.slideRecover = false; // board straightening after a slide
     this.slip = 0; // angle between deck and travel
     this.slipRate = 0;
@@ -216,18 +225,23 @@ export class Player {
     // Slide initiation / release.
     if (input.slide && !this.slideMode && speed > 3) {
       this.slideMode = true;
-      // Steering picks the side; otherwise throw it towards the inside of the
-      // bend coming up, so the side is never a surprise.
+      // Thrown mid-turn, a hand goes down to the inside of the turn. Riding
+      // straight it's a stand-up slide: steering picks the side, otherwise it
+      // goes towards the inside of the bend coming up, so it's never a surprise.
+      const steer = Math.abs(input.steer || 0) > Math.abs(this.steer) ? input.steer || 0 : this.steer;
+      this.handDown = Math.abs(steer) > HAND_TURNING || Math.abs(this.lean) > HAND_TURNING * 0.7;
       const ahead = road.sample(this.s + 15 + speed * 0.8, this.frame).kappa;
-      if (Math.abs(this.steer) > 0.15) this.slideDir = Math.sign(this.steer);
+      if (Math.abs(steer) > 0.15) this.slideDir = Math.sign(steer);
+      else if (this.handDown) this.slideDir = Math.sign(this.lean);
       else if (Math.abs(ahead) > 1 / 400) this.slideDir = Math.sign(ahead);
       this.slideRecover = false;
-      this.events.push('slideStart');
+      this.events.push(this.handDown ? 'handSlideStart' : 'slideStart');
     } else if (!input.slide && this.slideMode) {
       this.slideMode = false;
       this.slideRecover = true;
       const a = Math.abs(this.slip);
-      if (d.highside && speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7) {
+      const hookSlip = d.highsideSlip + (this.handDown ? HAND_HIGHSIDE : 0);
+      if (d.highside && speed > d.highsideSpeed && a > hookSlip && a < Math.PI - 0.7) {
         this.crash('Highsided: the wheels hooked up while sideways');
         return;
       }
@@ -257,6 +271,12 @@ export class Player {
     if (pushAcc === 0 && Math.abs(vLong0) < Math.abs(long) * dt && long * vLong0 < 0) long = -vLong0 / dt;
     ax += ux * long;
     az += uz * long;
+    // A glove on the road scrapes against the direction of travel.
+    if (this.slideMode && this.handDown && speed > 1) {
+      const drag = (HAND_DRAG * this.handAmount) / speed;
+      ax -= this.vel.x * drag;
+      az -= this.vel.y * drag;
+    }
     let vx = this.vel.x + ax * dt;
     let vz = this.vel.y + az * dt;
 
@@ -270,7 +290,7 @@ export class Player {
       // A controllable drift by default, about 40° to travel, so most of the
       // speed carries. Steering into the slide opens it a little; brake throws
       // it fully sideways to scrub hard; tuck closes it down to carry speed.
-      const base = SLIDE_ANGLE + 0.25 * this.steer * this.slideDir + (input.down ? 0.9 : 0) - (input.up ? 0.25 : 0);
+      const base = (this.handDown ? HAND_ANGLE : SLIDE_ANGLE) + 0.25 * this.steer * this.slideDir + (input.down ? 0.9 : 0) - (input.up ? 0.25 : 0);
       const target = this.slideDir * clamp(base, 0.4, 1.9);
       yawAcc = clamp(40 * (target - slip) - 9 * this.slipRate, -45, 45);
     } else {
@@ -429,7 +449,7 @@ export class Player {
     const rx = -vz / v, rz = vx / v; // right of travel
     const aWheels = ((vx - vx0) * rx + (vz - vz0) * rz) / dt;
     const cap = this.diff.muKinetic * G * gripScale;
-    const want = clamp(this.steer * SLIDE_STEER * G * gripScale + pull * aWheels, -cap, cap);
+    const want = clamp(this.steer * (this.handDown && this.slideMode ? HAND_STEER : SLIDE_STEER) * G * gripScale + pull * aWheels, -cap, cap);
     const dv = (want - aWheels) * dt;
     return [vx + rx * dv, vz + rz * dv];
   }
@@ -438,7 +458,8 @@ export class Player {
   get highsideRisk() {
     const d = this.diff;
     const a = Math.abs(this.slip);
-    return !!d.highside && this.slideMode && this.speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7;
+    const hookSlip = d.highsideSlip + (this.handDown ? HAND_HIGHSIDE : 0);
+    return !!d.highside && this.slideMode && this.speed > d.highsideSpeed && a > hookSlip && a < Math.PI - 0.7;
   }
 
   checkEdges(p) {
@@ -542,19 +563,18 @@ export class Player {
     const v = this.speed;
     // Fore/aft: the body leans against the push, the brake and the drag.
     this.leanZ = lerp(this.leanZ, Math.atan2(-this.accLocal.y, G) * 0.6, 1 - Math.exp(-dt * 8));
-    let wantCrouch = this.slideMode ? 0.75 : this.brake > 0.1 ? 0.45 : 0.3 + Math.min(0.35, Math.abs(this.lean) * 0.6);
+    let wantCrouch = this.slideMode ? (this.handDown ? 1 : 0.75) : this.brake > 0.1 ? 0.45 : 0.3 + Math.min(0.35, Math.abs(this.lean) * 0.6);
     wantCrouch = lerp(wantCrouch, 0.05, this.airbrake);
     this.crouch = lerp(this.crouch, wantCrouch, 1 - Math.exp(-dt * 6));
-    const wantHand = this.slideMode && Math.abs(this.lean) > 0.25 ? 1 : 0;
-    this.handAmount = lerp(this.handAmount, wantHand, 1 - Math.exp(-dt * 10));
+    const wantHand = this.slideMode && this.handDown ? 1 : 0;
+    this.handAmount = lerp(this.handAmount, wantHand, 1 - Math.exp(-dt * 7));
 
     this.applyTransform();
 
     // The rig is turned round when riding fakie, so mirror into rig space.
     const sgn = this.fakie ? -1 : 1;
     const lean = this.lean * sgn;
-    const handSide = Math.sign(lean) || 1;
-    this.handLocal.set(handSide * 0.62, -DECK_HEIGHT + 0.03, 0.1);
+    this.handSide = this.slideDir * sgn; // toe side +, in rig space
     m.pose({
       roll: this.roll * sgn,
       lean,
@@ -567,13 +587,20 @@ export class Player {
       push: this.push,
       pushPhase: this.pushPhase,
       fakie: this.fakie,
-      slideHand: this.handAmount > 0.01 ? handSide : 0,
+      slideHand: this.handAmount > 0.01 ? this.handSide : 0,
       handAmount: this.handAmount,
-      handTarget: this.handLocal,
       lookYaw: clamp(this.slip, -1.2, 1.2) * 0.8,
     });
     this.topSpeed = Math.max(this.topSpeed, v);
     this.shake = Math.max(0, this.shake - dt * 2, this.wobble * 0.5);
+  }
+
+  // World position of the glove on the road, or null when no hand is down.
+  gloveOnRoad(out) {
+    if (this.crashed || this.handAmount < 0.7) return null;
+    const m = this.model;
+    m.rig.updateWorldMatrix(true, false);
+    return m.rig.localToWorld(out.copy(m.joints[this.handSide > 0 ? 'haF' : 'haR']));
   }
 
   applyTransform() {
