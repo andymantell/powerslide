@@ -1,5 +1,7 @@
 // Keyboard, gamepad and touch input merged into one analogue-ish state.
 
+import { Tilt } from './tilt.js';
+
 export class Input {
   constructor() {
     this.keys = new Set();
@@ -27,6 +29,7 @@ export class Input {
       this.padConnected = any;
       if (!any) this.onPad?.(false);
     });
+    this.tilt = new Tilt();
     this.setupTouch();
   }
 
@@ -159,6 +162,7 @@ export class Input {
     let slide = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight');
 
     let padTuck = 0;
+    let padSteer = false;
     let padPush = false;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) {
@@ -171,6 +175,7 @@ export class Input {
       const ax = gp.axes[0] || 0;
       // Deadzone plus a gentle curve for fine control at speed.
       const dz = 0.12;
+      if (Math.abs(ax) > dz) padSteer = true;
       if (Math.abs(ax) > dz) steer = Math.sign(ax) * Math.pow((Math.abs(ax) - dz) / (1 - dz), 1.4);
       // Standard mapping: RT (7) analogue tuck, LT (6) analogue brake, A (0)
       // push, X (2) slide (LB / RB too). The stick only steers, so a hard
@@ -192,7 +197,10 @@ export class Input {
       });
     }
     const t = this.touch;
-    if (t.steer) steer = t.steer;
+    // Tilt mode replaces swipe steering; swipes still tuck, brake and slide.
+    const tilt = this.tilt.steer(dt);
+    if (tilt !== null && !padSteer) steer = tilt;
+    else if (t.steer) steer = t.steer;
     slide = slide || t.slide;
     t.pushTime = Math.max(0, t.pushTime - dt);
 

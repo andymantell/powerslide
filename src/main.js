@@ -6,6 +6,7 @@ import { Player } from './player.js';
 import { Traffic } from './traffic.js';
 import { Input } from './input.js';
 import { Audio, VOLUMES } from './audio.js';
+import { TILT_SENSITIVITIES } from './tilt.js';
 import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
 import { createSky, SUN_DIR, ATMOSPHERE } from './sky.js';
@@ -346,6 +347,45 @@ addEventListener('click', (e) => {
   if (!b || b.classList.contains('slider') || b.closest('#hud')) return;
   audio.ui(b.classList.contains('secondary') || /back|menu|quit/.test(b.id) ? 'back' : 'click');
 });
+// Steering on touch screens: swipe (the default) or tilt.
+const STEER_MODES = [[false, 'Swipe'], [true, 'Tilt']];
+$('opt-steer').replaceChildren(
+  ...STEER_MODES.map(([tilt, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = () => setTiltMode(tilt, true);
+    return b;
+  }),
+);
+$('opt-tilt').replaceChildren(
+  ...TILT_SENSITIVITIES.map(([key, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = () => setTiltSensitivity(key);
+    return b;
+  }),
+);
+// ask: called from a tap, so iOS can show its motion access prompt.
+async function setTiltMode(on, ask = false) {
+  if (on && ask && !(await input.tilt.request())) {
+    toast('Tilt needs motion access. Reload, turn Tilt on again and tap Allow');
+    on = false;
+  }
+  input.tilt.enabled = on;
+  store.set('powerslide.tilt', on);
+  [...$('opt-steer').children].forEach((b, i) => b.classList.toggle('on', STEER_MODES[i][0] === on));
+  $('tilt-row').classList.toggle('hidden', !on);
+  $('tilt-note').classList.toggle('hidden', !on);
+}
+function setTiltSensitivity(key) {
+  input.tilt.sensitivity = key;
+  store.set('powerslide.tiltSensitivity', key);
+  [...$('opt-tilt').children].forEach((b, i) => b.classList.toggle('on', TILT_SENSITIVITIES[i][0] === key));
+}
+setTiltSensitivity(store.get('powerslide.tiltSensitivity', 'medium'));
+setTiltMode(store.get('powerslide.tilt', false));
+// Android hands out motion readings without asking; iOS waits for RIDE.
+if (input.tilt.enabled && typeof window.DeviceMotionEvent?.requestPermission !== 'function') input.tilt.request();
 
 function setQuality(key) {
   if (key === settings.qualityChoice) return;
@@ -626,6 +666,10 @@ function fmtSpeed(ms) {
 async function startRun(from = game.level ? 'start' : 'here') {
   audio.start();
   input.resetTouchHold?.(); // touch-only: don't carry a held tuck into the new run
+  if (input.tilt.enabled) {
+    input.tilt.request(); // inside the RIDE tap, so iOS can ask for motion access
+    input.tilt.calibrate();
+  }
   const level = game.level;
   const cp = from === 'checkpoint' ? game.checkpoint : null;
   if (level) {
@@ -883,6 +927,7 @@ async function restart() {
 
 function togglePause() {
   game.mode = game.mode === 'play' ? 'paused' : 'play';
+  if (game.mode === 'play') input.tilt.calibrate();
   show(game.mode === 'paused' ? 'pause' : null);
   audio.setPaused(game.mode === 'paused');
 }

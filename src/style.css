@@ -124,6 +124,7 @@ button:hover { filter: brightness(1.1); }
 .opt-row label { width: 84px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
 #opt-volume button.slider { min-width: 240px; }
 #opt-volume button.slider .val { flex-basis: 48px; }
+body:not(.is-touch) .touch-only { display: none; }
 .seg { display: flex; flex-wrap: wrap; gap: 4px; }
 .seg button {
   margin: 0; padding: 6px 12px; font-size: 13px; letter-spacing: 1px; font-weight: 700;

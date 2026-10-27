@@ -35,6 +35,12 @@ Apart from the two buttons in the top right, touch has no buttons: the rest of t
 wherever your finger lands. Lifting your finger centres the steering but keeps
 the current tuck or air brake; the next touch carries on from there.
 
+Settings has an optional **Tilt** steering mode for touch screens: turn the
+device like a steering wheel (Low / Medium / High sensitivity). Swiping left and
+right then does nothing; everything else stays the same. Straight ahead is
+however the device is held when a run starts or resumes. iOS asks for motion
+access the first time.
+
 In menus, use the d-pad, left stick or arrow keys to move between buttons, A or
 Enter to select, and B or Esc to go back.
 
