@@ -5,13 +5,16 @@
 // shows one item.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createSky, SUN_DIR, ATMOSPHERE } from '../../src/sky.js';
+import { createSky, SUN_DIR, atmosphereFor } from '../../src/sky.js';
 import { createPropMaterial } from '../../src/propmat.js';
 import { texturesReady } from '../../src/ground.js';
 import { Forest } from '../../src/forest.js';
 import { Boulders } from '../../src/boulders.js';
 import { RiderModel } from '../../src/rider.js';
-import { carMesh } from '../../src/traffic.js';
+import { sampleLook } from '../../src/traffic.js';
+import { VehicleFleet } from '../../src/vehicles.js';
+import { QUALITY } from '../../src/settings.js';
+import { mulberry32 } from '../../src/noise.js';
 import { Extras } from '../../src/extras.js';
 import { START_S } from '../../src/road.js';
 import { POSES } from '../poses/list.js';
@@ -31,7 +34,7 @@ const GROUPS = [
   ['Dartmoor animals', 'sheep sheep_dark pony pony_dark pony_grey duck duck_b'],
   ['Dartmoor roadside', 'fingerpost sign_grid sign_pony sign_ford gate whitepost gauge picnic clapper footbridge'],
   ['Dartmoor parked vehicles', 'tractor car_red car_blue car_silver'],
-  ['Traffic', 'traffic_car traffic_van'],
+  ['Traffic', '*traffic'], // every type in vehicles.glb
   ['Trees and rocks', 'spruce0 spruce1 spruce2 rock0 rock1 rock2 rock3'],
   ['Rider and board', 'rider_upright rider_tuck board'],
 ];
@@ -43,7 +46,7 @@ renderer.shadowMap.enabled = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-const { sun } = createSky(scene, renderer, { shadows: true, shadowMap: 4096 }, ATMOSPHERE.alpine);
+const { sun } = createSky(scene, renderer, { shadows: true, shadowMap: 4096 }, atmosphereFor('alpine', 'day', 'clear'));
 scene.fog = null;
 const camera = new THREE.PerspectiveCamera(30, W / H, 0.05, 3000);
 
@@ -120,18 +123,22 @@ boulders.meshes.forEach((bm, i) =>
   }),
 );
 
-// Traffic: carMesh draws the kind, then the paint, from rand.
-const seq = (...v) => () => v.shift() ?? 0.5;
+// Traffic: the fleet draws one car at a time; the tile frames a box of its size.
 const shadowed = (g) => (g.traverse((o) => o.isMesh && (o.castShadow = o.receiveShadow = true)), g);
-const facing = (g) => {
-  const w = new THREE.Group();
-  g.rotation.y = Math.PI; // cars face -Z
-  w.add(g);
-  return w;
-};
-makers.set('traffic_car', () => facing(shadowed(carMesh(seq(0.5, 0.05)).group)));
-makers.set('traffic_van', () => facing(shadowed(carMesh(seq(0.1, 0.35)).group)));
-
+const fleet = new VehicleFleet(scene, { ...QUALITY.high, vehicleLod: 1000 });
+await fleet.ready;
+const traffic = Object.keys(fleet.types).filter((t) => fleet.meta(t));
+for (const type of traffic) {
+  makers.set(`traffic_${type}`, () => {
+    const m = fleet.meta(type);
+    const car = { type, x: 0, y: 0, z: 0, yaw: Math.PI, pitch: 0, roll: 0, spin: 0, ...sampleLook(type, mulberry32(7 + traffic.indexOf(type))), lamps: { head: 0.25, tail: 0.35, amber: 0.3 } };
+    fleet.update([car], camera);
+    const box = new THREE.Mesh(new THREE.BoxGeometry(m.W ?? 1.8, m.H, m.L), new THREE.MeshBasicMaterial({ visible: false }));
+    box.position.y = m.H / 2;
+    box.userData.fleet = true;
+    return box;
+  });
+}
 // Endless roadside: lay a straight test road and pick one of each.
 const flat = {
   sample: (s, f) => Object.assign(f, { x: 0, y: 0, z: -s, dirX: 0, dirZ: -1, rightX: 1, rightZ: 0, heading: 0 }),
@@ -183,7 +190,7 @@ const riderH = new THREE.Box3().setFromObject(rider.root, true).max.y;
 const placed = new Set();
 const items = [];
 for (const [group, names] of GROUPS) {
-  for (const n of names.split(' ')) {
+  for (const n of names === '*traffic' ? traffic.map((t) => `traffic_${t}`) : names.split(' ')) {
     if (!makers.has(n)) {
       console.error('sheet: no such item', n);
       continue;
@@ -205,16 +212,17 @@ const SUN = new THREE.Vector3().setFromSphericalCoords(1, Math.acos(SUN_DIR.y), 
 // Shows one item and renders it. label: the text in the corner tag.
 function show(name, label = name) {
   if (current) scene.remove(current);
+  if (!name.startsWith('traffic_')) fleet.update([], camera);
   current = makers.get(name)();
   scene.add(current);
   current.updateMatrixWorld(true);
   box.setFromObject(current);
   const size = box.getSize(new THREE.Vector3());
-  // The rider stands front-left of the prop, clear of its footprint.
+  // The rider stands just off the prop's front-left corner, in plain view.
   rider.root.visible = !solo.has(name);
   rider.pose(POSES.upright);
   if (rider.root.visible) {
-    rider.root.position.set(box.min.x - 0.6, 0, box.max.z - Math.min(size.z * 0.25, 1.5));
+    rider.root.position.set(box.min.x - 0.6, 0, box.max.z + 0.4);
     rider.root.rotation.y = 0.5;
     rider.root.updateMatrixWorld(true);
     box.union(new THREE.Box3().setFromObject(rider.root, true));

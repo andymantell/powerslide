@@ -31,9 +31,15 @@ let next = Math.max(0, ...Object.values(ids)) + 1;
 for (const it of items) if (!ids[it.name]) ids[it.name] = next++;
 if (!only) fs.writeFileSync(IDS, `${JSON.stringify(ids, null, 1)}\n`);
 
+// With a list of names, only those are redrawn; the rest of the index stays.
+const old = only && fs.existsSync(`${out}/index.json`) ? JSON.parse(fs.readFileSync(`${out}/index.json`)) : [];
 const index = [];
 for (const it of items) {
-  if (only && !only.includes(it.name)) continue;
+  if (only && !only.includes(it.name)) {
+    const was = old.find((e) => e.name === it.name);
+    if (was) index.push(was);
+    continue;
+  }
   const num = String(ids[it.name]).padStart(3, '0');
   const size = await page.evaluate(([n, l]) => window.__sheet.show(n, l), [it.name, `${num} ${it.name}`]);
   const file = `${num}-${it.name}.jpg`;
