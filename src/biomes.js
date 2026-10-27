@@ -5,6 +5,8 @@
 // `look` names each biome's entries in ATMOSPHERE (sky.js), GROUND_SETS
 // (ground.js), MARKINGS (roadmat.js) and the tree species in conifers.glb
 // (tools/blender/tree.py). A missing entry falls back to the alpine one.
+//
+// `drive: 'left'` makes traffic keep left (and the rider starts in the left lane).
 
 export const BIOMES = [
   {
@@ -28,7 +30,7 @@ export const BIOMES = [
     rails: false,
     look: { markings: 'uk', lane: 2.7 },
   },
-  { id: 'suburbs', name: 'Hillside Suburbs', blurb: 'Parked cars, speed bumps and side roads.' },
+  { id: 'suburbs', name: 'Hillside Suburbs', blurb: 'Parked cars, speed bumps and side roads.', drive: 'left' },
   { id: 'forest', name: 'Pine Forest', blurb: 'Blind bends and grit on the inside line.' },
   { id: 'canyon', name: 'Desert Canyon', blurb: 'Long, steep straights fast enough to wobble.' },
   { id: 'city', name: 'City at Night', blurb: 'Steep streets, tram lines and buses.' },

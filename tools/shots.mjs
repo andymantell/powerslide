@@ -31,7 +31,7 @@ await page.addInitScript((q) => {
   Math.random = (() => { let a = 12345; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
 }, quality);
 await page.goto(url);
-await page.waitForFunction(() => window.__powerslide && window.__powerslide.game.mode === 'title', null, { timeout: 590000 });
+await page.waitForFunction(() => window.__powerslide && ['title', 'intro'].includes(window.__powerslide.game.mode), null, { timeout: 590000 });
 await page.waitForTimeout(1500);
 
 const views = {
@@ -47,6 +47,9 @@ const views = {
   cutting: { target: 'cutting' },
   distant: { target: 'distant' },
   boulder: { target: 'boulder', back: 4, up: 1.5, ahead: 0, lookUp: 0.5, side: 1 },
+  // The nearest vehicles: from the roadside, and following one.
+  traffic: { target: 'traffic', side: 5, up: 1.6, back: -6 },
+  tail: { target: 'traffic', side: 0.2, up: 2.2, back: 9, far: true },
 };
 for (const [name, v] of Object.entries(views)) {
   if (only && !only.includes(name)) continue;
@@ -75,6 +78,42 @@ for (const [name, v] of Object.entries(views)) {
       if (best) {
         p = best.p;
         v = { ...v, back: best.s * 4, up: best.s * 1.5, lookUp: best.s * 0.5, side: best.s * 1.5 };
+      }
+    }
+    if (v.night) {
+      // Fake a night for checking headlamps: no sun, no sky light.
+      P.sun.intensity = 0.02;
+      P.scene.environmentIntensity = 0.03;
+      P.scene.background = new P.sun.color.constructor('#05070c');
+      P.traffic.lights = 1;
+    }
+    if (v.left && !P.leftDone) {
+      // Check keep-left traffic (SHOT_LEFT=1) without needing a left-hand level.
+      P.leftDone = true;
+      P.traffic.setPlace('dartmoor', 'left');
+      P.player.side = -1;
+      P.traffic.configure({ density: 1.4 }, 7);
+      P.player.reset(P.player.s);
+    }
+    if (v.target === 'traffic') {
+      // Drive the traffic on a few seconds so the road fills, then frame a vehicle.
+      const { traffic } = P;
+      for (let i = 0; i < 3; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
+      for (let i = 0; i < 240; i++) traffic.update(1 / 60, player, []);
+      const cars = traffic.cars.filter((c) => c.s > player.s + 15).sort((a, b) => a.s - b.s);
+      const c = v.far ? cars.find((x) => x.dir > 0) || cars[0] : cars[0];
+      if (c) {
+        const cfx = Math.sin(c.yaw), cfz = -Math.cos(c.yaw);
+        const crx = -cfz, crz = cfx;
+        const back = v.far ? v.back : v.back + c.L / 2;
+        camera.position.set(c.x - cfx * back + crx * v.side * Math.sign(c.lane || 1), c.y + v.up, c.z - cfz * back + crz * v.side * Math.sign(c.lane || 1));
+        camera.lookAt(c.x, c.y + 0.9, c.z);
+        camera.fov = 50;
+        camera.updateProjectionMatrix();
+        traffic.draw(camera);
+        console.warn('traffic', c.type, c.dir, c.lane.toFixed(2));
+        P.renderFrame();
+        return;
       }
     }
     if (v.pr) {
@@ -128,7 +167,7 @@ for (const [name, v] of Object.entries(views)) {
     camera.fov = 60;
     camera.updateProjectionMatrix();
     for (let i = 0; i < 1; i++) { P.renderFrame ? P.renderFrame() : renderer.render(scene, camera); await new Promise((r) => setTimeout(r, 50)); }
-  }, { ...v, pr: process.env.SHOT_PR ? +process.env.SHOT_PR : 0 });
+  }, { ...v, pr: process.env.SHOT_PR ? +process.env.SHOT_PR : 0, night: !!process.env.SHOT_NIGHT, left: !!process.env.SHOT_LEFT });
   await page.screenshot({ path: `${out}/${name}.png`, timeout: 590000 });
   console.log('shot', name);
 }

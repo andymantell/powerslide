@@ -116,7 +116,7 @@ export class Player {
   reset(s) {
     const f = this.road.sample(s, this.frame);
     this.s = s;
-    this.d = 1.75;
+    this.d = 1.75 * (this.side ?? 1); // your lane: right, or left where they keep left
     this.pos.set(f.x + f.rightX * this.d, f.y, f.z + f.rightZ * this.d);
     this.yaw = f.heading;
     this.yawRate = 0;

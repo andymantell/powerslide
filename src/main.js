@@ -3,7 +3,7 @@ import { Road, START_S, setRoadWidth } from './road.js';
 import { Terrain } from './terrain.js';
 import { RoadMesh } from './roadmesh.js';
 import { Player } from './player.js';
-import { Traffic } from './traffic.js';
+import { Traffic, carLights } from './traffic.js';
 import { Input } from './input.js';
 import { Audio, VOLUMES } from './audio.js';
 import { TILT_SENSITIVITIES } from './tilt.js';
@@ -86,7 +86,8 @@ const structures = new Structures(scene, renderer, road, terrain, props, boulder
 const scenery = new Scenery(road, terrain, props, structures);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
 const player = new Player(scene, road, terrain);
-const traffic = new Traffic(scene, road);
+const traffic = new Traffic(scene, road, Q);
+traffic.lights = carLights(pick(ATMOSPHERE, look.atmosphere), look);
 const extras = new Extras(scene, road);
 const input = new Input();
 const audio = new Audio();
@@ -178,6 +179,9 @@ async function loadWorld(level) {
   road.reset(game.seed, level, mix.shape);
   const biome = level ? biomeOf(level) : mix.biome;
   road.drive = biome?.drive === 'left' ? -1 : 1;
+  // The biome picks the traffic mix and the side of the road (and your lane).
+  traffic.setPlace(biome?.id, biome?.drive);
+  player.side = road.drive;
   road.rails = biome?.rails !== false;
   road.ensure(START_S + 7000);
   terrain.reset(game.seed + 11, level?.terrain);
@@ -692,8 +696,7 @@ async function startRun(from = game.level ? 'start' : 'here') {
     if (game.mode === 'crashed') player.reset(player.s);
     for (const c of [...traffic.cars]) {
       if (Math.abs(c.s - player.s) < 90) {
-        scene.remove(c.mesh);
-        traffic.cars.splice(traffic.cars.indexOf(c), 1);
+        traffic.remove(c);
       }
     }
     game.bonus = 0;
@@ -1289,6 +1292,7 @@ function frame(now) {
   audio.riding = game.mode === 'play';
   audio.onRoad = game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished';
   audio.update(player, traffic.cars, camera);
+  traffic.draw(camera);
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') updateHud(dt);
   input.endFrame();
   post.render();

@@ -197,12 +197,21 @@ preset.
   prop shader (`src/propmat.js`) adds on top. `/tools/props/` shows them all
   (`?only=chalet,barn`), and `node tools/props/shoot.mjs out.png [query]`
   saves it.
+- `tools/blender/vehicles.py` builds the traffic into `vehicles.glb` (then
+  meshopt-compresses it with gltf-transform). Car bodies are lofted from a
+  side profile and plan width, with arches cut in and lamps, grilles and
+  windows as material zones; lorries, the tractor and the motorbikes (with
+  riders) are built from parts. Every type has a detailed and a far LoD, baked
+  ambient occlusion in the vertex colours and a `meta` extra (size, wheels,
+  lamps). `/tools/garage/` shows them all in the game's materials
+  (`?types=hatch,van&views=fq,side,rq,front&night=1`), and
+  `node tools/garage/shoot.mjs out.png [query]` saves it.
 - `node tools/levelshots.mjs <levelId> [outDir] [quality] [at:view,...]`
   screenshots a level at points along the road (views: chase, high, side,
   back) for before/after comparisons of level dressing.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
-  vista, trees, forest, verge, cutting, distant, boulder; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.
+  vista, trees, forest, verge, cutting, distant, boulder, traffic, tail; `SHOT_PR=0.6` mimics a lowered render scale, `SHOT_NIGHT=1` darkens the scene to check headlamps and `SHOT_LEFT=1` switches to keep-left traffic) for before/after comparisons.
 
 ## Sound
 
@@ -288,9 +297,17 @@ listen to (needs `npm run build && npx vite preview` running).
   the physics. Feet stay planted on the rolling deck, the hips lean with the
   balance model, and IK places knees and elbows. The joints don't depend on
   the model, so `SkeletonDriver` in `src/ik.js` can drive a skinned rig too.
-- **Traffic** (`src/traffic.js`): downhill cars share your lane and slow for
-  bends. Uphill cars come at you in the other lane. Close passes score bonus
-  points.
+- **Traffic** (`src/traffic.js`, `src/vehicles.js`): downhill vehicles share
+  your lane and slow for bends. Uphill ones come at you in the other lane.
+  Close passes score bonus points. Biomes with `drive: 'left'` (Dartmoor,
+  Hillside Suburbs) keep left, and each biome has its own mix of vehicles
+  (`MIXES`). Every vehicle gets its own paint, trim and wheels, and recent
+  spawns are remembered so the same type or colour doesn't come straight
+  back. Vehicles are placed from the road under both axles, so long ones
+  follow bends; motorbikes lean. They're drawn with instancing (a few draw
+  calls per type and LoD, one per wheel style), with soft contact shadows,
+  and at night, in rain or in mist their lamps light up, with light pools on
+  the road and a few real spot lights (`carLights` in the quality presets).
 - **Audio** (`src/audio.js`, `src/ambience.js`, `src/sfx.js`,
   `src/music.js`): see Sound above.
 
