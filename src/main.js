@@ -5,7 +5,7 @@ import { RoadMesh } from './roadmesh.js';
 import { Player } from './player.js';
 import { Traffic } from './traffic.js';
 import { Input } from './input.js';
-import { Audio } from './audio.js';
+import { Audio, VOLUMES } from './audio.js';
 import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
 import { createSky, SUN_DIR, ATMOSPHERE } from './sky.js';
@@ -87,6 +87,7 @@ const traffic = new Traffic(scene, road);
 const extras = new Extras(scene, road);
 const input = new Input();
 const audio = new Audio();
+audio.unlockOn();
 const marks = new SlideMarks(scene);
 const sparks = new Sparks(scene, Q.sparks);
 
@@ -204,6 +205,7 @@ async function loadWorld(level) {
   Object.assign(player.mods, mix.mods);
   setRoadSurface(roadMesh.roadMat, mix.surface);
   scene.fog.density = Q.fog * mix.fog;
+  audio.setScene({ biome: (level ? biomeOf(level) : mix.biome)?.id, level, road, mix });
   player.reset(road.start);
   cam.init = false;
   roadMesh.update(player.s);
@@ -294,6 +296,56 @@ function setUnits(mph) {
   [...$('opt-units').children].forEach((b, i) => b.classList.toggle('on', UNITS[i][0] === mph));
 }
 setUnits(game.mph);
+
+// Volumes: master, effects, ambience and music, as sliders like the endless
+// setup's (drag or tap along them, or left / right with the D-pad).
+function volumeRow([key, label]) {
+  const row = document.createElement('div');
+  row.className = 'opt-row';
+  row.append(Object.assign(document.createElement('label'), { textContent: label }));
+  const b = document.createElement('button');
+  b.className = 'slider';
+  b.setAttribute('aria-label', `${label} volume`);
+  b.innerHTML = '<span class="track"><span class="fill"></span><span class="knob"></span></span><span class="val"></span>';
+  const paint = () => {
+    const v = audio.volume[key];
+    b.querySelector('.fill').style.width = `${v * 100}%`;
+    b.querySelector('.knob').style.left = `${v * 100}%`;
+    b.querySelector('.val').textContent = v ? `${Math.round(v * 100)}%` : 'Off';
+  };
+  const set = (v) => {
+    const before = audio.volume[key];
+    audio.setVolume(key, Math.round(v * 20) / 20);
+    if (audio.volume[key] !== before) {
+      paint();
+      audio.ui('tick');
+    }
+  };
+  const track = b.querySelector('.track');
+  const fromX = (e) => {
+    const r = track.getBoundingClientRect();
+    set((e.clientX - r.left) / r.width);
+  };
+  b.addEventListener('pointerdown', (e) => {
+    b.setPointerCapture?.(e.pointerId);
+    fromX(e);
+  });
+  b.addEventListener('pointermove', (e) => {
+    if (b.hasPointerCapture?.(e.pointerId)) fromX(e);
+  });
+  b.nudge = (_, dir) => set(audio.volume[key] + dir * 0.1);
+  paint();
+  row.append(b);
+  return row;
+}
+$('opt-volume').replaceChildren(...VOLUMES.map(volumeRow));
+
+// Menu buttons click (sliders tick as they move instead).
+addEventListener('click', (e) => {
+  const b = e.target.closest?.('button');
+  if (!b || b.classList.contains('slider') || b.closest('#hud')) return;
+  audio.ui(b.classList.contains('secondary') || /back|menu|quit/.test(b.id) ? 'back' : 'click');
+});
 
 function setQuality(key) {
   if (key === settings.qualityChoice) return;
@@ -659,7 +711,9 @@ function finishRun() {
   if (!after && biome.levels[biome.levels.length - 1] === level) {
     const nb = BIOMES[BIOMES.indexOf(biome) + 1];
     if (nb) popup(biomeUnlocked(nb) ? `${nb.name.toUpperCase()} UNLOCKED` : `${biome.name.toUpperCase()} COMPLETE`);
+    audio.unlock();
   }
+  audio.fanfare(r.earned.filter(Boolean).length);
   show('finish');
 }
 
@@ -708,7 +762,7 @@ function moveFocus(dx, dy) {
   }
   // Left and right move a focused slider rather than the focus.
   if (dx && cur.classList.contains('slider')) {
-    nudgeSlider(cur, dx);
+    (cur.nudge || nudgeSlider)(cur, dx);
     return;
   }
   const r0 = cur.getBoundingClientRect();
@@ -727,7 +781,10 @@ function moveFocus(dx, dy) {
       best = b;
     }
   }
-  if (best) setFocus(best, true);
+  if (best) {
+    setFocus(best, true);
+    audio.ui('move');
+  }
 }
 
 const stickNav = { x: 0, y: 0, t: 0 };
@@ -818,7 +875,7 @@ for (const [id, act] of [['run-menu', () => game.mode === 'play' && togglePause(
 // Back to the top of the level (or a fresh endless run) from a run or the pause menu.
 async function restart() {
   if (game.mode !== 'play' && game.mode !== 'paused') return;
-  if (game.mode === 'paused') audio.ctx?.resume();
+  if (game.mode === 'paused') audio.setPaused(false);
   // Endless drops scenery behind the rider, so the top of the road is rebuilt.
   if (!game.level) await loadWorld(null);
   startRun('start');
@@ -827,7 +884,7 @@ async function restart() {
 function togglePause() {
   game.mode = game.mode === 'play' ? 'paused' : 'play';
   show(game.mode === 'paused' ? 'pause' : null);
-  if (audio.ctx) game.mode === 'paused' ? audio.ctx.suspend() : audio.ctx.resume();
+  audio.setPaused(game.mode === 'paused');
 }
 
 // ---------------------------------------------------------------- camera
@@ -1077,9 +1134,9 @@ function frame(now) {
         audio.ding();
         popup('CLOSE CALL', `+${pts}${game.combo > 1 ? ` · x${game.combo}` : ''}`);
       } else if (e.type === 'honk') {
-        audio.honk(Math.hypot(e.car.x - player.pos.x, e.car.z - player.pos.z));
+        audio.honk(Math.hypot(e.car.x - player.pos.x, e.car.z - player.pos.z), e.car);
       } else if (e.type === 'carHit') {
-        audio.crash();
+        audio.carHit();
       }
     }
     game.comboTimer -= dt;
@@ -1176,6 +1233,8 @@ function frame(now) {
 
   updateResolution(dt);
   updateCamera(dt, time);
+  audio.riding = game.mode === 'play';
+  audio.onRoad = game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished';
   audio.update(player, traffic.cars, camera);
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') updateHud(dt);
   input.endFrame();
@@ -1209,7 +1268,7 @@ const debug = { freeze: false, dt: 0 }; // dt: a fixed frame time, for screensho
 watchForUpdates({
   inRun: () => game.mode === 'play' || game.mode === 'paused',
   leaveRun: () => {
-    if (game.mode === 'paused') audio.ctx?.resume();
+    if (game.mode === 'paused') audio.setPaused(false);
     toTitle();
   },
   showNews: () => show('whatsnew'),
@@ -1222,4 +1281,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, props, structures, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, props, structures, renderFrame: () => post.render() });

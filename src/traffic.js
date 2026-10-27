@@ -50,7 +50,7 @@ function carMesh(rand) {
     t.position.set(x, 0.75, L / 2 + 0.01);
     group.add(h, t);
   }
-  return { group, L, W, tail };
+  return { group, L, W, tail, kind };
 }
 
 export class Traffic {
@@ -86,6 +86,7 @@ export class Traffic {
     for (const c of this.cars) if (c.dir === dir && Math.abs(c.s - s) < 45) return;
     const car = {
       mesh: m.group,
+      kind: m.kind, // engine and horn sounds (audio.js)
       tail: m.tail,
       L: m.L,
       W: m.W,

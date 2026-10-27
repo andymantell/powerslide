@@ -122,6 +122,8 @@ button:hover { filter: brightness(1.1); }
 .opts { margin: 14px auto 4px; display: inline-block; text-align: left; }
 .opt-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
 .opt-row label { width: 84px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+#opt-volume button.slider { min-width: 240px; }
+#opt-volume button.slider .val { flex-basis: 48px; }
 .seg { display: flex; flex-wrap: wrap; gap: 4px; }
 .seg button {
   margin: 0; padding: 6px 12px; font-size: 13px; letter-spacing: 1px; font-weight: 700;

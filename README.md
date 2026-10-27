@@ -131,7 +131,8 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   `maxRelief` and `snowLine` (metres above the road).
 - `sky` sets the time of day (`dawn`, `day`, `dusk`, `night`) and weather
   (`clear`, `cloudy`, `mist`, `rain`, `snow`). Rain also makes the road wet
-  and less grippy.
+  and less grippy. The sound follows it (rain, wind, night-time animals).
+- `ambience` changes the biome's sounds for one level (see Sound below).
 - `seed` fixes the scenery, the guardrail sides and the traffic, so every run
   of a level looks and plays the same.
 - `traffic.density` scales how often cars spawn (0 = none); `speed` scales how
@@ -187,6 +188,54 @@ preset.
   headless Chromium and saves fixed camera views (chase, rider, board, road,
   vista, trees, forest, verge, cutting, distant, boulder; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.
 
+## Sound
+
+Everything is synthesised with WebAudio at run time (nothing to download, so
+it works offline). Volumes for master, effects, ambience and music are on the
+Settings screen; `M` mutes. Safari only allows sound after a touch, so the
+first touch, click or key starts it, and it sleeps while the game is hidden.
+
+- **Rider and board** (`src/audio.js`): wheel roar and bearing hum that rise
+  with speed and change with the surface (smooth, bumpy, wet, gravel, grit),
+  slide hiss with a urethane squeal, the hand-down puck scrape with spark
+  crackle, footbrake, push kicks, wind that a tuck cuts and an air brake
+  catches (with flapping leathers), wobble rattle, guardrail clang and scrape,
+  crash and ragdoll thuds, and the loose board clattering away.
+- **Traffic**: each vehicle type has its own engine (gears, harmonics), tyre
+  noise, horn and doppler. The traffic code names a car's type in `car.kind`
+  (`car`, `taxi`, `van`, `suv`, `pickup`, `camper`, `bus`, `lorry`, `tractor`,
+  `motorbike`, `police`, `ambulance`, `fire`, `icecream`, `horsebox`; see
+  `ENGINES`). `car.siren = true` sounds an emergency vehicle's siren.
+- **Ambience** (`src/ambience.js`, calls in `src/sfx.js`): `AMBIENCE[biome]`
+  sets each biome's beds (`wind`, `water`, `surf`, `hum`, `insects`,
+  `crickets`), the calls dropped in at random (cowbells, skylarks, sheep,
+  ponies, gulls, sirens…) and an `echo`. Set pieces and props make their own
+  sounds as you ride past (`spotsFor`): waterfalls, streams, church bells, the
+  sawmill, cow herds and fountains, and galleries ring with an echo.
+- **Music** (`src/music.js`): an optional four-chord loop per biome, with
+  bass and drums while riding.
+
+A level's `"ambience"` changes its biome's mix:
+
+```json
+"ambience": {
+  "layers": { "water": 0.3, "wind": { "level": 0.5, "whistle": 0.4 } },
+  "events": { "cowbell": 0, "marmot": { "every": [5, 12], "gain": 0.5 } },
+  "spots": [{ "at": 820, "d": -30, "sound": "waterfall", "radius": 150, "gain": 0.7 }],
+  "zones": [{ "from": 1200, "to": 1350, "echo": { "time": 0.07, "feedback": 0.45, "mix": 0.5 } }]
+}
+```
+
+Setting a layer or event to 0 turns it off. A spot's `sound` is a bed
+(`stream`, `waterfall`, `surf`) or any call in `CALLS` (repeated every
+`every` seconds while in earshot). The weather and time of day come from the
+level's `sky`, and code can change them at any time with
+`audio.setWeather({ rain, wind, thunder })` (0..1) and
+`audio.setTimeOfDay(hours or 'dawn' / 'day' / 'dusk' / 'night')`;
+`audio.setEcho({ time, feedback, mix })` sets an echo (null goes back to the
+biome's). `npm run sounds` records each biome headless into `sounds/` to
+listen to (needs `npm run build && npx vite preview` running).
+
 ## How it works
 
 - **Road** (`src/road.js`): the centreline is built from clothoid-style
@@ -224,8 +273,8 @@ preset.
 - **Traffic** (`src/traffic.js`): downhill cars share your lane and slow for
   bends. Uphill cars come at you in the other lane. Close passes score bonus
   points.
-- **Audio** (`src/audio.js`): wheel roar, wind, slide hiss, doppler-shifted
-  engines and horns, all synthesised with WebAudio.
+- **Audio** (`src/audio.js`, `src/ambience.js`, `src/sfx.js`,
+  `src/music.js`): see Sound above.
 
 ## Deploying
 
