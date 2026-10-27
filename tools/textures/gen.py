@@ -65,7 +65,7 @@ def strokes(size, count, seed, length, width, angle_spread, colour_fn, base=None
     return np.asarray(img) / 255.0, np.asarray(hgt) / 255.0
 
 
-def grass(name='grass', pal=None, seed=1):
+def grass(name='grass', pal=None, seed=1, blades=(5, 16), count=70000):
     pal = pal or dict(soil='#3a3122', dark='#30431b', mid='#4b6127', light='#6f853b', dry='#9a9058')
     soil, dark, mid, light, dry = (hexcol(pal[k]) for k in ('soil', 'dark', 'mid', 'light', 'dry'))
     macro = norm01(fbm(N, 4, 5, seed))
@@ -82,7 +82,7 @@ def grass(name='grass', pal=None, seed=1):
         c = c * rng.uniform(0.8, 1.15)
         return tuple(int(v * 255) for v in np.clip(c, 0, 1)), int(110 + t * 145)
 
-    rgb, h = strokes(N, 70000, seed, (5, 16), (1.0, 2.2), np.pi, blade, base=base, scale=8)
+    rgb, h = strokes(N, count, seed, blades, (1.0, 2.2), np.pi, blade, base=base, scale=8)
     # Tint by macro variation and dry patches.
     rgb = rgb * (0.85 + macro[..., None] * 0.3)
     lum = rgb.mean(-1, keepdims=True)
@@ -101,6 +101,47 @@ def moor():
     grass('moor', dict(soil='#3a2d22', dark='#45481f', mid='#6b6a33', light='#a09a58', dry='#a26f3c', heather='#4f3a38'), seed=3)
     # Tussocks: tawny moor grass, gorse yellow in the flowering clumps.
     tuft('moor_tuft', dict(dark='#3c3a1f', mid='#605b35', light='#8a8150', dry='#94704a', flowers=['#e6b81a', '#d9a514']), seed=83)
+
+
+def lawn():
+    """Hillside Suburbs: short, even, well-watered lawn grass."""
+    grass('lawn', dict(soil='#2f3a1c', dark='#3a5a1f', mid='#567a2c', light='#7a9e3e', dry='#97a050'), seed=5, blades=(3, 8), count=110000)
+    # Garden tufts: long grass and a few daisies and dandelions.
+    tuft('lawn_tuft', dict(dark='#36521c', mid='#55782b', light='#7da343', dry='#9da455', flowers=['#f4f4ee', '#f2cf1d']), seed=85)
+
+
+def paving(name='paving', seed=91):
+    """Pavement: 600 mm concrete flags (4 x 4 per 2.4 m tile), laid in
+    staggered rows, each flag its own shade, with sandy joints, chewing-gum
+    spots, a few cracks and dark weathering at the edges."""
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
+    cell = N / 4
+    row = np.floor(yy / cell)
+    sx = xx + (row % 2) * cell * 0.5  # stagger alternate rows
+    col_i = np.floor(sx / cell) % 4
+    fx, fy = (sx % cell) / cell, (yy % cell) / cell
+    edge = np.minimum(np.minimum(fx, 1 - fx), np.minimum(fy, 1 - fy))
+    joint = 1 - smoothstep(0.004, 0.012, edge)
+    shade = rng.uniform(0.86, 1.08, (4, 4))[row.astype(int) % 4, col_i.astype(int)]
+    tone = norm01(fbm(N, 8, 4, seed + 1))
+    grain = fbm(N, 220, 2, seed + 2)
+    base = hexcol('#a9a59c')
+    col = base * shade[..., None] * (0.9 + tone[..., None] * 0.18) * (0.94 + grain[..., None] * 0.2)
+    # Weathering darkens the rims of each flag; joints are dark sand and grit.
+    col = col * (1 - (1 - smoothstep(0.0, 0.08, edge))[..., None] * 0.12)
+    col = lerp(col, hexcol('#5e584c'), joint[..., None] * 0.85)
+    # Chewing gum and drips: small pale and dark spots.
+    spots = rng.random((N, N)) < 0.00012
+    gum = blur(spots.astype(np.float32), 2) * 60
+    col = lerp(col, hexcol('#c9c6bd'), np.clip(gum, 0, 1)[..., None] * 0.7)
+    stain = smoothstep(0.62, 0.8, norm01(fbm(N, 12, 4, seed + 3)))
+    col = col * (1 - stain[..., None] * 0.09)
+    # Hairline cracks in a few flags.
+    crack = smoothstep(0.993, 1.0, 1 - np.abs(fbm(N, 6, 2, seed + 4))) * (rng.random((4, 4))[row.astype(int) % 4, col_i.astype(int)] < 0.3)
+    col = col * (1 - crack[..., None] * 0.2)
+    h = norm01((1 - joint) * 0.8 + grain * 0.1 - crack * 0.3 + smoothstep(0.0, 0.05, edge) * 0.1)
+    save(name, col, h, normal_from_height(h, 4.0))
 
 
 def ridged(size, period, octaves, seed):
@@ -457,7 +498,7 @@ def tuft(name='grass_tuft', pal=None, seed=81, size=512):
     print('wrote', name)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite)
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

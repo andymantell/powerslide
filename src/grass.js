@@ -39,7 +39,7 @@ export class Grass {
   constructor(scene, renderer, terrain, q = {}) {
     this.terrain = terrain;
     this.radius = q.grassRadius ?? 0;
-    this.density = q.grassDensity ?? 0.8;
+    this.density = (q.grassDensity ?? 0.8) * (terrain.groundSet?.tuftDensity ?? 1);
     this.cells = new Map();
     this.dirty = false;
     this.lastX = Infinity;

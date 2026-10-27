@@ -42,7 +42,54 @@ export const GROUND_SETS = {
     patchLo: [0.72, 0.66, 0.62], patchHi: [1.12, 1.0, 0.8], patchC: [1.15, 0.7, 0.45, 0.7],
     relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.15,
   },
+  // Hillside Suburbs: mown lawns and verges, gentle hills, few wild trees,
+  // and only the odd clump of long grass.
+  suburbs: {
+    base: 'lawn', rock: 'rock', gravel: 'gravel', snow: 'snow', tuft: 'lawn_tuft', tuftDensity: 0.3,
+    patchLo: [0.86, 0.92, 0.8], patchHi: [1.06, 1.04, 0.9],
+    relief: 0.55, maxRelief: 90, snowLine: 1e5, treeDensity: 0.2,
+  },
 };
+
+// Paving for pavements and other flat hard surfaces built as geometry: 600 mm
+// flags (2.4 m per texture tile) projected in world space on whichever axis
+// the surface faces, so no UVs are needed. Kerbs and steps work too.
+export function createPavingMaterial(renderer, { tint = '#ffffff' } = {}) {
+  const mat = new THREE.MeshStandardMaterial({ color: tint, roughness: 0.85, metalness: 0 });
+  const uniforms = { tPaveA: { value: groundTexture('paving', 'albedo', renderer) }, tPaveN: { value: groundTexture('paving', 'normal', renderer) } };
+  mat.onBeforeCompile = (s) => {
+    Object.assign(s.uniforms, uniforms);
+    s.vertexShader = s.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPvW;\nvarying vec3 vPvN;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvPvW = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvPvN = normalize(mat3(modelMatrix) * objectNormal);');
+    s.fragmentShader = s.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform sampler2D tPaveA, tPaveN;\nvarying vec3 vPvW;\nvarying vec3 vPvN;')
+      .replace(
+        '#include <map_fragment>',
+        `vec3 pa = abs(vPvN);
+        vec2 pUv = (pa.y > max(pa.x, pa.z) ? vPvW.xz : pa.x > pa.z ? vPvW.zy : vPvW.xy) / 2.4;
+        vec4 pT = texture2D(tPaveA, pUv);
+        diffuseColor.rgb *= pT.rgb;`,
+      )
+      .replace(
+        '#include <normal_fragment_maps>',
+        `{
+          vec3 tn = texture2D(tPaveN, pUv).xyz * 2.0 - 1.0;
+          vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition);
+          vec2 st0 = dFdx(pUv), st1 = dFdy(pUv);
+          vec3 N = normal;
+          vec3 q1perp = cross(q1, N), q0perp = cross(N, q0);
+          vec3 T = q1perp * st0.x + q0perp * st1.x;
+          vec3 B = q1perp * st0.y + q0perp * st1.y;
+          float det = max(dot(T, T), dot(B, B));
+          float sc = det == 0.0 ? 0.0 : inversesqrt(det);
+          normal = normalize(T * (tn.x * sc) + B * (tn.y * sc) + N * tn.z);
+        }`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'paving';
+  return mat;
+}
 
 const SHARED = /* glsl */ `
   uniform sampler2D tBaseA, tBaseN, tRockA, tRockN, tGravA, tGravN, tSnowA, tSnowN;

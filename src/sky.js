@@ -21,6 +21,22 @@ export const ATMOSPHERE = {
     cloudColor: '#ffffff',
     envIntensity: 0.55,
   },
+  // A bright British seaside town: high sun, fresh blue sky, fair-weather
+  // cumulus and a pale sea haze.
+  suburbs: {
+    sunAzimuth: -2.4,
+    sunElevation: 0.62,
+    zenith: '#2a62b8',
+    horizon: '#c6d8e8',
+    haze: '#c4d2dc',
+    sunHaze: '#f4e6cc',
+    sunColor: '#fff4e2',
+    sunIntensity: 3.0,
+    cloudCover: 0.5,
+    cloudColor: '#ffffff',
+    envIntensity: 0.6,
+    fogScale: 1.2,
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,
