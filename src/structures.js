@@ -645,9 +645,12 @@ export const PLANS = {
     const side = road.drive || 1;
     const fr = road.sample(s, {});
     // The gate stands beside the grid on the verge.
+    // It hangs in the line of the wall, in the gap the grid's wall ends
+    // leave for it (see BUILDS.grid), swinging away from the grid.
     for (const k of [-1, 1]) {
-      const d = k * (RAIL_OFFSET + 0.6);
-      this.props.add('gate', fr.x + fr.rightX * d + fr.dirX * 2.5 * k, fr.z + fr.rightZ * d + fr.dirZ * 2.5 * k, Math.atan2(-fr.dirZ, fr.dirX) + (k < 0 ? Math.PI : 0));
+      const d = k * (RAIL_OFFSET + 0.4);
+      const g = road.sample(s + k * GATE_AT, {});
+      this.props.add('gate', g.x + g.rightX * d, g.z + g.rightZ * d, Math.atan2(-g.dirZ, g.dirX) + (k < 0 ? Math.PI : 0));
     }
     const ws = s - 60;
     if (ws > road.start + 20) {
@@ -968,17 +971,20 @@ const BUILDS = {
       const x = f.x + along.x * k, z = f.z + along.z * k;
       geo.box(x, z, f.y - 0.06, f.y + 0.03, along, 0.04, across, hw, METAL, '#6d7175');
     }
-    // Short wall ends either side, leaving room for the gate.
+    // Short wall ends either side: up to the grid, except where the gate
+    // hangs (the gate is on the right after the grid and the left before it).
     for (const side of [-1, 1]) {
       const d = side * (RAIL_OFFSET + 0.4);
       for (const k of [-1, 1]) {
-        const c = road.sample(s + k * 7, {});
+        const from = k === side ? GATE_AT + 4.3 : 1.65;
+        const half = (GRID_WALL - from) / 2;
+        const c = road.sample(s + k * (from + half), {});
         // Rough stones in courses, ragged at the top.
         const a1 = { x: c.dirX, z: c.dirZ }, a2 = { x: c.rightX, z: c.rightZ };
         for (let y = -0.8; y < 1.0; y += 0.3) {
-          for (let u = -3.2; u < 3.1;) {
+          for (let u = -half; u < half - 0.1;) {
             const l = 0.45 + this.rand() * 0.45;
-            const m = Math.min(u + l, 3.2);
+            const m = Math.min(u + l, half);
             const o = (u + m) / 2;
             const ctr = new THREE.Vector3(c.x + c.rightX * d + c.dirX * o, c.y + y, c.z + c.rightZ * d + c.dirZ * o);
             lump(geo, ctr, a1, a2, (m - u) / 2 + 0.03, 0.36, 0.34 + (y > 0.8 ? this.rand() * 0.15 : 0), STONES[Math.floor(this.rand() * STONES.length)], this.rand);
@@ -1111,6 +1117,10 @@ function edgeRun(geo, job, side, kind) {
   }
 }
 
+// Cattle grid: where its gate's hinge post stands (m from the grid's middle)
+// and where its wall ends stop. Lane walls leave this stretch to the grid.
+const GATE_AT = 1.8, GRID_WALL = 12.5;
+
 // Granite greys, a few with moss in them.
 const STONES = ['#7f7a70', '#878275', '#767268', '#8d887c', '#6f6c64', '#7c786b', '#66655c', '#959082', '#6d705f'];
 
@@ -1164,11 +1174,30 @@ function wallRun(geo, job, side) {
     const field = face(d0 + side * w, g - 0.05, -side).reverse();
     return { pts: [...road1, ...field], m: at(mid, top), c: at(mid, (base + top) / 2), sag, rx: f.rightX, rz: f.rightZ };
   };
+  // Cattle grids build their own wall ends and gates: leave them room.
+  const grids = [...(this.todo || []), ...(this.endless || [])].filter((j) => j.f.type === 'grid').map((j) => j.s0);
+  const open = (s) => grids.some((g) => Math.abs(s - g) < GRID_WALL);
+  // Close off an end of the wall so it isn't hollow.
+  const cap = (r) => {
+    for (let i = 0; i < r.pts.length - 1; i++) {
+      geo.tri(r.c, r.pts[i], r.pts[i + 1], PLASTER, greys[0]);
+      geo.tri(r.c, r.pts[i + 1], r.pts[i], PLASTER, greys[0]);
+    }
+  };
   const step = 0.6;
   let prev = ring(job.s0);
+  let gap = open(job.s0);
+  if (!gap) cap(prev);
   let cols = prev.pts.map(() => greys[Math.floor(rand() * greys.length)]);
   for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
     const cur = ring(s);
+    const shut = open(s);
+    if (shut !== gap) cap(shut ? prev : cur);
+    gap = shut;
+    if (gap || open(s - step)) {
+      prev = cur;
+      continue;
+    }
     // A stone runs on into the next column about half the time.
     cols = cols.map((c) => (rand() < 0.45 ? c : greys[Math.floor(rand() * greys.length)]));
     const inside = new THREE.Vector3().lerpVectors(prev.c, cur.c, 0.5);
@@ -1194,6 +1223,7 @@ function wallRun(geo, job, side) {
     }
     prev = cur;
   }
+  if (!gap) cap(prev);
 }
 
 // A rough stone: a box with jittered corners, narrower at the top, flat
