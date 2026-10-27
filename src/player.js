@@ -66,6 +66,7 @@ const MAX_CURVATURE = (Math.tan(MAX_ROLL) * (SIN_FRONT + SIN_REAR)) / WHEELBASE;
 // Urethane grips up to about 6° of slip, then breaks away to sliding friction.
 const PEAK_SLIP = 0.1;
 const SLIP_FALLOFF = 0.12;
+const WOBBLE_SHOVE = 0.8; // peak sideways shove from a full wobble, in g
 const BALANCE_WINDOW = 0.12; // rad of lean error the rider can hold through the feet
 
 const PUSH_PERIOD = 0.8; // s per kick
@@ -436,15 +437,24 @@ export class Player {
   // stand: a tuck with weight forward keeps it small, riding upright or air
   // braking lets it grow. Jerky steering fights it and pumps it up; only
   // fighting it hard, or riding far over the threshold, throws you off.
-  // Throwing a slide kills it. Returns the deck roll it adds.
+  // Throwing a slide kills it. Returns the deck roll it adds to the steering:
+  // sized so the sideways shove peaks at WOBBLE_SHOVE at any speed (a fixed
+  // roll would steer harder with the square of speed and spin the board out
+  // at 130 km/h). The deck shows a bigger, visual-only shimmy.
   updateWobble(dt, v) {
     const d = this.diff;
     const steerRate = Math.abs(this.steer - this.prevSteer) / dt;
     this.prevSteer = this.steer;
-    if (!d.wobble) return 0;
+    if (!d.wobble) {
+      this.wobble = 0;
+      this.wobbleRoll = 0;
+      return 0;
+    }
     const over = v - d.wobbleSpeed - this.weight * 3;
     const stance = 1 - 0.45 * this.tuck + 0.15 * this.airbrake;
-    const target = this.slideMode ? 0 : Math.max(0, over / 12) * stance;
+    // Well over the threshold it keeps getting worse, but ever more slowly.
+    const excess = Math.max(0, over) / 12;
+    const target = this.slideMode ? 0 : (excess / (1 + 0.35 * excess)) * stance;
     const rate = target > this.wobble ? 0.6 : 1.5;
     const fight = over > 0 ? Math.max(0, steerRate - 3) * 0.1 * Math.min(1, over / 3) : 0;
     this.wobble = Math.max(0, this.wobble + ((target - this.wobble) * rate + fight) * dt);
@@ -452,9 +462,13 @@ export class Player {
       this.crash('Speed wobbles threw you off');
       return 0;
     }
-    this.wobblePhase += dt * Math.PI * 2 * (6 + v * 0.1);
-    return Math.sin(this.wobblePhase) * this.wobble * 0.012;
+    this.wobblePhase += dt * Math.PI * 2 * (6 + Math.min(v, 40) * 0.1);
+    const s = Math.sin(this.wobblePhase) * this.wobble;
+    this.wobbleRoll = s * 0.05;
+    const v2 = Math.max(v * v, 100);
+    return Math.atan((s * WOBBLE_SHOVE * G * WHEELBASE) / (v2 * (SIN_FRONT + SIN_REAR)));
   }
+
 
 
   // While sliding, the rider steers the path by weighting toes or heels: the
@@ -605,7 +619,7 @@ export class Player {
     _qb.setFromAxisAngle(UP, -this.yaw);
     m.root.quaternion.copy(_qa).multiply(_qb);
     // Deck rolls on the bushings; trucks steer (front into the turn, rear out).
-    m.deck.rotation.z = -this.roll;
+    m.deck.rotation.z = -(this.roll + (this.wobbleRoll || 0));
     m.trucks[0].rotation.y = -this.steerFront;
     m.trucks[1].rotation.y = -this.steerRear;
     m.rig.rotation.y = this.fakie ? Math.PI : 0;

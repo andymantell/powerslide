@@ -69,7 +69,7 @@ are always on:
 
 - **Speed wobbles** above about 72 km/h. They build gradually with speed and
   settle rather than running away: a smooth tuck keeps them small up to about
-  110 km/h, riding upright or steering jerkily makes them worse, and only
+  110 km/h and ridable past 160 km/h, riding upright or steering jerkily makes them worse, and only
   fighting them hard or riding far too fast throws you. Throw a slide to kill
   them.
 - **Highsides:** letting go of a slide while the board is still well sideways

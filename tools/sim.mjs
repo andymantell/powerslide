@@ -212,7 +212,7 @@ console.log('\n== A strong speed wobble at 85 km/h (flat, held for 1 s)');
 }
 
 console.log('\n== Speed wobbles: 40 s at a held speed (wobble 1 throws you; warning shows above 0.3)');
-for (const kmh of [80, 95, 110, 125]) {
+for (const kmh of [80, 95, 110, 130, 160]) {
   const row = [];
   for (const [name, inp, steer] of [
     ['tucked, smooth', { tuck: 1 }, (p) => keepLane(p)],
