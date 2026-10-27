@@ -136,53 +136,78 @@ export class Forest {
   bakeImpostors() {
     const r = this.renderer;
     const scene = new THREE.Scene();
-    scene.add(new THREE.AmbientLight('#ffffff', Math.PI));
     // Mipmapped, so distant impostors filter smoothly instead of sparkling.
+    // Deliberately plain targets (no multisampling, no sRGB format) and
+    // shaders that write every pixel's alpha themselves, background included:
+    // on iPad the multisampled sRGB bake came back with solid alpha, which
+    // drew distant trees as dark rectangles.
     const cols = this.variants.length * IMP_VIEWS;
-    const opts = { samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter };
+    const opts = { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, depthBuffer: true };
     const rt = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
     const rtN = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
-    rt.texture.colorSpace = THREE.SRGBColorSpace;
-    const prev = { target: r.getRenderTarget(), tone: r.toneMapping, clear: r.getClearAlpha() };
+    const prev = { target: r.getRenderTarget(), tone: r.toneMapping, clear: r.getClearAlpha(), autoClear: r.autoClear };
     const clearCol = r.getClearColor(new THREE.Color());
     r.toneMapping = THREE.NoToneMapping;
-    // Bake-camera-space normals, 0..1 encoded; foliage cut out like the colour pass.
-    const normalMat = (map) =>
+    r.autoClear = false;
+    // mode 0: colour (sRGB-encoded by hand), 1: bake-camera-space normal.
+    // Foliage is cut out with the same mip-aware alpha boost as in game.
+    const bakeMat = (mode, map, vcol, cut) =>
       new THREE.ShaderMaterial({
-        defines: map ? { USE_CUT: '' } : {},
+        defines: { MODE: mode, ...(cut ? { USE_CUT: '' } : {}), ...(vcol ? { USE_VCOL: '' } : {}) },
         uniforms: { map: { value: map } },
         side: THREE.DoubleSide,
-        vertexShader: `varying vec2 vUv; varying vec3 vN;
-          void main() { vUv = uv; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform sampler2D map; varying vec2 vUv; varying vec3 vN;
+        vertexShader: `varying vec2 vUv; varying vec3 vN; varying vec3 vC;
+          #ifdef USE_VCOL
+            attribute vec3 color;
+          #endif
           void main() {
+            vUv = uv; vN = normalize(normalMatrix * normal);
+            #ifdef USE_VCOL
+              vC = color;
+            #else
+              vC = vec3(1.0);
+            #endif
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }`,
+        fragmentShader: `uniform sampler2D map; varying vec2 vUv; varying vec3 vN; varying vec3 vC;
+          void main() {
+            vec4 t = texture2D(map, vUv);
             #ifdef USE_CUT
               vec2 dt = max(abs(dFdx(vUv)), abs(dFdy(vUv))) * 512.0;
-              if (texture2D(map, vUv).a * (1.0 + max(0.0, log2(max(dt.x, dt.y))) * 0.35) < 0.45) discard;
+              if (t.a * (1.0 + max(0.0, log2(max(dt.x, dt.y))) * 0.35) < 0.45) discard;
             #endif
-            gl_FragColor = vec4(normalize(vN) * 0.5 + 0.5, 1.0);
+            #if MODE == 0
+              gl_FragColor = vec4(pow(t.rgb * vC, vec3(1.0 / 2.2)), 1.0);
+            #else
+              gl_FragColor = vec4(normalize(vN) * 0.5 + 0.5, 1.0);
+            #endif
           }`,
       });
-    const normF = normalMat(this.foliageMat.map);
-    const normT = normalMat(null);
-    const basicF = new THREE.MeshBasicMaterial({ map: this.foliageMat.map, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide });
-    basicF.onBeforeCompile = (s) => boostAlpha(s);
-    const basicT = new THREE.MeshBasicMaterial({ map: this.barkMat.map });
-    // Each target is filled in one go: switching away from a multisampled
-    // target resolves and discards it, which would wipe earlier columns.
-    // Clear colours bleed into the mips at the edges, so use a foliage green
-    // and a viewer-facing normal.
-    for (const [target, mf, mt, clear] of [[rt, basicF, basicT, '#2e4228'], [rtN, normF, normT, new THREE.Color(0.5, 0.5, 1)]]) {
+    // A camera-filling quad that writes the background with alpha 0. Its
+    // colour bleeds into the mips at the edges, so use foliage green and a
+    // viewer-facing normal.
+    const bgMat = (rgb) =>
+      new THREE.ShaderMaterial({
+        depthWrite: false,
+        depthTest: false,
+        vertexShader: 'void main() { gl_Position = vec4(position.xy * 2.0, 0.0, 1.0); }',
+        fragmentShader: `void main() { gl_FragColor = vec4(${rgb}, 0.0); }`,
+      });
+    const bg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1));
+    bg.frustumCulled = false;
+    bg.renderOrder = -1;
+    const sets = [
+      [rt, bakeMat(0, this.foliageMat.map, true, true), bakeMat(0, this.barkMat.map, false, false), bgMat('0.18, 0.26, 0.16')],
+      [rtN, bakeMat(1, this.foliageMat.map, false, true), bakeMat(1, this.barkMat.map, false, false), bgMat('0.5, 0.5, 1.0')],
+    ];
+    for (const [target, mf, mt, mb] of sets) {
       r.setRenderTarget(target);
-      r.setClearColor(clear, 0);
-      r.setScissorTest(false);
-      r.clear();
+      bg.material = mb;
       this.variants.forEach((v, i) => {
         scene.clear();
-        scene.add(new THREE.AmbientLight('#ffffff', Math.PI));
         const tree = new THREE.Group();
         tree.add(new THREE.Mesh(v.foliage.geometry, mf), new THREE.Mesh(v.trunk.geometry, mt));
-        scene.add(tree);
+        scene.add(bg, tree);
         const half = Math.max(v.W * 0.5, v.H * 0.25) * 1.02;
         v.impW = half * 2;
         const cam = new THREE.OrthographicCamera(-half, half, v.H * 1.02, 0, 0.1, 100);
@@ -196,6 +221,7 @@ export class Forest {
           r.setViewport(x, 0, IMP_W, IMP_H);
           r.setScissor(x, 0, IMP_W, IMP_H);
           r.setScissorTest(true);
+          r.clearDepth();
           r.render(scene, cam);
         }
       });
@@ -205,7 +231,9 @@ export class Forest {
     r.setViewport(0, 0, r.domElement.width / r.getPixelRatio(), r.domElement.height / r.getPixelRatio());
     r.toneMapping = prev.tone;
     r.setClearColor(clearCol, prev.clear);
-    for (const m of [basicF, basicT, normF, normT]) m.dispose();
+    r.autoClear = prev.autoClear;
+    for (const set of sets) for (const m of set.slice(1)) m.dispose();
+    bg.geometry.dispose();
     this.impTargets = [rt, rtN]; // kept for debugging views
 
     const n = this.variants.length;
@@ -218,6 +246,17 @@ export class Forest {
         boostAlpha(s, IMP_H);
         s.uniforms.tImpN = { value: rtN.texture };
         s.fragmentShader = s.fragmentShader
+          .replace(
+            '#include <map_fragment>',
+            `vec4 impT = texture2D(map, vMapUv);
+            impT.rgb = pow(impT.rgb, vec3(2.2)); // baked sRGB-encoded by hand
+            diffuseColor *= impT;`,
+          )
+          .replace(
+            '#include <alphatest_fragment>',
+            // Belt and braces: never draw the card's empty background.
+            '#include <alphatest_fragment>\nif (impT.a < 0.02) discard;',
+          )
           .replace('#include <common>', '#include <common>\nuniform sampler2D tImpN;\nvarying vec3 vBbR, vBbF;')
           .replace(
             '#include <normal_fragment_maps>',

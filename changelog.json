@@ -2,6 +2,7 @@
   {
     "date": "2026-10-27",
     "items": [
+      "Fixed: faraway trees on iPad no longer show up as dark rectangles",
       "Fixed: the menus work with a controller on iPad. Move with the D-pad or stick, A to pick, B to go back, and you can always see which button you're on",
       "New: Xbox controller buttons that make more sense. A pushes, RT tucks (squeeze harder to get lower), LT brakes, X slides and the stick steers. Works on an iPad with a controller too",
       "Better: faraway trees look more like real trees, with light and shade on them, and they change shape as you ride past",
