@@ -665,7 +665,7 @@ def wheel_mesh(style, lod):
     B.recalc = False
     seg = 28 if lod == 0 else 12
     if style == 'bike':
-        rim_r, prof = 0.78, [(0.0, 0.78), (0.22, 0.86), (0.4, 0.95), (0.5, 1.0)]
+        rim_r, prof = 0.7, [(0.0, 0.7), (0.12, 0.8), (0.32, 0.95), (0.5, 1.0)]
     elif style in ('truck', 'tractor'):
         rim_r, prof = 0.55, [(0.0, 0.55), (0.06, 0.6), (0.1, 0.9), (0.2, 0.98), (0.5, 1.0)]
     else:
@@ -1655,26 +1655,30 @@ def build_bike(lod, style):
     yf = lambda u: L / 2 - u  # noqa: E731
     r = 0.31
     s['wheels'] = [{'u': 0.32, 'r': r, 'z': r, 'w': 0.12, 'x': 0, 'centre': True, 'style': 'bike'},
-                   {'u': 1.75, 'r': r, 'z': r, 'w': 0.17, 'x': 0, 'centre': True, 'style': 'bike'}]
+                   {'u': 1.75, 'r': r, 'z': r, 'w': 0.19, 'x': 0, 'centre': True, 'style': 'bike'}]
     seg = 2 if lod == 0 else 0
     sv = 10 if lod == 0 else 6
     # Forks, swing arm, engine block, exhaust.
     for sx in (-1, 1):
         tube(B, 'trim', None, [(sx * 0.09, yf(0.32), r), (sx * 0.09, yf(0.55), 0.98)], 0.03, sv)
-        tube(B, 'detail', GREY, [(sx * 0.1, yf(1.1), 0.42), (sx * 0.1, yf(1.75), r)], 0.035, sv)
+        tube(B, 'detail', GREY, [(sx * 0.1, yf(1.1), 0.42), (sx * 0.1, yf(1.75), r)], 0.05, sv)
     box(B, 'detail', GREY, (0.36, 0.55, 0.42), (0, yf(1.0), 0.48), 0.06 if lod == 0 else 0, seg)
     box(B, 'detail', STEEL, (0.4, 0.3, 0.3), (0, yf(0.88), 0.5), 0.05 if lod == 0 else 0, seg)
-    tube(B, 'detail', CHROME, [(0.14, yf(0.85), 0.32), (0.18, yf(1.2), 0.28), (0.2, yf(1.65), 0.5), (0.2, yf(2.0), 0.62)], 0.05, sv)
+    tube(B, 'detail', STEEL, [(0.1, yf(0.75), 0.42), (0.14, yf(0.9), 0.24), (0.17, yf(1.3), 0.26)], 0.03, sv)
+    # Silencer can by the rear wheel.
+    tube(B, 'detail', GREY, [(0.19, yf(1.3), 0.3), (0.21, yf(1.85), 0.52)], 0.065, sv)
+    tube(B, 'detail', CHROME, [(0.21, yf(1.85), 0.52), (0.215, yf(1.9), 0.545)], 0.045, sv)
     # Mudguard, tank, seat, tail.
     box(B, 'paint', None, (0.14, 0.4, 0.05), (0, yf(0.3), r * 2 + 0.06), 0.02 if lod == 0 else 0, seg, rot=(0.15, 0, 0))
-    sphere(B, 'paint', None, 0.25, (0, yf(1.0), 0.95), (0.95, 1.45, 0.62), 14 if lod == 0 else 8, 8 if lod == 0 else 5)
+    sphere(B, 'paint', None, 0.27, (0, yf(1.0), 0.95), (1.05, 1.45, 0.66), 14 if lod == 0 else 8, 8 if lod == 0 else 5)
     box(B, 'detail', LEATHER, (0.28, 0.6, 0.1), (0, yf(1.55), 0.9), 0.04 if lod == 0 else 0, seg)
     box(B, 'paint', None, (0.24, 0.55, 0.16), (0, yf(1.85), 0.95), 0.06 if lod == 0 else 0, seg, rot=(-0.25, 0, 0))
     box(B, 'lamp', TAIL, (0.14, 0.03, 0.05), (0, yf(2.1) + 0.01, 0.98))
     box(B, 'detail', PLATE_Y, (0.2, 0.012, 0.14), (0, yf(2.05), 0.75), rot=(0.4, 0, 0))
     if style == 'sport':
         # Full fairing and a screen.
-        sphere(B, 'paint', None, 0.3, (0, yf(0.62), 0.78), (0.8, 1.25, 1.0), 14 if lod == 0 else 8, 8 if lod == 0 else 5)
+        box(B, 'paint', None, (0.4, 0.62, 0.42), (0, yf(0.8), 0.7), 0.13 if lod == 0 else 0.04, 3 if lod == 0 else 1, rot=(-0.35, 0, 0))
+        box(B, 'paint', None, (0.3, 0.3, 0.26), (0, yf(0.5), 0.84), 0.11 if lod == 0 else 0.03, 3 if lod == 0 else 1, rot=(-0.6, 0, 0))  # nose
         box(B, 'glass', None, (0.3, 0.25, 0.012), (0, yf(0.52), 1.12), rot=(-0.85, 0, 0))
         box(B, 'trim', None, (0.4, 0.5, 0.25), (0, yf(1.0), 0.6), 0.08 if lod == 0 else 0, seg)
         box(B, 'lamp', HEAD, (0.2, 0.05, 0.08), (0, yf(0.37), 0.86), 0.02 if lod == 0 else 0, 1, rot=(-0.4, 0, 0))
@@ -1694,23 +1698,28 @@ def build_bike(lod, style):
     up = Vector((0, math.sin(lean), math.cos(lean)))
     sh = hip + up * 0.52
     head = sh + up * 0.2 + Vector((0, 0.06, 0.06 if style == 'sport' else 0.03))
-    limb(B, 'trim', None, hip - up * 0.04, sh + up * 0.06, 0.2, 0.15, seg)  # torso, deeper than wide
+    limb(B, 'trim', None, hip - up * 0.04, sh + up * 0.04, 0.22, 0.16, seg)  # torso
+    limb(B, 'trim', None, sh + Vector((-0.2, 0, -0.03)), sh + Vector((0.2, 0, -0.03)), 0.1, 0.1, seg)  # shoulders
+    if style == 'sport':
+        back = Vector((0, -math.cos(lean), math.sin(lean)))  # out of the rider's back
+        limb(B, 'trim', None, sh - up * 0.16 + back * 0.1, sh + back * 0.1, 0.09, 0.06, seg)  # back protector hump
     limb(B, 'trim', None, hip + Vector((0, -0.04, -0.02)), hip + Vector((0, 0.05, 0.06)), 0.19, 0.17, seg)  # seat
-    sphere(B, 'paint', None, 0.145, tuple(head), (0.95, 1.08, 1.0), 14 if lod == 0 else 8, 9 if lod == 0 else 5)
+    sphere(B, 'paint', None, 0.155, tuple(head), (0.95, 1.1, 1.0), 14 if lod == 0 else 8, 9 if lod == 0 else 5)
     # Visor: a dark band across the front of the helmet.
     sphere(B, 'glass', None, 0.13, tuple(head + Vector((0, 0.045, -0.005))), (0.92, 1.0, 0.5), 12 if lod == 0 else 7, 6 if lod == 0 else 4)
     for sx in (-1, 1):
         shp = sh + Vector((sx * 0.19, -0.02, -0.04))
         hand = Vector((sx * 0.3, yf(hb_y - 0.04), hb_z + 0.03))
         elbow = shp + (hand - shp) * 0.5 + Vector((sx * 0.08, -0.02, -0.08 if style == 'sport' else -0.04))
-        limb(B, 'trim', None, shp, elbow, 0.07, 0.07, seg)
-        limb(B, 'trim', None, elbow, hand, 0.06, 0.06, seg)
-        sphere(B, 'detail', BLACK, 0.055, tuple(hand), (1, 1.2, 0.9), 8, 5)
+        limb(B, 'trim', None, shp, elbow, 0.085, 0.085, seg)
+        limb(B, 'trim', None, elbow, hand, 0.072, 0.072, seg)
+        sphere(B, 'detail', BLACK, 0.065, tuple(hand), (1, 1.2, 0.9), 8, 5)
         hp = hip + Vector((sx * 0.13, 0.02, 0))
         knee = Vector((sx * 0.21, yf(1.12), 0.84 if style == 'sport' else 0.74))
         foot = Vector((sx * 0.17, yf(1.38), 0.42))
-        limb(B, 'trim', None, hp, knee, 0.095, 0.095, seg)
-        limb(B, 'detail', LEATHER, knee, foot, 0.07, 0.07, seg)
+        limb(B, 'trim', None, hp, knee, 0.12, 0.115, seg)
+        limb(B, 'trim', None, knee, foot, 0.09, 0.09, seg)
+        sphere(B, 'detail', GREY, 0.07, tuple(knee + Vector((sx * 0.03, 0.04, 0))), (1, 1, 1), 8, 5)  # knee slider
         box(B, 'detail', BLACK, (0.1, 0.25, 0.11), tuple(foot + Vector((0, 0.06, -0.04))), 0.03 if lod == 0 else 0, 1)
     return s, B
 

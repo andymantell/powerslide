@@ -33,7 +33,7 @@ const CAMPER_PAINT = [['#f1f1ee', 3], ['#e2b33a', 1], ['#7ab6d8', 1], ['#d95d1a'
 // Trim (bumper inserts, grilles, rails): black, dark grey or bright.
 const TRIM_CAR = [['#141516', 6], ['#2a2c2f', 2], ['#b9bcc0', 2], ['body', 1]];
 const TRIM_BOX = [['#f4f4f2', 6], ['#c9ccd0', 2], ['#1d3557', 1], ['#8d1b1b', 1], ['#2d6a3e', 1]];
-const TRIM_LEATHERS = [['#141516', 6], ['#2a2c2f', 2], ['#3a4250', 2], ['body', 2]];
+const TRIM_LEATHERS = [['#141516', 6], ['#2a2c2f', 2], ['#3a4250', 2], ['#5a1d1d', 1], ['#e8e6e0', 1]];
 const RIMS = [['#c9ccd0', 5], ['#3a3c40', 3], ['#16171a', 2], ['#8f9398', 2]];
 
 // type: kind, paint, trim, speed range (m/s), rims (style -> alternatives).
