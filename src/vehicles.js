@@ -18,7 +18,8 @@ const WHEEL_CAP = 96;
 // lamps green < 0.2, amber in between) and the instance colour carries the
 // levels: r = head, g = tail, b = amber/beacon.
 function lampMaterial() {
-  const m = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.15, metalness: 0.1, vertexColors: true, emissive: '#ffffff' });
+  // Unlit, a lamp is clear glass over a mirror-like reflector.
+  const m = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.12, metalness: 0.6, vertexColors: true, emissive: '#ffffff' });
   m.onBeforeCompile = (sh) => {
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vLampC;\nvarying vec3 vLampK;')
@@ -31,7 +32,7 @@ function lampMaterial() {
         #endif`);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vLampC;\nvarying vec3 vLampK;')
-      .replace('#include <color_fragment>', 'diffuseColor.rgb = vLampC * 0.2;')
+      .replace('#include <color_fragment>', 'diffuseColor.rgb = vLampC * 0.45 + 0.06;')
       .replace('#include <emissivemap_fragment>', `
         float lampK = vLampC.g > 0.8 ? vLampK.r : (vLampC.g < 0.2 ? vLampK.g : vLampK.b);
         totalEmissiveRadiance = vLampC * lampK;`);

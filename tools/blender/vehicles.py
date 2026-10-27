@@ -178,13 +178,21 @@ def body(B, s, lod):
     L, W = s['L'], s['W']
     hw = W / 2
     top, belt, sill = s['top'], s['belt'], s['sill']
+    # The nose and tail must stand tall enough to carry their lamps, or the
+    # fascia ends below them and the car has no eyes.
+    for end, zones in ((0, s['front']), (L, s['rear'])):
+        zl = max((zn[3] for zn in zones if zn[4] == 'lamp' and zn[3] < 2), default=0)
+        if zl and interp(top, end) < zl + 0.03:
+            lift = lambda prof, h: sorted([(u, max(z, h - abs(u - end) * 0.12)) for u, z in prof if abs(u - end) > 0.02] + [(end, h)])
+            top = lift(top, zl + 0.05)
+            belt = lift(belt, zl + 0.035)
     plan = s.get('plan', [(0, 1), (L, 1)])
-    roofw = s.get('roofw', 0.78)  # roof half width as a fraction of the body
+    roofw = s.get('roofw', 0.78) + s.get('roofwiden', 0.05)  # roof half width as a fraction of the body
     bulge = s.get('bulge', 0.035)
-    endr = s.get('endr', (0.4, 0.4))  # plan corner radius at nose and tail
-    endk = s.get('endk', (0.8, 0.85))  # width left at the very ends
+    endr = s.get('endr', (0.32, 0.3))  # plan corner radius at nose and tail
+    endk = s.get('endk', (0.86, 0.9))  # width left at the very ends
     wheels = s['wheels']
-    archr = s.get('archr', 0.08)  # arch clearance over the tyre
+    archr = s.get('archr', 0.05)  # arch clearance over the tyre
     liner = s.get('liner', 0.3)
     glass_rows = s.get('glass', True)
 
@@ -280,19 +288,20 @@ def body(B, s, lod):
         if not glass_rows:
             g = 0
         wr = w * roofw
-        rnd = s.get('roofround', 0.07)
+        rnd = s.get('roofround', 0.055)
         cabin = [
-            (w * (1 - bulge * 1.4) - 0.04, zs + 0.03),
-            (wr + 0.035, zt - 0.12),
+            (w * (1 - bulge * 1.4) - 0.015, zs + 0.025),
+            (wr + 0.02, zt - 0.1),
             (wr, zt - rnd),
             (wr - rnd * 0.7, zt - 0.012),
             (wr * 0.5, zt),
             (0.0, zt + 0.006),
         ]
-        bx = [0.93, 0.78, 0.62, 0.48, 0.26, 0.0]
-        bz = [0.08, 0.4, 0.66, 0.84, 0.96, 1.0]
+        # Over the bonnet and boot: a wide, gently crowned surface.
+        bx = [0.95, 0.88, 0.74, 0.56, 0.3, 0.0]
+        bz = [0.1, 0.45, 0.72, 0.88, 0.97, 1.0]
         crown = s.get('crown', 0.04)
-        zones = ['glass', 'glass', 'roofedge', 'roof', 'roof', 'roof']
+        zones = ['glass', 'glasstop', 'roofedge', 'roof', 'roof', 'roof']
         for (cx, cz), fx, fz, zn in zip(cabin, bx, bz, zones):
             x = lerp(w * fx, cx, g)
             z = lerp(zs + (zt - zs) * fz + crown * fz, cz, g)
@@ -332,10 +341,16 @@ def body(B, s, lod):
             if g > 0.5 and (in_ranges(um, windows)):
                 return 'trim', None
             return 'paint', None
-        if zone == 'glass':
+        if zone in ('glass', 'glasstop'):
             if g > 0.3 and in_ranges(um, windows):
                 return 'glass', None
-            if g > 0.3 and (ws and ws[0] <= um <= ws[1] or rs and rs[0] <= um <= rs[1]):
+            # Beside the windscreen: the screen wraps round to a slim pillar
+            # on the roof corner, not a broad painted wedge.
+            if g > 0.3 and ws and ws[0] <= um <= ws[1]:
+                if zone == 'glass':
+                    return 'glass', None
+                return pillar, (BLACK if pillar == 'detail' else None)
+            if g > 0.3 and rs and rs[0] <= um <= rs[1]:
                 return pillar, (BLACK if pillar == 'detail' else None)
             return 'paint', None
         if zone in ('roofedge', 'roof'):
@@ -541,6 +556,8 @@ def plates(B, s, lod, uk=False):
     """Number plates front and rear, on the fascia."""
     L = s['L']
     pf, pr = s.get('plates', (0.45, 0.55))
+    if pf and getattr(s.get('front'), 'plate', None):
+        pf = s['front'].plate
     w, h = (0.52, 0.11)
     if pf:
         box(B, 'detail', PLATE_W, (w, 0.015, h), (0, L / 2 + 0.005 - s.get('platefin', 0.0), pf), 0.004 if lod == 0 else 0)
@@ -590,7 +607,7 @@ def interior(B, s, u0, u1, z0, z1, w):
 
 
 # ---------------------------------------------------------------- AO bake
-def bake_ao(obj, wheels, rays=24, dist=0.9, strength=0.85):
+def bake_ao(obj, wheels, rays=24, dist=0.9, strength=0.6):
     """Multiplies each face corner's colour by ambient occlusion, sampled per
     vertex against the body and its wheels."""
     me = obj.data
@@ -742,14 +759,24 @@ def lamp_spec(u0, u1, z0, z1, c):
     return {'u0': u0, 'u1': u1, 'z0': z0, 'z1': z1, 'c': c}
 
 
-def std_front(lamp_z, grille_z, bumper_z, intake=True, lamp_x=0.56):
-    """Fascia zones: (x0, x1, z0, z1, material, colour) as fractions of half width."""
-    z = [
+class Zones(list):
+    """Fascia zones, plus where the number plate goes (plate z)."""
+    plate = None
+
+
+def std_front(lamp_z, grille_z, bumper_z, intake=True, lamp_x=0.46, tall=False):
+    """Fascia zones: (x0, x1, z0, z1, material, colour) as fractions of half
+    width. Lamps joined by a slim grille, a body-colour bumper carrying the
+    plate, and a lower intake with corner vents."""
+    gz0 = grille_z[0] if tall else max(grille_z[0], lamp_z[0] + 0.015)
+    z = Zones([
         (lamp_x, 1.01, lamp_z[0], lamp_z[1], 'lamp', HEAD),
-        (0.0, lamp_x, grille_z[0], grille_z[1], 'trim', None),
-        (0.0, 0.62, 0.0, bumper_z, 'detail', BLACK) if intake else (0, 0, 9, 9, 'paint'),
+        (0.0, lamp_x, gz0, lamp_z[1] - 0.012, 'trim', None),
+        (0.0, 0.58, 0.19, bumper_z - 0.04, 'detail', BLACK) if intake else (0, 0, 9, 9, 'paint'),
+        (0.74, 0.93, 0.21, bumper_z - 0.06, 'detail', BLACK) if intake else (0, 0, 9, 9, 'paint'),
         (0.0, 1.01, 0.0, 0.18, 'detail', BLACK),
-    ]
+    ])
+    z.plate = bumper_z - 0.12 if tall else (bumper_z + lamp_z[0]) / 2
     return z
 
 
@@ -767,24 +794,24 @@ def spec_hatch():
     L, W = 4.05, 1.76
     r = 0.31
     s = dict(kind='car', name='hatch', L=L, W=W, H=1.47)
-    s['wheels'] = car_wheels(L, 0.78, 0.66, r, 1.52)
-    s['top'] = [(0, 0.62), (0.12, 0.72), (0.8, 0.86), (1.05, 0.9), (1.75, 1.43), (2.1, 1.47), (3.3, 1.44), (3.75, 1.36), (3.98, 1.05), (4.05, 0.98)]
-    s['belt'] = [(0, 0.6), (0.15, 0.7), (1.0, 0.86), (1.8, 0.92), (3.5, 0.96), (3.95, 0.95), (4.05, 0.93)]
+    s['wheels'] = car_wheels(L, 0.8, 0.68, r, 1.52)
+    s['top'] = [(0, 0.8), (0.12, 0.85), (0.5, 0.91), (0.95, 0.98), (1.85, 1.42), (2.15, 1.47), (3.3, 1.45), (3.72, 1.38), (3.98, 1.08), (4.05, 1.0)]
+    s['belt'] = [(0, 0.78), (0.15, 0.83), (0.95, 0.95), (1.8, 0.98), (3.5, 1.02), (3.95, 1.0), (4.05, 0.98)]
     s['sill'] = [(0, 0.24), (0.3, 0.2), (L - 0.3, 0.2), (L, 0.26)]
-    s['plan'] = [(0, 0.88), (0.5, 0.97), (1.2, 1), (3.2, 1), (L, 0.94)]
+    s['plan'] = [(0, 0.9), (0.5, 0.97), (1.2, 1), (3.2, 1), (L, 0.94)]
     s['roofw'] = 0.8
-    s['windscreen'] = (1.08, 1.72)
-    s['rearscreen'] = (3.68, 3.96)
-    s['windows'] = [(1.78, 2.6), (2.68, 3.36)]
-    s['seams'] = [1.06, 2.64, 3.4]
-    s['rows'] = [0.35, 0.5, 0.62, 0.72, 0.8]
-    s['front'] = std_front((0.66, 0.8), (0.5, 0.66), 0.35)
-    s['rear'] = std_rear((0.8, 0.96), 0.4, 0.55)
-    s['lamps'] = [lamp_spec(0, 0.16, 0.66, 0.8, HEAD), lamp_spec(L - 0.1, L, 0.8, 1.0, TAIL)]
-    s['bands'] = [(0, 0.3, 0.2, 0.34, 'detail', BLACK), (L - 0.3, L, 0.2, 0.4, 'detail', BLACK)]
+    s['windscreen'] = (0.97, 1.84)
+    s['rearscreen'] = (3.66, 3.96)
+    s['windows'] = [(1.9, 2.62), (2.7, 3.38)]
+    s['seams'] = [0.95, 2.66, 3.42]
+    s['rows'] = [0.35, 0.5, 0.63, 0.75, 0.86]
+    s['front'] = std_front((0.63, 0.75), (0.42, 0.63), 0.36)
+    s['rear'] = std_rear((0.82, 0.96), 0.42, 0.55)
+    s['lamps'] = [lamp_spec(0, 0.2, 0.63, 0.75, HEAD), lamp_spec(L - 0.1, L, 0.82, 0.96, TAIL)]
+    s['bands'] = [(0, 0.3, 0.2, 0.36, 'detail', BLACK), (L - 0.3, L, 0.2, 0.42, 'detail', BLACK)]
     s['plates'] = (0.44, 0.58)
-    s['mirror'] = (1.82, 0.93)
-    s['handles'] = [2.25, 3.05]
+    s['mirror'] = (1.95, 0.99)
+    s['handles'] = [2.3, 3.08]
     s['rails'] = None
     s['spoiler'] = True
     return s
@@ -795,17 +822,17 @@ def spec_city():
     L, W = 3.6, 1.66
     s.update(name='city', L=L, W=W, H=1.5)
     s['wheels'] = car_wheels(L, 0.66, 0.55, 0.29, 1.44)
-    s['top'] = [(0, 0.64), (0.12, 0.75), (0.65, 0.9), (0.85, 0.94), (1.5, 1.48), (1.8, 1.52), (3.0, 1.49), (3.35, 1.42), (3.55, 1.1), (3.6, 1.02)]
-    s['belt'] = [(0, 0.62), (0.15, 0.73), (0.85, 0.9), (1.6, 0.95), (3.2, 0.98), (3.6, 0.96)]
-    s['windscreen'] = (0.88, 1.47)
+    s['top'] = [(0, 0.78), (0.1, 0.83), (0.4, 0.88), (0.75, 0.95), (1.55, 1.46), (1.85, 1.52), (3.0, 1.49), (3.35, 1.42), (3.55, 1.1), (3.6, 1.02)]
+    s['belt'] = [(0, 0.76), (0.12, 0.8), (0.75, 0.93), (1.6, 0.97), (3.2, 1.0), (3.6, 0.97)]
+    s['windscreen'] = (0.77, 1.52)
     s['rearscreen'] = (3.3, 3.54)
-    s['windows'] = [(1.53, 2.28), (2.36, 3.02)]
-    s['seams'] = [0.86, 2.32, 3.06]
+    s['windows'] = [(1.58, 2.3), (2.38, 3.04)]
+    s['seams'] = [0.75, 2.34, 3.08]
     s['rear'] = std_rear((0.85, 1.05), 0.42, 0.55)
-    s['lamps'] = [lamp_spec(0, 0.15, 0.68, 0.82, HEAD), lamp_spec(L - 0.1, L, 0.85, 1.05, TAIL)]
+    s['lamps'] = [lamp_spec(0, 0.18, 0.63, 0.75, HEAD), lamp_spec(L - 0.1, L, 0.85, 1.05, TAIL)]
     s['bands'] = [(0, 0.25, 0.2, 0.34, 'detail', BLACK), (L - 0.25, L, 0.2, 0.4, 'detail', BLACK)]
-    s['mirror'] = (1.58, 0.96)
-    s['handles'] = [2.0, 2.75]
+    s['mirror'] = (1.62, 0.98)
+    s['handles'] = [2.05, 2.78]
     s['roofmat'] = 'paint'
     return s
 
@@ -814,25 +841,25 @@ def spec_saloon():
     L, W = 4.75, 1.82
     r = 0.33
     s = dict(kind='car', name='saloon', L=L, W=W, H=1.44)
-    s['wheels'] = car_wheels(L, 0.9, 0.98, r, 1.58)
-    s['top'] = [(0, 0.62), (0.12, 0.72), (1.2, 0.86), (1.45, 0.89), (2.15, 1.39), (2.45, 1.43), (3.3, 1.4), (3.95, 1.05), (4.55, 1.0), (4.75, 0.92)]
-    s['belt'] = [(0, 0.6), (0.15, 0.7), (1.4, 0.86), (2.2, 0.9), (3.9, 0.98), (4.6, 0.97), (4.75, 0.92)]
+    s['wheels'] = car_wheels(L, 0.88, 1.02, r, 1.58)
+    s['top'] = [(0, 0.74), (0.12, 0.8), (0.6, 0.9), (1.45, 1.0), (2.3, 1.4), (2.6, 1.44), (3.25, 1.42), (3.95, 1.08), (4.5, 1.04), (4.75, 0.98)]
+    s['belt'] = [(0, 0.72), (0.15, 0.78), (1.45, 0.97), (2.3, 1.0), (3.9, 1.05), (4.6, 1.03), (4.75, 0.98)]
     s['sill'] = [(0, 0.25), (0.3, 0.2), (L - 0.3, 0.2), (L, 0.28)]
     s['plan'] = [(0, 0.86), (0.5, 0.97), (1.3, 1), (3.6, 1), (L, 0.93)]
     s['roofw'] = 0.79
-    s['windscreen'] = (1.48, 2.12)
-    s['rearscreen'] = (3.35, 3.9)
-    s['windows'] = [(2.18, 2.98), (3.06, 3.62)]
-    s['seams'] = [1.45, 3.02, 3.72, 3.97]
+    s['windscreen'] = (1.47, 2.28)
+    s['rearscreen'] = (3.3, 3.92)
+    s['windows'] = [(2.34, 3.06), (3.12, 3.7)]
+    s['seams'] = [1.45, 3.09, 3.95]
     s['seamroof'] = True
-    s['rows'] = [0.36, 0.5, 0.62, 0.72, 0.8, 0.9]
-    s['front'] = std_front((0.64, 0.78), (0.48, 0.64), 0.34)
-    s['rear'] = std_rear((0.78, 0.92), 0.45, 0.5)
-    s['lamps'] = [lamp_spec(0, 0.2, 0.64, 0.78, HEAD), lamp_spec(L - 0.16, L, 0.78, 0.96, TAIL)]
+    s['rows'] = [0.36, 0.5, 0.62, 0.74, 0.84, 0.94]
+    s['front'] = std_front((0.62, 0.74), (0.5, 0.62), 0.36)
+    s['rear'] = std_rear((0.82, 0.96), 0.45, 0.5)
+    s['lamps'] = [lamp_spec(0, 0.22, 0.62, 0.74, HEAD), lamp_spec(L - 0.16, L, 0.82, 0.98, TAIL)]
     s['bands'] = [(0, 0.3, 0.2, 0.33, 'detail', BLACK), (L - 0.3, L, 0.2, 0.42, 'detail', BLACK)]
     s['plates'] = (0.44, 0.6)
-    s['mirror'] = (2.2, 0.92)
-    s['handles'] = [2.62, 3.4]
+    s['mirror'] = (2.36, 0.99)
+    s['handles'] = [2.75, 3.5]
     return s
 
 
@@ -840,15 +867,15 @@ def spec_estate():
     s = spec_saloon()
     L = 4.8
     s.update(name='estate', L=L, H=1.5)
-    s['wheels'] = car_wheels(L, 0.9, 0.98, 0.33, 1.58)
-    s['top'] = [(0, 0.62), (0.12, 0.72), (1.2, 0.86), (1.45, 0.89), (2.15, 1.42), (2.45, 1.47), (4.3, 1.44), (4.62, 1.36), (4.76, 1.05), (4.8, 0.98)]
-    s['belt'] = [(0, 0.6), (0.15, 0.7), (1.4, 0.86), (2.2, 0.9), (4.6, 0.97), (4.8, 0.95)]
+    s['wheels'] = car_wheels(L, 0.88, 1.02, 0.33, 1.58)
+    s['top'] = [(0, 0.74), (0.12, 0.8), (0.6, 0.9), (1.45, 1.0), (2.3, 1.42), (2.6, 1.47), (4.35, 1.44), (4.64, 1.36), (4.76, 1.08), (4.8, 1.0)]
+    s['belt'] = [(0, 0.72), (0.15, 0.78), (1.45, 0.97), (2.3, 1.0), (4.6, 1.05), (4.8, 1.02)]
     s['rearscreen'] = (4.6, 4.76)
-    s['windows'] = [(2.18, 2.98), (3.06, 3.7), (3.78, 4.45)]
-    s['seams'] = [1.45, 3.02, 3.74, 4.66]
+    s['windows'] = [(2.34, 3.06), (3.12, 3.75), (3.83, 4.48)]
+    s['seams'] = [1.45, 3.09, 3.79, 4.66]
     s['seamroof'] = False
-    s['rear'] = std_rear((0.84, 1.0), 0.45, 0.55)
-    s['lamps'] = [lamp_spec(0, 0.2, 0.64, 0.78, HEAD), lamp_spec(L - 0.12, L, 0.84, 1.02, TAIL)]
+    s['rear'] = std_rear((0.86, 1.02), 0.45, 0.55)
+    s['lamps'] = [lamp_spec(0, 0.22, 0.62, 0.74, HEAD), lamp_spec(L - 0.12, L, 0.86, 1.04, TAIL)]
     s['rails'] = (2.3, 4.5)
     return s
 
@@ -857,23 +884,23 @@ def spec_coupe():
     L, W = 4.45, 1.85
     s = dict(kind='car', name='coupe', L=L, W=W, H=1.28)
     s['wheels'] = car_wheels(L, 0.92, 0.8, 0.33, 1.6)
-    s['top'] = [(0, 0.55), (0.12, 0.64), (1.25, 0.8), (1.5, 0.82), (2.2, 1.24), (2.55, 1.28), (3.1, 1.22), (3.9, 0.94), (4.35, 0.9), (4.45, 0.84)]
-    s['belt'] = [(0, 0.53), (0.15, 0.62), (1.45, 0.8), (2.3, 0.86), (3.9, 0.9), (4.45, 0.84)]
+    s['top'] = [(0, 0.66), (0.12, 0.71), (0.6, 0.78), (1.45, 0.87), (2.3, 1.24), (2.6, 1.28), (3.1, 1.23), (3.95, 0.96), (4.35, 0.93), (4.45, 0.88)]
+    s['belt'] = [(0, 0.64), (0.15, 0.69), (1.45, 0.86), (2.3, 0.9), (3.9, 0.94), (4.45, 0.88)]
     s['sill'] = [(0, 0.2), (0.3, 0.16), (L - 0.3, 0.16), (L, 0.24)]
     s['plan'] = [(0, 0.84), (0.6, 0.97), (1.4, 1), (3.2, 1.0), (L, 0.92)]
     s['roofw'] = 0.72
-    s['windscreen'] = (1.52, 2.18)
-    s['rearscreen'] = (3.12, 3.85)
-    s['windows'] = [(2.24, 3.06)]
-    s['seams'] = [1.5, 3.1]
+    s['windscreen'] = (1.47, 2.26)
+    s['rearscreen'] = (3.14, 3.9)
+    s['windows'] = [(2.32, 3.08)]
+    s['seams'] = [1.45, 3.12]
     s['seamroof'] = True
-    s['rows'] = [0.3, 0.44, 0.56, 0.66, 0.74]
-    s['front'] = std_front((0.58, 0.7), (0.3, 0.52), 0.3, lamp_x=0.5)
+    s['rows'] = [0.3, 0.44, 0.54, 0.64, 0.76]
+    s['front'] = std_front((0.54, 0.64), (0.3, 0.52), 0.3, lamp_x=0.5)
     s['rear'] = std_rear((0.7, 0.84), 0.38, 0.45)
-    s['lamps'] = [lamp_spec(0, 0.24, 0.58, 0.7, HEAD), lamp_spec(L - 0.18, L, 0.7, 0.86, TAIL)]
+    s['lamps'] = [lamp_spec(0, 0.24, 0.54, 0.64, HEAD), lamp_spec(L - 0.18, L, 0.7, 0.86, TAIL)]
     s['bands'] = [(0, 0.3, 0.16, 0.28, 'detail', BLACK), (L - 0.3, L, 0.16, 0.34, 'detail', BLACK)]
     s['plates'] = (0.4, 0.55)
-    s['mirror'] = (2.25, 0.86)
+    s['mirror'] = (2.33, 0.9)
     s['handles'] = [2.85]
     s['spoiler'] = 'boot'
     s['pillar'] = 'paint'
@@ -885,23 +912,23 @@ def spec_suv():
     r = 0.37
     s = dict(kind='car', name='suv', L=L, W=W, H=1.7)
     s['wheels'] = car_wheels(L, 0.92, 0.88, r, 1.62)
-    s['top'] = [(0, 0.78), (0.12, 0.92), (1.0, 1.06), (1.3, 1.1), (1.95, 1.64), (2.25, 1.7), (4.1, 1.67), (4.45, 1.58), (4.57, 1.2), (4.6, 1.12)]
-    s['belt'] = [(0, 0.76), (0.15, 0.9), (1.3, 1.06), (2.0, 1.1), (4.3, 1.15), (4.6, 1.12)]
+    s['top'] = [(0, 0.98), (0.12, 1.03), (0.5, 1.08), (1.25, 1.16), (2.05, 1.64), (2.35, 1.7), (4.1, 1.67), (4.45, 1.58), (4.57, 1.22), (4.6, 1.14)]
+    s['belt'] = [(0, 0.96), (0.15, 1.01), (1.25, 1.13), (2.0, 1.16), (4.3, 1.2), (4.6, 1.16)]
     s['sill'] = [(0, 0.38), (0.35, 0.32), (L - 0.35, 0.32), (L, 0.42)]
     s['plan'] = [(0, 0.9), (0.5, 0.98), (1.2, 1), (3.6, 1), (L, 0.96)]
     s['roofw'] = 0.82
-    s['windscreen'] = (1.33, 1.92)
+    s['windscreen'] = (1.27, 2.02)
     s['rearscreen'] = (4.42, 4.57)
-    s['windows'] = [(2.0, 2.85), (2.93, 3.6), (3.68, 4.28)]
-    s['seams'] = [1.3, 2.89, 3.64, 4.5]
-    s['rows'] = [0.45, 0.6, 0.78, 0.9, 1.0]
-    s['front'] = std_front((0.84, 0.98), (0.62, 0.84), 0.5)
+    s['windows'] = [(2.1, 2.9), (2.98, 3.64), (3.72, 4.28)]
+    s['seams'] = [1.25, 2.94, 3.68, 4.5]
+    s['rows'] = [0.45, 0.6, 0.72, 0.86, 0.98, 1.06]
+    s['front'] = std_front((0.86, 0.98), (0.62, 0.86), 0.56)
     s['rear'] = std_rear((0.98, 1.14), 0.56, 0.55)
-    s['lamps'] = [lamp_spec(0, 0.2, 0.84, 0.98, HEAD), lamp_spec(L - 0.12, L, 0.98, 1.15, TAIL)]
+    s['lamps'] = [lamp_spec(0, 0.2, 0.86, 0.98, HEAD), lamp_spec(L - 0.12, L, 0.98, 1.15, TAIL)]
     # Black cladding round the arches and sills.
     s['bands'] = [(0, L, 0.3, 0.46, 'detail', GREY)]
     s['plates'] = (0.56, 0.72)
-    s['mirror'] = (2.0, 1.12)
+    s['mirror'] = (2.1, 1.18)
     s['handles'] = [2.45, 3.25]
     s['rails'] = (2.1, 4.3)
     s['archr'] = 0.1
@@ -950,24 +977,24 @@ def spec_pickup():
     r = 0.38
     s = dict(kind='car', name='pickup', L=L, W=W, H=1.82)
     s['wheels'] = car_wheels(L, 0.92, 1.2, r, 1.58)
-    s['top'] = [(0, 0.86), (0.1, 1.0), (1.1, 1.14), (1.35, 1.18), (1.95, 1.76), (2.2, 1.8), (3.2, 1.78), (3.28, 1.3), (5.3, 1.22)]
-    s['belt'] = [(0, 0.84), (0.1, 0.98), (1.35, 1.14), (2.0, 1.18), (3.3, 1.2), (5.3, 1.22)]
+    s['top'] = [(0, 1.1), (0.12, 1.15), (1.3, 1.24), (2.0, 1.76), (2.25, 1.8), (3.2, 1.78), (3.28, 1.3), (5.3, 1.24)]
+    s['belt'] = [(0, 1.08), (0.12, 1.13), (1.3, 1.21), (2.0, 1.22), (3.3, 1.23), (5.3, 1.24)]
     s['sill'] = [(0, 0.44), (0.3, 0.4), (L - 0.3, 0.4), (L, 0.5)]
     s['plan'] = [(0, 0.92), (0.4, 0.98), (1.0, 1), (L, 1)]
     s['endr'] = (0.3, 0.1)
     s['endk'] = (0.85, 0.97)
     s['roofw'] = 0.82
-    s['windscreen'] = (1.38, 1.92)
+    s['windscreen'] = (1.33, 1.97)
     s['rearscreen'] = (3.2, 3.28)
-    s['windows'] = [(2.0, 2.62), (2.7, 3.12)]
-    s['seams'] = [1.35, 2.66, 3.18, 3.36]
-    s['rows'] = [0.55, 0.7, 0.88, 1.0, 1.08]
-    s['front'] = std_front((0.9, 1.06), (0.62, 0.9), 0.58, lamp_x=0.62)
+    s['windows'] = [(2.04, 2.64), (2.72, 3.12)]
+    s['seams'] = [1.3, 2.68, 3.18, 3.36]
+    s['rows'] = [0.55, 0.66, 0.8, 0.96, 1.08, 1.16]
+    s['front'] = std_front((0.96, 1.08), (0.66, 1.06), 0.6, lamp_x=0.62, tall=True)
     s['rear'] = std_rear((0.85, 1.15), 0.6, 0.86)
-    s['lamps'] = [lamp_spec(0, 0.16, 0.9, 1.06, HEAD), lamp_spec(L - 0.06, L, 0.85, 1.15, TAIL)]
+    s['lamps'] = [lamp_spec(0, 0.16, 0.96, 1.08, HEAD), lamp_spec(L - 0.06, L, 0.85, 1.15, TAIL)]
     s['bands'] = [(0, L, 0.36, 0.5, 'detail', BLACK)]
     s['plates'] = (0.66, 0.7)
-    s['mirror'] = (2.05, 1.2)
+    s['mirror'] = (2.1, 1.24)
     s['handles'] = [2.4, 3.0]
     s['bed'] = (3.3, 5.24)
     s['roofzones'] = [(3.32, 5.25, 'detail', BLACK)]  # tonneau cover over the bed
@@ -1170,9 +1197,9 @@ def spec_police():
 
 def spec_ambulance():
     s = spec_van()
-    s.update(name='ambulance', H=2.7)
+    s.update(name='ambulance', H=2.5)
     L = s['L']
-    s['top'] = [(0, 0.82), (0.12, 0.98), (0.75, 1.18), (0.9, 1.22), (1.5, 2.3), (1.7, 2.62), (5.15, 2.66), (5.3, 2.6)]
+    s['top'] = [(0, 0.82), (0.12, 0.98), (0.75, 1.18), (0.9, 1.22), (1.5, 2.3), (1.8, 2.48), (5.15, 2.5), (5.3, 2.44)]
     s['windows'] = [(1.52, 2.3)]
     s['ladder'] = False
     s['livery'] = battenburg(2.4, L - 0.1, 0.55, 1.15, HIVIS_G, HIVIS_Y, 0.5)
@@ -1180,7 +1207,7 @@ def spec_ambulance():
     s['rows'] = sorted(set(s['rows'] + [0.55, 0.85, 1.15]))
     s['front'] = s['front'] + [(0.0, 1.01, 0.45, 0.6, 'detail', HIVIS_G)]
     s['lightbar'] = (1.9, None)
-    s['beacons'] = [(L - 0.15, 2.66)]
+    s['beacons'] = [(L - 0.15, 2.5)]
     return s
 
 
@@ -1549,7 +1576,12 @@ def build_lofted(s, lod):
         zb = interp(s['belt'], u_d)
         z_top = interp(s['top'], u_d)
         w = hw_at(u_d)
-        interior(B, dict(s, L=Lf), ws[1] - 0.1, (s['rearscreen'][0] if s.get('rearscreen') else Lf) - 0.2, zb - 0.25, z_top - 0.08, w * 0.88)
+        # Start the interior where the roof clears it, or it pokes through
+        # the roof above the windscreen as a dark brow.
+        u_i = ws[1] - 0.1
+        while u_i < u_d and interp(s['top'], u_i) < z_top - 0.02:
+            u_i += 0.03
+        interior(B, dict(s, L=Lf), u_i, (s['rearscreen'][0] if s.get('rearscreen') else Lf) - 0.2, zb - 0.25, z_top - 0.08, w * 0.88)
         driver(B, dict(s, L=Lf), u_d + 0.15, min(zb + 0.05, z_top - 0.58), -0.38 if s.get('uk') else 0.38)
     if s.get('cabover') or s['kind'] == 'bus':
         if lod == 0:
@@ -1749,6 +1781,9 @@ def build_all(only=None):
                 s = SPECS[name]()
                 for w in s['wheels']:
                     w.setdefault('style', default_wheel(s))
+                    if s['kind'] in ('car', 'van'):
+                        # Tyres flush with the body sides, not tucked inside.
+                        w['x'] = max(w['x'], s['W'] / 2 - w['w'] / 2 - 0.012)
                 B = build_lofted(s, lod)
             objs.append(finish_vehicle(s, B, lod))
     return objs

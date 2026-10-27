@@ -318,7 +318,7 @@ export class Traffic {
       c.v += clamp(vt - c.v, -6 * dt, accel * dt);
       c.s += c.v * c.dir * dt;
       this.place(c, dt);
-      c.lamps.head = 0.25 + night * 3.5;
+      c.lamps.head = 0.06 + night * 3.5;
       c.lamps.tail = (c.braking ? 2.6 : 0.35) + night * 0.9;
       if (c.beacon >= 0) {
         c.beacon += dt;

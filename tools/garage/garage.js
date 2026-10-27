@@ -43,7 +43,7 @@ const rand = mulberry32(+(P.get('seed') || 1));
 const ANG = { fq: [-0.7, 0.32], side: [Math.PI / 2, 0.08], rq: [-2.4, 0.3], front: [0, 0.12], rear: [Math.PI, 0.12], top: [-0.6, 1.1] };
 types.forEach((type, row) => {
   const meta = fleet.meta(type);
-  const car = { type, x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, spin: 0, ...sampleLook(type, rand), lamps: { head: 0.25 + night * 3.5, tail: 0.35 + night, amber: 0.3 + night } };
+  const car = { type, x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, spin: 0, ...sampleLook(type, rand), lamps: { head: 0.06 + night * 3.5, tail: 0.35 + night, amber: 0.3 + night } };
   fleet.update([car], camera);
   views.forEach((v, col) => {
     const [a, e] = ANG[v];
