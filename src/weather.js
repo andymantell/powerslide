@@ -85,7 +85,8 @@ export class Precipitation {
         void main() {
           float across = 1.0 - abs(vUv.x * 2.0 - 1.0);
           #ifdef SNOW
-            float a = smoothstep(0.0, 0.6, across) * smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.7, vUv.y) * 0.9;
+            // A soft round flake, stretched a little along its motion.
+            float a = smoothstep(1.0, 0.35, length(vec2(vUv.x * 2.0 - 1.0, vUv.y * 2.0 - 1.0))) * 0.9;
           #else
             float a = across * smoothstep(0.0, 0.4, vUv.y) * smoothstep(1.0, 0.8, vUv.y) * 0.45;
           #endif

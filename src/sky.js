@@ -61,7 +61,7 @@ export const TIME = {
 export const WEATHER = {
   clear: {},
   cloudy: { cloudCover: 0.86, sunIntensity: 0.45, envIntensity: 1.35, grey: 0.45, fogScale: 1.4, cloudSun: 0.75 },
-  mist: { cloudCover: 0.72, sunIntensity: 0.5, envIntensity: 1.3, grey: 0.55, fogScale: 5 },
+  mist: { cloudCover: 0.72, sunIntensity: 0.5, envIntensity: 1.3, grey: 0.7, fogScale: 5, cloudAmb: 1.5, cloudSun: 0.6 },
   rain: { cloudCover: 0.97, sunIntensity: 0.22, envIntensity: 1.15, grey: 0.75, dim: 0.72, fogScale: 2.6, wet: 1, precip: 1, cloudSun: 0.3, cloudAmb: 0.85 },
   snow: { cloudCover: 0.93, sunIntensity: 0.3, envIntensity: 1.4, grey: 0.8, fogScale: 3, precip: 1, snow: true, cloudSun: 0.45 },
 };

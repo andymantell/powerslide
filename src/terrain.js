@@ -126,7 +126,7 @@ export class Terrain {
     const snowLine = this.snowLine + this.noise3(x / 150, z / 150) * 50;
     out.v = v;
     out.v2 = v2;
-    out.snow = smoothstep(snowLine, snowLine + 40, rel) * smoothstep(0.55, 0.75, ny);
+    out.snow = smoothstep(snowLine, snowLine + 40, rel) * (this.snowCover ? smoothstep(0.4, 0.6, ny) : smoothstep(0.55, 0.75, ny));
     out.gravel = 1 - smoothstep(5.6, 7.6 + v * 1.5, dist);
     out.rock = rock;
     return out;
@@ -296,6 +296,9 @@ export class Terrain {
     this.relief = g.relief ?? 1;
     this.maxRelief = g.maxRelief ?? Infinity; // caps the far hills (m)
     this.snowLine = g.snowLine ?? 240;
+    // Snowing (ENV.snow): white everywhere but the steepest banks.
+    this.snowCover = !!g.snowCover;
+    if (this.snowCover) this.snowLine = Math.min(this.snowLine, -260);
     this.treeDensity = g.treeDensity ?? 1;
   }
 

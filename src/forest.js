@@ -6,6 +6,14 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { groundTexture, trackLoad } from './ground.js';
+import { ENV } from './sky.js';
+
+// When it's snowing, needles facing the sky carry a layer of snow.
+const snowOnTop = () => `
+  if (${ENV.snow ? 1 : 0} == 1) {
+    float snowUp = dot(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz));
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.89, 0.93), smoothstep(0.4, 0.85, snowUp) * 0.75);
+  }`;
 
 const MODEL = new URL('./assets/models/conifers.glb', import.meta.url).href;
 const TWIG = new URL('./assets/textures/spruce_twig.png', import.meta.url).href;
@@ -86,11 +94,11 @@ export class Forest {
     this.foliageMat.onBeforeCompile = (s) => {
       s.fragmentShader = s.fragmentShader.replace(
         '#include <normal_fragment_begin>',
-        '#include <normal_fragment_begin>\n  normal = normalize(vNormal);',
+        '#include <normal_fragment_begin>\n  normal = normalize(vNormal);' + snowOnTop(),
       );
       boostAlpha(s);
     };
-    this.foliageMat.customProgramCacheKey = () => 'foliage';
+    this.foliageMat.customProgramCacheKey = () => `foliage-${ENV.snow}`;
     this.barkMat = new THREE.MeshStandardMaterial({
       map: groundTexture('bark', 'albedo', renderer),
       normalMap: groundTexture('bark', 'normal', renderer),
@@ -279,7 +287,7 @@ export class Forest {
               // normals read frosty compared with the real trees.
               wn = normalize(mix(vBbF, wn, 0.8));
               normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz);
-            }`,
+            }` + snowOnTop(),
           );
         s.vertexShader = s.vertexShader
           .replace('#include <common>', '#include <common>\nvarying vec3 vBbR, vBbF;')
@@ -304,7 +312,7 @@ export class Forest {
             gl_Position = projectionMatrix * mvPosition;`,
           );
       };
-      mat.customProgramCacheKey = () => `impostor-${i}-${halfW}`;
+      mat.customProgramCacheKey = () => `impostor-${i}-${halfW}-${ENV.snow}`;
       const m = new THREE.InstancedMesh(geo, mat, MAX_IMP);
       m.count = 0;
       m.frustumCulled = false;

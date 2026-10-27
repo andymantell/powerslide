@@ -85,7 +85,7 @@ const road = new Road(1);
 road.ensure(START_S + 200);
 // Falling snow settles everywhere, not just on the peaks.
 const groundSet = { ...pick(GROUND_SETS, look.ground) };
-if (ENV.snow) groundSet.snowLine = Math.min(groundSet.snowLine ?? 240, -20);
+groundSet.snowCover = ENV.snow;
 const terrain = new Terrain(scene, road, 12, Q, renderer, groundSet);
 const forest = new Forest(scene, renderer, Q, look.species);
 terrain.forest = forest;
