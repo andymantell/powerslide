@@ -15,13 +15,16 @@ import { MARKINGS } from './roadmat.js';
 import { Forest } from './forest.js';
 import { Boulders } from './boulders.js';
 import { Grass } from './grass.js';
+import { Props } from './props.js';
+import { Structures } from './structures.js';
+import { dressLevel } from './dressing.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
 import { registerOffline, keepSaves } from './pwa.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, autoQuality } from './settings.js';
 import { lookOf } from './biomes.js';
-import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, NORMAL } from './endless.js';
+import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, levelMix } from './endless.js';
 import { setRoadSurface } from './roadmat.js';
 import { Extras } from './extras.js';
 import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
@@ -57,7 +60,7 @@ if (shared) {
 }
 // Endless rides in the biome its setup picks.
 const endlessLook = () => lookOf(derive(endless).biome);
-const look = bootLevel ? lookOf(biomeOf(bootLevel)) : endlessLook();
+const look = bootLevel ? lookOf(biomeOf(bootLevel), bootLevel) : endlessLook();
 const pick = (map, key) => map[key] || map.alpine;
 
 const scene = new THREE.Scene();
@@ -74,6 +77,8 @@ terrain.forest = forest;
 const boulders = new Boulders(scene, renderer, pick(GROUND_SETS, look.ground));
 terrain.boulders = boulders;
 const grass = new Grass(scene, renderer, terrain, Q);
+const props = new Props(scene, renderer, terrain);
+const structures = new Structures(scene, renderer, road, terrain, props, boulders);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
 const player = new Player(scene, road, terrain);
 const traffic = new Traffic(scene, road);
@@ -150,6 +155,7 @@ async function buildTiles() {
   }
   forest.update(player.pos.x, player.pos.z);
   boulders.update();
+  props.update(player.pos.x, player.pos.z, true);
   grass.fill(player.pos.x, player.pos.z);
   game.mode = prevMode;
 }
@@ -159,12 +165,19 @@ const setupKey = () => JSON.stringify({ ...endless, newRoad: null });
 // Swaps in the road for a level, or for endless the road its setup makes.
 async function loadWorld(level) {
   game.level = level;
-  const mix = level ? NORMAL : derive(endless);
+  const mix = level ? levelMix(level) : derive(endless);
   worldKey = level ? null : setupKey();
   game.seed = level ? level.seed : mix.seed;
   road.reset(game.seed, level, mix.shape);
   road.ensure(START_S + 7000);
-  terrain.reset(game.seed + 11);
+  terrain.reset(game.seed + 11, level?.terrain);
+  // Level set pieces and props shape the terrain, so they go in before any tiles build.
+  props.begin();
+  structures.plan(level);
+  dressLevel(level, road, props);
+  props.shape();
+  structures.build();
+  props.finish();
   grass.clear();
   roadMesh.clear();
   marks.clear();
@@ -288,8 +301,8 @@ async function toTitle() {
 
 async function selectLevel(level) {
   if (game.mode === 'loading') return;
-  if (JSON.stringify(lookOf(level && biomeOf(level))) !== JSON.stringify(look)) {
-    // Another biome's look: reload into it.
+  if (JSON.stringify(lookOf(level && biomeOf(level), level)) !== JSON.stringify(look)) {
+    // Another biome, time of day or weather: reload into it.
     location.search = `?level=${level ? level.id : 'endless'}`;
     return;
   }
@@ -1148,6 +1161,8 @@ function frame(now) {
   terrain.update(player.pos.x, player.pos.z, 4);
   forest.update(player.pos.x, player.pos.z);
   boulders.update();
+  props.update(player.pos.x, player.pos.z);
+  structures.update(dt);
   grass.update(player.pos.x, player.pos.z, now / 1000);
 
   // Sun & shadows follow the rider.
@@ -1203,4 +1218,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, props, structures, renderFrame: () => post.render() });

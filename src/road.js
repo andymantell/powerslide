@@ -17,6 +17,19 @@ export const RAIL_OFFSET = 4.9; // guardrail lateral offset
 export const MAX_HEADING = 1.15; // ~66 degrees
 export const START_S = 400; // where a run starts; the road behind is the approach
 const RUNOUT = 600; // straight past a level's finish
+export const RAIL_THRESHOLD = 0.3; // |cliff| above this gets a guardrail on the valley side
+
+// Which side gets a guardrail for a cliff value: the valley side (-1 left,
+// +1 right), or 0 for none.
+export function railSide(cliff) {
+  if (cliff > RAIL_THRESHOLD) return -1; // mountain right -> drop on the left
+  if (cliff < -RAIL_THRESHOLD) return 1;
+  return 0;
+}
+
+// Feature types that are structures carrying or covering the road; each
+// replaces the guardrail and verge along its stretch (see src/structures.js).
+export const SPAN_TYPES = { bridge: 'parapet', covered: 'wall', gallery: 'wall', stream: 'parapet' };
 
 export class Road {
   constructor(seed = 1337, level = null) {
@@ -41,6 +54,8 @@ export class Road {
     this.count = 0;
     // Patches of gravel/sand washed onto the asphalt, sorted by s.
     this.patches = [];
+    // Bridges, galleries and other structures along the road: { type, s0, s1, f }.
+    this.spans = [];
     this.level = level;
     this.start = START_S;
     this.finish = null;
@@ -62,6 +77,9 @@ export class Road {
       for (const f of level.features || []) {
         if (f.type === 'grit') {
           this.patches.push({ s: this.start + f.at, d: f.d ?? 0, len: f.len ?? 6, width: f.width ?? 1.5 });
+        } else if (SPAN_TYPES[f.type]) {
+          const [a, b] = spanRange(f);
+          this.spans.push({ type: f.type, s0: this.start + a, s1: this.start + b, f });
         }
       }
       this.patches.sort((a, b) => a.s - b.s);
@@ -197,6 +215,25 @@ export class Road {
       corners: Math.min(2, corners + 0.7 * w),
       sharp: Math.min(2, sharp + 0.8 * w),
     };
+  }
+
+  // The bridge or gallery at s, if any.
+  spanAt(s) {
+    for (const sp of this.spans) if (s >= sp.s0 && s <= sp.s1) return sp;
+    return null;
+  }
+
+  // The guardrail side drawn at sample i (structures bring their own walls).
+  railAt(i) {
+    return this.spans.length && this.spanAt(i * DS) ? 0 : railSide(this.c[i]);
+  }
+
+  // What stops you running off the road at s on a side (-1 left, +1 right):
+  // 'guardrail', a structure's 'wall' or 'parapet', or null for open verge.
+  barrierAt(s, side) {
+    const sp = this.spans.length ? this.spanAt(s) : null;
+    if (sp) return SPAN_TYPES[sp.type];
+    return railSide(this.c[clamp(Math.round(s / DS), 0, this.count - 1)]) === side ? 'guardrail' : null;
   }
 
   // 0..1 amount of grit under the wheels at (s, d).
@@ -371,6 +408,14 @@ export class Road {
     out.uphill = out.cliff * out.side * smoothstep(0, 4, dist);
     return out;
   }
+}
+
+// A structure feature's stretch, in metres from the start: from/to, or a
+// short span centred on `at` (a stream's bridge).
+export function spanRange(f) {
+  if (f.from !== undefined) return [f.from, f.to];
+  const half = (f.span ?? 18) / 2;
+  return [f.at - half, f.at + half];
 }
 
 export function pieceLength(p) {

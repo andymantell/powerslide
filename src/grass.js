@@ -155,7 +155,7 @@ export class Grass {
       const u = rand() * GRID, v = rand() * GRID;
       const x = x0 + u * step, z = z0 + v * step;
       const dist = lerp2(D, u, v);
-      if (dist < 5.4) continue;
+      if (dist < 5.4 || t.blocked(x, z)) continue;
       const h = lerp2(H, u, v);
       const gx = (lerp2(H, Math.min(GRID, u + 0.25), v) - lerp2(H, Math.max(0, u - 0.25), v)) / (step * 0.5);
       const gz = (lerp2(H, u, Math.min(GRID, v + 0.25)) - lerp2(H, u, Math.max(0, v - 0.25))) / (step * 0.5);

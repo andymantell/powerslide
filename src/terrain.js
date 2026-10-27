@@ -28,10 +28,7 @@ export class Terrain {
     this.road = road;
     // Biome shape: relief scales the hills, snowLine is metres above the road.
     this.groundSet = groundSet;
-    this.relief = groundSet?.relief ?? 1;
-    this.maxRelief = groundSet?.maxRelief ?? Infinity; // caps the far hills (m)
-    this.snowLine = groundSet?.snowLine ?? 240;
-    this.treeDensity = groundSet?.treeDensity ?? 1;
+    this.setShape();
     this.noise = createNoise2D(seed);
     this.noise2 = createNoise2D(seed + 1);
     this.noise3 = createNoise2D(seed + 2);
@@ -67,6 +64,30 @@ export class Terrain {
 
     this.forest = null; // set by the owner; receives each tile's tree list
     this.boulders = null;
+    // Level shaping (see src/structures.js and src/props.js): functions
+    // (x, z, field, h) => h that carve ravines, lakes and building terraces,
+    // and circles that trees, rocks and grass keep out of.
+    this.mods = [];
+    this.blockers = new Map();
+  }
+
+  // Keep-out circles for scatter, bucketed in a 32 m grid.
+  block(x, z, r) {
+    const c = { x, z, r2: r * r };
+    for (let gx = Math.floor((x - r) / 32); gx <= Math.floor((x + r) / 32); gx++) {
+      for (let gz = Math.floor((z - r) / 32); gz <= Math.floor((z + r) / 32); gz++) {
+        const key = gx * 65536 + gz;
+        if (!this.blockers.has(key)) this.blockers.set(key, []);
+        this.blockers.get(key).push(c);
+      }
+    }
+  }
+
+  blocked(x, z) {
+    const list = this.blockers.get(Math.floor(x / 32) * 65536 + Math.floor(z / 32));
+    if (!list) return false;
+    for (const c of list) if ((x - c.x) ** 2 + (z - c.z) ** 2 < c.r2) return true;
+    return false;
   }
 
   heightAt(x, z, coarse = false) {
@@ -86,6 +107,7 @@ export class Terrain {
     let h = f.roadY - 0.4 + base + (ridge - 0.3) * amp + detail;
     // Gentle ditch on the shoulder.
     if (f.dist > 4.6 && f.dist < SHOULDER + 2) h -= 0.25 * smoothstep(4.6, 5.6, f.dist);
+    for (const m of this.mods) h = m(x, z, f, h);
     // Coarse tiles sit lower near the road so they never cover it far away.
     if (coarse) h -= 8 * (1 - smoothstep(30, 120, f.dist));
     return h;
@@ -173,7 +195,7 @@ export class Terrain {
         const forest = this.noise2(x / 140, z / 140) * 0.5 + 0.5;
         const r = rand();
         const f = this.road.field(x, z, this.field);
-        if (f.dist < 7.5) continue;
+        if (f.dist < 7.5 || this.blocked(x, z)) continue;
         const h = this.heightFromField(x, z, f, false);
         const rel = h - f.roadY;
         // Estimate slope with a cheap finite difference.
@@ -268,7 +290,17 @@ export class Terrain {
   }
 
   // Drop every tile and reseed the noise, for a new road.
-  reset(seed) {
+  // The biome's shape, with a level's own tweaks (its "terrain" block) on top.
+  setShape(over = {}) {
+    const g = { ...this.groundSet, ...over };
+    this.relief = g.relief ?? 1;
+    this.maxRelief = g.maxRelief ?? Infinity; // caps the far hills (m)
+    this.snowLine = g.snowLine ?? 240;
+    this.treeDensity = g.treeDensity ?? 1;
+  }
+
+  reset(seed, shape) {
+    this.setShape(shape);
     for (const map of [this.near, this.far]) {
       for (const g of map.values()) this.disposeGroup(g);
       map.clear();
@@ -276,6 +308,8 @@ export class Terrain {
     this.noise = createNoise2D(seed);
     this.noise2 = createNoise2D(seed + 1);
     this.noise3 = createNoise2D(seed + 2);
+    this.mods = [];
+    this.blockers.clear();
   }
 
   get tileCount() {

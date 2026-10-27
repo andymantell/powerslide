@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { DS, HALF_WIDTH, RAIL_OFFSET } from './road.js';
+import { DS, HALF_WIDTH, RAIL_OFFSET, railSide } from './road.js';
 import { makeGritTexture } from './textures.js';
 import { createRoadMaterial } from './roadmat.js';
 import { groundTexture } from './ground.js';
@@ -13,7 +13,6 @@ const VERGE = HALF_WIDTH + 0.75; // road mesh carries on past the asphalt as a g
 const CHUNK = 160; // samples per chunk
 const AHEAD = 1600; // metres
 const BEHIND = 250;
-export const RAIL_THRESHOLD = 0.3; // |cliff| above this gets a guardrail on the valley side
 
 export class RoadMesh {
   constructor(scene, road, renderer, markings) {
@@ -70,9 +69,7 @@ export class RoadMesh {
 
   // Lateral position of the guardrail at sample i (0 when none).
   static railSide(cliff) {
-    if (cliff > RAIL_THRESHOLD) return -1; // mountain right -> drop on the left
-    if (cliff < -RAIL_THRESHOLD) return 1;
-    return 0;
+    return railSide(cliff);
   }
 
   buildChunk(ci) {
@@ -98,12 +95,14 @@ export class RoadMesh {
         pos.push(f.x + f.rightX * u, f.y + crown(u), f.z + f.rightZ * u);
         uv.push(u, s);
       }
+      // Bridges and galleries have their own edges: no bank there.
+      const bank = road.spans.length && road.spanAt(s) ? 0 : 1;
       for (const side of [-1, 1]) {
         const u = side * VERGE;
         // A shallow bank down to below the terrain, so the edge never shows a dark wall.
-        const u2 = side * (VERGE + 2.2);
+        const u2 = side * (VERGE + 2.2 * bank);
         skirtPos.push(f.x + f.rightX * u, f.y + crown(u) + 0.02, f.z + f.rightZ * u);
-        skirtPos.push(f.x + f.rightX * u2, f.y - 1.6, f.z + f.rightZ * u2);
+        skirtPos.push(f.x + f.rightX * u2, f.y - 1.6 * bank, f.z + f.rightZ * u2);
         skirtUv.push(0, s * 0.45, 1.2, s * 0.45);
       }
     }
@@ -210,7 +209,7 @@ export class RoadMesh {
     ];
     for (let i = i0; i <= i1; i++) {
       road.sample(i * DS, f);
-      const side = RoadMesh.railSide(road.c[i]);
+      const side = road.railAt(i);
       if (side === 0) {
         run = -1;
         continue;
@@ -220,7 +219,7 @@ export class RoadMesh {
         const u = side * (RAIL_OFFSET - o);
         railPos.push(f.x + f.rightX * u, f.y + hgt, f.z + f.rightZ * u);
       }
-      if (run >= 0 && RoadMesh.railSide(road.c[i - 1]) === side) {
+      if (run >= 0 && road.railAt(i - 1) === side) {
         for (let p = 0; p < profile.length - 1; p++) {
           const a = run + p, b = run + p + 1, c = base + p, d = base + p + 1;
           railIdx.push(a, c, b, b, c, d);

@@ -3,108 +3,45 @@
   "name": "Pine Gate",
   "biome": "alpine",
   "seed": 1606,
-  "hint": "Longer run with a checkpoint halfway. Crash after it and you restart from there.",
+  "hint": "Longer run with a checkpoint halfway, just past the covered bridge. Crash after it and you restart from there.",
   "pieces": [
-    {
-      "straight": 180,
-      "grade": 0.075
-    },
-    {
-      "bend": "right",
-      "radius": 40,
-      "length": 37
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "left",
-      "radius": 26,
-      "length": 48
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "right",
-      "radius": 30,
-      "length": 55
-    },
-    {
-      "bend": "left",
-      "radius": 90,
-      "length": 110
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "right",
-      "radius": 26,
-      "length": 26
-    },
-    {
-      "straight": 90
-    },
-    {
-      "bend": "left",
-      "radius": 35,
-      "length": 60
-    },
-    {
-      "straight": 150
-    },
-    {
-      "bend": "right",
-      "radius": 100,
-      "length": 120
-    },
-    {
-      "straight": 130
-    },
-    {
-      "bend": "left",
-      "radius": 25,
-      "length": 33
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "right",
-      "radius": 30,
-      "length": 55
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 28,
-      "length": 50
-    },
-    {
-      "straight": 90
-    },
-    {
-      "bend": "right",
-      "radius": 70,
-      "length": 80
-    },
-    {
-      "straight": 106
-    }
+    {"straight": 180, "grade": 0.075},
+    {"bend": "right", "radius": 40, "length": 37},
+    {"straight": 100},
+    {"bend": "left", "radius": 26, "length": 48},
+    {"straight": 140},
+    {"bend": "right", "radius": 30, "length": 55},
+    {"bend": "left", "radius": 90, "length": 110},
+    {"straight": 120, "grade": 0.09},
+    {"bend": "right", "radius": 26, "length": 26, "grade": 0.075},
+    {"straight": 90},
+    {"bend": "left", "radius": 35, "length": 60},
+    {"straight": 150},
+    {"bend": "right", "radius": 100, "length": 120},
+    {"straight": 130},
+    {"bend": "left", "radius": 25, "length": 33},
+    {"straight": 100},
+    {"bend": "right", "radius": 30, "length": 55},
+    {"straight": 120},
+    {"bend": "left", "radius": 28, "length": 50},
+    {"straight": 90},
+    {"bend": "right", "radius": 70, "length": 80},
+    {"straight": 106}
   ],
-  "features": [],
-  "checkpoints": [
-    1000
+  "features": [
+    {"type": "flat", "from": 830, "to": 990},
+    {"type": "covered", "from": 900, "to": 930}
   ],
-  "traffic": {
-    "density": 0.5,
-    "speed": 1
-  },
-  "targets": {
-    "time": 180,
-    "score": 2800
-  }
+  "props": [
+    {"type": "sawmill", "at": 880, "d": -30, "yaw": 90},
+    {"scatter": ["logstack"], "from": 840, "to": 980, "near": 14, "far": 45, "count": 7},
+    {"type": "chalet_small", "at": 960, "d": 24},
+    {"type": "woodpile", "at": 975, "d": 15, "yaw": "along"},
+    {"type": "shrine", "at": 300, "d": 7.2}
+  ],
+  "terrain": {"treeDensity": 1.3},
+  "sky": {"time": "day", "weather": "cloudy"},
+  "checkpoints": [1000],
+  "traffic": {"density": 0.5, "speed": 1},
+  "targets": {"time": 180, "score": 2800}
 }

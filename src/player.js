@@ -28,7 +28,6 @@ import * as THREE from 'three';
 import { RiderModel } from './rider.js';
 import { Ragdoll, LooseBoard } from './ragdoll.js';
 import { DS, HALF_WIDTH, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
-import { RoadMesh } from './roadmesh.js';
 import { clamp, lerp } from './noise.js';
 import { TUNING } from './settings.js';
 
@@ -497,7 +496,8 @@ export class Player {
   checkEdges(p) {
     const side = Math.sign(p.d);
     const absD = Math.abs(p.d);
-    const rail = RoadMesh.railSide(this.road.c[Math.round(p.s / DS)]) === side;
+    const barrier = this.road.barrierAt(p.s, side);
+    const rail = !!barrier;
     const limit = rail ? RAIL_OFFSET - 0.35 : GRAVEL_EDGE;
     // Urethane wheels stop dead in loose gravel: any real speed and you go
     // over the nose.
@@ -509,7 +509,7 @@ export class Player {
     const vSide = (this.vel.x * p.rightX + this.vel.y * p.rightZ) * side;
     if (rail) {
       if (vSide > this.diff.railCrashSpeed) {
-        this.crash('Hit the guardrail');
+        this.crash(`Hit the ${barrier}`);
         return;
       }
       // Glance off: kill the impact and scrub some speed.

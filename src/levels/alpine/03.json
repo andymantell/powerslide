@@ -3,76 +3,39 @@
   "name": "Cowbell Corner",
   "biome": "alpine",
   "seed": 1303,
-  "hint": "A tighter bend waits near the bottom. Stand up to air brake, or footbrake, before you reach it.",
+  "hint": "A tighter bend waits by the farm near the bottom. Stand up to air brake, or footbrake, before you reach it.",
   "pieces": [
-    {
-      "straight": 150,
-      "grade": 0.06
-    },
-    {
-      "bend": "right",
-      "radius": 160,
-      "length": 140
-    },
-    {
-      "bend": "left",
-      "radius": 120,
-      "length": 180
-    },
-    {
-      "straight": 100,
-      "grade": 0.07
-    },
-    {
-      "bend": "right",
-      "radius": 90,
-      "length": 110
-    },
-    {
-      "straight": 90
-    },
-    {
-      "bend": "left",
-      "radius": 70,
-      "length": 90
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "right",
-      "radius": 45,
-      "length": 60
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 110,
-      "length": 130
-    },
-    {
-      "straight": 80,
-      "grade": 0.065
-    },
-    {
-      "bend": "right",
-      "radius": 40,
-      "length": 55
-    },
-    {
-      "straight": 80
-    }
+    {"straight": 150, "grade": 0.06},
+    {"bend": "right", "radius": 160, "length": 140},
+    {"bend": "left", "radius": 120, "length": 180},
+    {"straight": 100, "grade": 0.075},
+    {"bend": "right", "radius": 90, "length": 110, "grade": 0.06},
+    {"straight": 90},
+    {"bend": "left", "radius": 70, "length": 90},
+    {"straight": 140},
+    {"bend": "right", "radius": 45, "length": 60},
+    {"straight": 120},
+    {"bend": "left", "radius": 110, "length": 130},
+    {"straight": 80, "grade": 0.065},
+    {"bend": "right", "radius": 40, "length": 55},
+    {"straight": 80}
   ],
-  "features": [],
+  "features": [
+    {"type": "flat", "from": 880, "to": 1150, "width": 80}
+  ],
+  "props": [
+    {"bends": ["farmhouse"], "maxRadius": 50, "d": 30, "from": 950, "to": 1150, "with": ["woodpile"]},
+    {"bends": ["barn"], "maxRadius": 50, "d": 54, "from": 950, "to": 1150},
+    {"row": "fence", "from": 880, "to": 1150, "d": 8.8, "every": 3},
+    {"scatter": ["cow", "cow_pied", "cow_dun"], "from": 930, "to": 1120, "side": "right", "near": 12, "far": 45, "count": 12},
+    {"type": "churns", "at": 975, "d": 6.8, "yaw": "along"},
+    {"scatter": ["cow", "cow_pied", "cow_dun"], "from": 120, "to": 800, "near": 15, "far": 70, "count": 12},
+    {"scatter": ["haybale"], "from": 100, "to": 800, "near": 15, "far": 80, "count": 10},
+    {"type": "shrine", "at": 1290, "d": 7.2}
+  ],
+  "terrain": {"treeDensity": 0.6},
+  "sky": {"time": "day", "weather": "cloudy"},
   "checkpoints": [],
-  "traffic": {
-    "density": 0.25,
-    "speed": 1
-  },
-  "targets": {
-    "time": 140,
-    "score": 1900
-  }
+  "traffic": {"density": 0.25, "speed": 1},
+  "targets": {"time": 140, "score": 1900}
 }

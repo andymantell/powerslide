@@ -1,92 +1,44 @@
 {
   "id": "alpine-05",
-  "name": "Edelweiss Slide",
+  "name": "Edelweiss Lake",
   "biome": "alpine",
   "seed": 1505,
   "hint": "Steer out of a slide to close it before you let go, or the wheels will hook up and throw you.",
   "pieces": [
-    {
-      "straight": 160,
-      "grade": 0.075
-    },
-    {
-      "bend": "right",
-      "radius": 32,
-      "length": 30
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "left",
-      "radius": 30,
-      "length": 56
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "right",
-      "radius": 28,
-      "length": 45
-    },
-    {
-      "bend": "left",
-      "radius": 70,
-      "length": 90
-    },
-    {
-      "straight": 150
-    },
-    {
-      "bend": "right",
-      "radius": 30,
-      "length": 37
-    },
-    {
-      "straight": 90
-    },
-    {
-      "bend": "left",
-      "radius": 28,
-      "length": 53
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "right",
-      "radius": 60,
-      "length": 80
-    },
-    {
-      "straight": 110
-    },
-    {
-      "bend": "left",
-      "radius": 32,
-      "length": 42
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "right",
-      "radius": 30,
-      "length": 50
-    },
-    {
-      "straight": 247
-    }
+    {"straight": 150, "grade": 0.075},
+    {"bend": "right", "radius": 32, "length": 30},
+    {"straight": 100},
+    {"bend": "left", "radius": 30, "length": 56},
+    {"straight": 120},
+    {"bend": "right", "radius": 28, "length": 45},
+    {"bend": "left", "radius": 70, "length": 90},
+    {"straight": 80, "grade": 0.03},
+    {"bend": "left", "radius": 320, "length": 200},
+    {"straight": 200},
+    {"bend": "right", "radius": 300, "length": 160},
+    {"straight": 60, "grade": 0.075},
+    {"bend": "right", "radius": 30, "length": 37},
+    {"straight": 90},
+    {"bend": "left", "radius": 28, "length": 53},
+    {"straight": 120},
+    {"bend": "right", "radius": 60, "length": 80},
+    {"straight": 110},
+    {"bend": "left", "radius": 32, "length": 42},
+    {"straight": 100},
+    {"bend": "right", "radius": 30, "length": 50},
+    {"straight": 150}
   ],
-  "features": [],
+  "features": [
+    {"type": "lake", "from": 680, "to": 1250, "dock": true}
+  ],
+  "props": [
+    {"scatter": ["cow", "cow_dun"], "from": 50, "to": 600, "near": 18, "far": 70, "count": 8},
+    {"type": "chalet_small", "at": 640, "d": 20},
+    {"type": "bench", "at": 900, "d": 0}
+  ],
+  "terrain": {"treeDensity": 0.7},
+  "sky": {"time": "dawn", "weather": "mist"},
   "checkpoints": [],
-  "traffic": {
-    "density": 0.4,
-    "speed": 1
-  },
-  "targets": {
-    "time": 155,
-    "score": 2300
-  }
+  "traffic": {"density": 0.4, "speed": 1},
+  "targets": {"time": 170, "score": 2300}
 }

@@ -3,103 +3,42 @@
   "name": "Summit Road",
   "biome": "alpine",
   "seed": 1909,
-  "hint": "Long and steep. Keep the tuck tidy and choose your braking points early.",
+  "hint": "Long and steep, through the avalanche galleries. Keep the tuck tidy and choose your braking points early.",
   "pieces": [
-    {
-      "straight": 260,
-      "grade": 0.08
-    },
-    {
-      "bend": "right",
-      "radius": 150,
-      "length": 120
-    },
-    {
-      "straight": 220
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 38
-    },
-    {
-      "straight": 180
-    },
-    {
-      "bend": "right",
-      "radius": 24,
-      "length": 42
-    },
-    {
-      "straight": 240
-    },
-    {
-      "bend": "left",
-      "radius": 120,
-      "length": 110
-    },
-    {
-      "straight": 160
-    },
-    {
-      "bend": "right",
-      "radius": 21,
-      "length": 25
-    },
-    {
-      "straight": 200
-    },
-    {
-      "bend": "left",
-      "radius": 23,
-      "length": 42
-    },
-    {
-      "straight": 150
-    },
-    {
-      "bend": "right",
-      "radius": 90,
-      "length": 100
-    },
-    {
-      "straight": 230
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 26
-    },
-    {
-      "straight": 160
-    },
-    {
-      "bend": "right",
-      "radius": 25,
-      "length": 45
-    },
-    {
-      "straight": 180
-    },
-    {
-      "bend": "left",
-      "radius": 140,
-      "length": 100
-    },
-    {
-      "straight": 172
-    }
+    {"straight": 260, "grade": 0.08},
+    {"bend": "right", "radius": 150, "length": 120},
+    {"straight": 220, "grade": 0.1},
+    {"bend": "left", "radius": 22, "length": 38, "grade": 0.08},
+    {"straight": 180},
+    {"bend": "right", "radius": 24, "length": 42},
+    {"straight": 240},
+    {"bend": "left", "radius": 120, "length": 110},
+    {"straight": 160},
+    {"bend": "right", "radius": 21, "length": 25},
+    {"straight": 200, "grade": 0.1},
+    {"bend": "left", "radius": 23, "length": 42, "grade": 0.08},
+    {"straight": 150},
+    {"bend": "right", "radius": 90, "length": 100},
+    {"straight": 230},
+    {"bend": "left", "radius": 22, "length": 26},
+    {"straight": 160},
+    {"bend": "right", "radius": 25, "length": 45},
+    {"straight": 180},
+    {"bend": "left", "radius": 140, "length": 100},
+    {"straight": 172}
   ],
-  "features": [],
-  "checkpoints": [
-    1400
+  "features": [
+    {"type": "gallery", "from": 410, "to": 560},
+    {"type": "gallery", "from": 990, "to": 1120}
   ],
-  "traffic": {
-    "density": 0.8,
-    "speed": 1
-  },
-  "targets": {
-    "time": 225,
-    "score": 4000
-  }
+  "props": [
+    {"type": "hut", "at": 30, "d": 24},
+    {"type": "summitcross", "at": -40, "d": -26},
+    {"row": "snowpole", "from": 0, "to": 2900, "d": 6.6, "every": 22, "both": true}
+  ],
+  "terrain": {"snowLine": 15},
+  "sky": {"time": "day", "weather": "snow"},
+  "checkpoints": [1400],
+  "traffic": {"density": 0.8, "speed": 1},
+  "targets": {"time": 225, "score": 4000}
 }

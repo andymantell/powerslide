@@ -213,3 +213,14 @@ export const NORMAL = {
   surface: { tone: 1, bump: 1, wet: 0 },
   fog: 1,
 };
+
+// A campaign level: normal, except that rain wets the road as endless's
+// "wet" weather does, with the same loss of grip.
+export function levelMix(level) {
+  if (level?.sky?.weather !== 'rain') return NORMAL;
+  return {
+    ...NORMAL,
+    tuning: { ...TUNING, muStatic: TUNING.muStatic * WET_GRIP, muKinetic: TUNING.muKinetic * WET_GRIP },
+    surface: { ...NORMAL.surface, wet: 1 },
+  };
+}

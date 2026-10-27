@@ -111,7 +111,24 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   The road builder eases in and out of every bend, so a short, tight bend
   turns less sharply than its radius suggests.
 - `features` are placed by distance from the start (`at`, metres) and lateral
-  offset (`d`, metres, + = right). Only `grit` exists so far.
+  offset (`d`, metres, + = right), or span `from` to `to`. Besides `grit`,
+  they are set pieces that shape the ground around them (`src/structures.js`):
+  `bridge` (stone viaduct over a gorge, `depth`), `covered` (timber covered
+  bridge), `stream` (stone arch over a stream, with a waterfall above when
+  `fall`), `gallery` (avalanche gallery), `lake`, `cableway` (gondolas
+  crossing overhead at `angle` degrees), `bunting` (flags over the road,
+  `count` and `every`) and `flat` (gentle ground either side for a village or
+  farm, `width`). Bridges and galleries have walls on both sides.
+- `props` dress the roadside with buildings, animals, fences and the rest (the
+  list is `PROP_TYPES` in `src/props.js`); see the top of `src/dressing.js` for
+  single props, rows, scatters and props at every tight bend. `"side":
+  "valley"` keeps a prop off the mountain side. Every tight bend also gets
+  chevrons and a warning sign on its own (`"chevrons": false` turns them off).
+- `terrain` tweaks the biome's ground for one level: `treeDensity`, `relief`,
+  `maxRelief` and `snowLine` (metres above the road).
+- `sky` sets the time of day (`dawn`, `day`, `dusk`, `night`) and weather
+  (`clear`, `cloudy`, `mist`, `rain`, `snow`). Rain also makes the road wet
+  and less grippy.
 - `seed` fixes the scenery, the guardrail sides and the traffic, so every run
   of a level looks and plays the same.
 - `traffic.density` scales how often cars spawn (0 = none); `speed` scales how
@@ -154,6 +171,15 @@ preset.
   narrows it down. `node tools/poses/shoot.mjs out.png [query]` saves it.
   `node tools/poses/check.mjs` (no browser) measures arms going into the body
   and how far off centre the rider sits, across every pose and the steps between.
+- `tools/blender/props.py` builds every roadside prop into `props.glb`, with a
+  colour and a surface kind (planks, shingles, masonry, plaster, glass, metal,
+  lights) per vertex; `tools/textures/props.py` makes the detail texture the
+  prop shader (`src/propmat.js`) adds on top. `/tools/props/` shows them all
+  (`?only=chalet,barn`), and `node tools/props/shoot.mjs out.png [query]`
+  saves it.
+- `node tools/levelshots.mjs <levelId> [outDir] [quality] [at:view,...]`
+  screenshots a level at points along the road (views: chase, high, side,
+  back) for before/after comparisons of level dressing.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
   vista, trees, forest, verge, cutting, distant, boulder; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.

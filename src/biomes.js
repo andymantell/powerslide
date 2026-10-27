@@ -11,8 +11,9 @@ export const BIOMES = [
     id: 'alpine',
     name: 'Alpine Meadows',
     blurb: 'Wide sweepers and gentle slopes. Learn to carve, tuck, brake and slide.',
-    // Tucked top speed on 8% is about 71 km/h, just under wobble speed.
-    rules: { minRadius: 18, maxGrade: 0.08, minGrade: 0.03 },
+    // Tucked top speed on 8% is about 71 km/h, just under wobble speed; the
+    // short 10-11% pitches in later levels go past it, so brake before them.
+    rules: { minRadius: 18, maxGrade: 0.11, minGrade: 0.02 },
     look: { atmosphere: 'alpine', ground: 'alpine', markings: 'alpine', species: 'spruce' },
   },
   { id: 'dartmoor', name: 'Dartmoor', blurb: 'Narrow lanes, stone walls, ponies and mist.' },
@@ -25,7 +26,8 @@ export const BIOMES = [
 ];
 
 // A biome's look, with the alpine defaults filled in.
-export function lookOf(biome) {
+// A level's "sky" block ({ time, weather }) adds its time of day and weather.
+export function lookOf(biome, level) {
   const id = biome?.id || 'alpine';
-  return { atmosphere: id, ground: id, markings: id, species: 'spruce', ...biome?.look };
+  return { atmosphere: id, ground: id, markings: id, species: 'spruce', time: 'day', weather: 'clear', ...biome?.look, ...level?.sky };
 }

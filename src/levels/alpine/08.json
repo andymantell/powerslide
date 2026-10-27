@@ -5,122 +5,47 @@
   "seed": 1808,
   "hint": "Oncoming cars on the hairpins. Hold your lane, and pass close for bonus points.",
   "pieces": [
-    {
-      "straight": 180,
-      "grade": 0.075
-    },
-    {
-      "bend": "right",
-      "radius": 35,
-      "length": 33
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 40
-    },
-    {
-      "straight": 150
-    },
-    {
-      "bend": "right",
-      "radius": 21,
-      "length": 38
-    },
-    {
-      "bend": "left",
-      "radius": 120,
-      "length": 130
-    },
-    {
-      "straight": 130
-    },
-    {
-      "bend": "left",
-      "radius": 24,
-      "length": 25
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "right",
-      "radius": 20,
-      "length": 37
-    },
-    {
-      "straight": 160
-    },
-    {
-      "bend": "left",
-      "radius": 30,
-      "length": 55
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "right",
-      "radius": 22,
-      "length": 40
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "left",
-      "radius": 23,
-      "length": 42
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "right",
-      "radius": 90,
-      "length": 100
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 21,
-      "length": 27
-    },
-    {
-      "straight": 110
-    },
-    {
-      "bend": "right",
-      "radius": 26,
-      "length": 45
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 38
-    },
-    {
-      "straight": 260
-    }
+    {"straight": 180, "grade": 0.075},
+    {"bend": "right", "radius": 35, "length": 33},
+    {"straight": 120},
+    {"bend": "left", "radius": 22, "length": 40},
+    {"straight": 150},
+    {"bend": "right", "radius": 21, "length": 38},
+    {"bend": "left", "radius": 120, "length": 130},
+    {"straight": 130},
+    {"bend": "left", "radius": 24, "length": 25},
+    {"straight": 120},
+    {"bend": "right", "radius": 20, "length": 37},
+    {"straight": 160, "grade": 0.1},
+    {"bend": "left", "radius": 30, "length": 55, "grade": 0.075},
+    {"straight": 100},
+    {"bend": "right", "radius": 22, "length": 40},
+    {"straight": 140},
+    {"bend": "left", "radius": 23, "length": 42},
+    {"straight": 120},
+    {"bend": "right", "radius": 90, "length": 100},
+    {"straight": 120},
+    {"bend": "left", "radius": 21, "length": 27},
+    {"straight": 110},
+    {"bend": "right", "radius": 26, "length": 45},
+    {"straight": 140},
+    {"bend": "left", "radius": 22, "length": 38},
+    {"straight": 260}
   ],
-  "features": [],
-  "checkpoints": [
-    1250
+  "features": [
+    {"type": "cableway", "at": 900, "angle": 20, "length": 1100},
+    {"type": "flat", "from": 1380, "to": 1640}
   ],
-  "traffic": {
-    "density": 0.9,
-    "speed": 1
-  },
-  "targets": {
-    "time": 225,
-    "score": 3800
-  }
+  "props": [
+    {"type": "farmhouse", "at": 1500, "d": 26},
+    {"type": "barn", "at": 1545, "d": 30},
+    {"type": "churns", "at": 1490, "d": 6.8, "yaw": "along"},
+    {"row": "fence", "from": 1380, "to": 1640, "d": -8.8, "every": 3},
+    {"scatter": ["cow", "cow_pied", "cow_dun"], "from": 1350, "to": 1700, "near": 12, "far": 70, "count": 18}
+  ],
+  "terrain": {"treeDensity": 0.7},
+  "sky": {"time": "day", "weather": "clear"},
+  "checkpoints": [1250],
+  "traffic": {"density": 0.9, "speed": 1},
+  "targets": {"time": 225, "score": 3800}
 }

@@ -11,7 +11,7 @@ process.on('unhandledRejection', (e) => {
 const logError = console.error;
 console.error = (...a) => a.some(offline) || logError(...a);
 const { Player } = await import('../src/player.js');
-const { Road } = await import('../src/road.js');
+const { Road, railSide } = await import('../src/road.js');
 const { TUNING } = await import('../src/settings.js');
 const THREE = await import('three');
 
@@ -24,6 +24,9 @@ class TestRoad {
   ensure() {}
   dirtAt() {
     return 0;
+  }
+  barrierAt(s, side) {
+    return railSide(this.c[Math.max(0, Math.round(s))]) === side ? 'guardrail' : null;
   }
   sample(s, out = {}) {
     Object.assign(out, { x: 0, y: -s * this.grade, z: -s, heading: 0, kappa: 0, grade: this.grade, cliff: 0, dirX: 0, dirZ: -1, rightX: 1, rightZ: 0 });

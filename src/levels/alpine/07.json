@@ -3,113 +3,43 @@
   "name": "Hairpin Hollow",
   "biome": "alpine",
   "seed": 1707,
-  "hint": "Near-hairpins. Scrub most of your speed before you turn in, then carve out.",
+  "hint": "Near-hairpins. Scrub most of your speed before you turn in, then carve out. Mind the waterfall bridge.",
   "pieces": [
-    {
-      "straight": 200,
-      "grade": 0.07
-    },
-    {
-      "bend": "right",
-      "radius": 22,
-      "length": 24
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 21,
-      "length": 39
-    },
-    {
-      "straight": 150,
-      "grade": 0.075
-    },
-    {
-      "bend": "right",
-      "radius": 24,
-      "length": 45
-    },
-    {
-      "straight": 110
-    },
-    {
-      "bend": "left",
-      "radius": 60,
-      "length": 80
-    },
-    {
-      "straight": 140
-    },
-    {
-      "bend": "right",
-      "radius": 20,
-      "length": 28
-    },
-    {
-      "straight": 100
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 39
-    },
-    {
-      "straight": 160,
-      "grade": 0.08
-    },
-    {
-      "bend": "right",
-      "radius": 23,
-      "length": 40
-    },
-    {
-      "straight": 110
-    },
-    {
-      "bend": "left",
-      "radius": 21,
-      "length": 37
-    },
-    {
-      "straight": 130
-    },
-    {
-      "bend": "right",
-      "radius": 80,
-      "length": 90
-    },
-    {
-      "straight": 120
-    },
-    {
-      "bend": "left",
-      "radius": 22,
-      "length": 26
-    },
-    {
-      "straight": 110
-    },
-    {
-      "bend": "right",
-      "radius": 24,
-      "length": 38
-    },
-    {
-      "straight": 264
-    }
+    {"straight": 200, "grade": 0.07},
+    {"bend": "right", "radius": 22, "length": 24},
+    {"straight": 120},
+    {"bend": "left", "radius": 21, "length": 39},
+    {"straight": 150, "grade": 0.075},
+    {"bend": "right", "radius": 24, "length": 45},
+    {"straight": 110},
+    {"bend": "left", "radius": 60, "length": 80},
+    {"straight": 140},
+    {"bend": "right", "radius": 20, "length": 28},
+    {"straight": 100},
+    {"bend": "left", "radius": 22, "length": 39},
+    {"straight": 160, "grade": 0.1},
+    {"bend": "right", "radius": 23, "length": 40, "grade": 0.075},
+    {"straight": 110},
+    {"bend": "left", "radius": 21, "length": 37},
+    {"straight": 130},
+    {"bend": "right", "radius": 80, "length": 90},
+    {"straight": 120},
+    {"bend": "left", "radius": 22, "length": 26},
+    {"straight": 110},
+    {"bend": "right", "radius": 24, "length": 38},
+    {"straight": 264}
   ],
-  "features": [],
-  "checkpoints": [
-    1100
+  "features": [
+    {"type": "stream", "at": 455, "fall": true}
   ],
-  "traffic": {
-    "density": 0.6,
-    "speed": 1
-  },
-  "targets": {
-    "time": 200,
-    "score": 3100
-  }
+  "props": [
+    {"bends": ["chapel"], "maxRadius": 25, "d": 15, "from": 850, "to": 1000},
+    {"bends": ["shrine"], "maxRadius": 25, "d": 8, "from": 1700, "to": 1800},
+    {"scatter": ["cow", "cow_pied"], "from": 600, "to": 1500, "near": 18, "far": 70, "count": 8},
+    {"type": "hut", "at": 520, "d": 26}
+  ],
+  "sky": {"time": "day", "weather": "rain"},
+  "checkpoints": [1100],
+  "traffic": {"density": 0.6, "speed": 1},
+  "targets": {"time": 200, "score": 3100}
 }

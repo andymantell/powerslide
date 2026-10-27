@@ -5,44 +5,41 @@
   "seed": 1101,
   "hint": "Push to get going, then tuck for speed. Lean to carve the long sweepers.",
   "pieces": [
-    {
-      "straight": 120,
-      "grade": 0.05
-    },
-    {
-      "bend": "right",
-      "radius": 250,
-      "length": 150
-    },
-    {
-      "straight": 80
-    },
-    {
-      "bend": "left",
-      "radius": 200,
-      "length": 220
-    },
-    {
-      "straight": 100,
-      "grade": 0.06
-    },
-    {
-      "bend": "right",
-      "radius": 220,
-      "length": 180
-    },
-    {
-      "straight": 150
-    }
+    {"straight": 170, "grade": 0.03},
+    {"bend": "right", "radius": 260, "length": 160, "grade": 0.05},
+    {"straight": 90},
+    {"bend": "left", "radius": 200, "length": 230},
+    {"straight": 110, "grade": 0.07},
+    {"bend": "right", "radius": 230, "length": 170, "grade": 0.05},
+    {"straight": 200, "grade": 0.04}
   ],
-  "features": [],
+  "features": [
+    {"type": "flat", "from": -170, "to": 175},
+    {"type": "bunting", "at": 12, "count": 3, "every": 16}
+  ],
+  "props": [
+    {"type": "church", "at": -45, "d": -27},
+    {"type": "fountain", "at": -4, "d": -11.5},
+    {"type": "chalet", "at": -135, "d": 17},
+    {"type": "chalet_small", "at": -100, "d": -17},
+    {"type": "chalet_tall", "at": -62, "d": 19},
+    {"type": "chalet", "at": -14, "d": 18},
+    {"type": "chalet_small", "at": 38, "d": -17},
+    {"type": "chalet_tall", "at": 78, "d": 18.5},
+    {"type": "chalet", "at": 118, "d": -19},
+    {"type": "chalet_small", "at": 152, "d": 17},
+    {"type": "bench", "at": 12, "d": -8.4},
+    {"type": "bench", "at": 24, "d": 8.4},
+    {"type": "trough", "at": 60, "d": 7.8, "yaw": "along"},
+    {"type": "woodpile", "at": 98, "d": 10, "yaw": "along"},
+    {"type": "shrine", "at": 420, "d": 7.2},
+    {"type": "barn", "at": 640, "d": -40},
+    {"scatter": ["haybale"], "from": 300, "to": 1050, "near": 13, "far": 70, "count": 18},
+    {"scatter": ["cow", "cow_pied", "cow_dun"], "from": 450, "to": 950, "near": 14, "far": 60, "count": 10}
+  ],
+  "terrain": {"treeDensity": 0.55},
+  "sky": {"time": "day", "weather": "clear"},
   "checkpoints": [],
-  "traffic": {
-    "density": 0,
-    "speed": 1
-  },
-  "targets": {
-    "time": 115,
-    "score": 1150
-  }
+  "traffic": {"density": 0, "speed": 1},
+  "targets": {"time": 115, "score": 1150}
 }
