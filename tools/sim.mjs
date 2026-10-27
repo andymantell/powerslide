@@ -71,7 +71,7 @@ for (const grade of [0.05, 0.08, 0.12]) {
   for (const [name, inp] of [['upright', {}], ['tuck', { tuck: 1 }], ['air', { air: 1 }]]) {
     const p = make(grade, 5.5);
     run(p, 60, (pp) => ({ ...inp, steer: keepLane(pp) }));
-    row.push(`${name} ${fmt(p.speed)}`);
+    row.push(`${name} ${fmt(p.crashed ? p.topSpeed : p.speed)}${p.crashed ? ' (then crashed: ' + p.crashReason + ')' : ''}`);
   }
   console.log(`grade ${(grade * 100).toFixed(0)}%: ${row.join('  ')}`);
 }

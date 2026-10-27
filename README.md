@@ -167,7 +167,7 @@ preset.
   - *Drag* depends on the body: upright, a progressive tuck, or an air brake
     with roughly double the upright drag. Pushing is a kick at a time and
     stops helping once the road is faster than your foot.
-  - Top speeds land around 50 km/h on a 5% grade and 90 km/h on 12% in a tuck.
+  - Top speeds land around 58 km/h on a 5% grade and 97 km/h on 12% in a tuck.
     `npm run sim` prints these and other numbers from a headless run.
 - **Rider pose** (`src/riderpose.js`, `src/ik.js`): the body is solved from
   the physics. Feet stay planted on the rolling deck, the hips lean with the
