@@ -1,0 +1,36 @@
+{
+  "id": "dartmoor-01",
+  "name": "Moor Gate",
+  "biome": "dartmoor",
+  "seed": 2101,
+  "hint": "The lanes are narrow and traffic keeps left. Rattle over the cattle grid onto the open moor.",
+  "pieces": [
+    {"straight": 160, "grade": 0.05},
+    {"bend": "right", "radius": 180, "length": 120},
+    {"straight": 90, "grade": 0.04},
+    {"bend": "left", "radius": 140, "length": 140, "grade": 0.06},
+    {"straight": 140},
+    {"bend": "right", "radius": 220, "length": 160, "grade": 0.05},
+    {"straight": 120},
+    {"bend": "left", "radius": 160, "length": 130, "grade": 0.045},
+    {"straight": 150}
+  ],
+  "features": [
+    {"type": "walls", "from": -60, "to": 268},
+    {"type": "grid", "at": 275},
+    {"type": "walls", "from": 282, "to": 330}
+  ],
+  "props": [
+    {"type": "fingerpost", "at": 240, "d": -4.6},
+    {"type": "cottage_slate", "at": 40, "d": 18},
+    {"type": "cottage", "at": -30, "d": -17},
+    {"row": "fieldwall", "from": 0, "to": 260, "d": 26, "every": 4, "both": true},
+    {"scatter": ["sheep", "sheep", "sheep_dark"], "from": 340, "to": 1150, "near": 7, "far": 70, "count": 26},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 330, "to": 1200, "near": 6, "far": 60, "count": 30},
+    {"type": "tor", "at": 900, "d": 160}
+  ],
+  "sky": {"time": "day", "weather": "cloudy"},
+  "checkpoints": [],
+  "traffic": {"density": 0.1, "speed": 0.8},
+  "targets": {"time": 120, "score": 1300}
+}

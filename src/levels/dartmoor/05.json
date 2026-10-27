@@ -1,0 +1,47 @@
+{
+  "id": "dartmoor-05",
+  "name": "Water Splash",
+  "biome": "dartmoor",
+  "seed": 2505,
+  "hint": "The lane dips through a ford. The water slows you right down, so carry speed in and push out up the far side.",
+  "pieces": [
+    {"straight": 150, "grade": 0.06},
+    {"bend": "left", "radius": 110, "length": 100},
+    {"straight": 90, "grade": 0.07},
+    {"bend": "right", "radius": 50, "length": 60},
+    {"straight": 100},
+    {"bend": "left", "radius": 70, "length": 80},
+    {"straight": 120, "grade": 0.08, "ramp": 30},
+    {"bend": "right", "radius": 120, "length": 70},
+    {"straight": 60, "grade": 0.1, "ramp": 20},
+    {"straight": 34, "grade": 0.0, "ramp": 14},
+    {"straight": 60, "grade": -0.05, "ramp": 14},
+    {"straight": 40, "grade": 0.03, "ramp": 20},
+    {"bend": "left", "radius": 60, "length": 45, "grade": 0.06},
+    {"straight": 130},
+    {"bend": "right", "radius": 45, "length": 55},
+    {"straight": 110},
+    {"bend": "left", "radius": 150, "length": 120, "grade": 0.05},
+    {"straight": 120}
+  ],
+  "features": [
+    {"type": "hedge", "from": 380, "to": 780},
+    {"type": "ford", "at": 855, "span": 16},
+    {"type": "hedge", "from": 960, "to": 1250}
+  ],
+  "props": [
+    {"type": "footbridge", "at": 855, "d": 8.5, "yaw": "along"},
+    {"type": "gauge", "at": 842, "d": -4.3},
+    {"type": "duck", "at": 853, "d": -12},
+    {"type": "duck_b", "at": 859, "d": -14},
+    {"type": "duck", "at": 850, "d": 15},
+    {"type": "cottage", "at": 930, "d": 16},
+    {"scatter": ["sheep", "sheep", "sheep_dark"], "from": 100, "to": 380, "near": 8, "far": 60, "count": 10},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 100, "to": 1650, "near": 6, "far": 60, "count": 30},
+    {"scatter": ["hawthorn"], "from": 790, "to": 940, "near": 14, "far": 40, "count": 4}
+  ],
+  "sky": {"time": "day", "weather": "rain"},
+  "checkpoints": [],
+  "traffic": {"density": 0.3, "speed": 0.8},
+  "targets": {"time": 160, "score": 2100}
+}

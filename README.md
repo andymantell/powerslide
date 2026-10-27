@@ -127,7 +127,17 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   `fall`), `gallery` (avalanche gallery), `lake`, `cableway` (gondolas
   crossing overhead at `angle` degrees), `bunting` (flags over the road,
   `count` and `every`) and `flat` (gentle ground either side for a village or
-  farm, `width`). Bridges and galleries have walls on both sides.
+  farm, `width`). Bridges and galleries have walls on both sides. Dartmoor
+  adds `walls` (dry-stone walls) and `hedge` (Devon hedge banks) along a
+  stretch, on both sides or one (`side`), which you crash into like a
+  guardrail; `grid` (a cattle grid that rattles the board, with a gate and a
+  warning sign) and `ford` (water over a dip in the lane that slows you).
+- A piece's `ramp` (metres) makes its new grade come in that quickly instead
+  of easing over a few hundred metres, for humps, crests and dips. A negative
+  grade climbs.
+- A biome can narrow the lanes (`look.lane`), keep traffic on the left
+  (`drive: 'left'`) and drop guardrails (`rails: false`); see `src/biomes.js`.
+  Its own props come from `props_<biome>.glb` (`tools/blender/props_<biome>.py`).
 - `props` dress the roadside with buildings, animals, fences and the rest (the
   list is `PROP_TYPES` in `src/props.js`); see the top of `src/dressing.js` for
   single props, rows, scatters and props at every tight bend. `"side":

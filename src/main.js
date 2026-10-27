@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Road, START_S } from './road.js';
+import { Road, START_S, setRoadWidth } from './road.js';
 import { Terrain } from './terrain.js';
 import { RoadMesh } from './roadmesh.js';
 import { Player } from './player.js';
@@ -64,6 +64,8 @@ if (shared) {
 const endlessLook = () => lookOf(derive(endless).biome);
 const look = bootLevel ? lookOf(biomeOf(bootLevel), bootLevel) : endlessLook();
 const pick = (map, key) => map[key] || map.alpine;
+// Narrow-lane biomes: set before the road mesh and traffic are made.
+setRoadWidth(look.lane);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12000);
@@ -79,7 +81,7 @@ terrain.forest = forest;
 const boulders = new Boulders(scene, renderer, pick(GROUND_SETS, look.ground));
 terrain.boulders = boulders;
 const grass = new Grass(scene, renderer, terrain, Q);
-const props = new Props(scene, renderer, terrain);
+const props = new Props(scene, renderer, terrain, look.atmosphere);
 const structures = new Structures(scene, renderer, road, terrain, props, boulders);
 const scenery = new Scenery(road, terrain, props, structures);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
@@ -174,6 +176,9 @@ async function loadWorld(level) {
   game.worldRidden = false;
   game.seed = level ? level.seed : mix.seed;
   road.reset(game.seed, level, mix.shape);
+  const biome = level ? biomeOf(level) : mix.biome;
+  road.drive = biome?.drive === 'left' ? -1 : 1;
+  road.rails = biome?.rails !== false;
   road.ensure(START_S + 7000);
   terrain.reset(game.seed + 11, level?.terrain);
   // Level set pieces and props shape the terrain, so they go in before any tiles build.
@@ -1140,7 +1145,9 @@ function frame(now) {
 
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') {
     const wasCrashed = player.crashed;
+    player.water = structures.waterAt(player.s);
     player.update(dt, game.mode === 'play' ? state : game.mode === 'finished' ? runOut() : { steer: 0 });
+    if (structures.rattleAt(player.s) && !player.crashed) player.shake = Math.max(player.shake, 0.45);
     if (game.mode === 'play' && !player.crashed) game.time += dt;
     // Past the finish, coast to a stop.
     if (game.mode === 'finished' && !player.crashed) player.vel.multiplyScalar(Math.exp(-dt * 0.8));

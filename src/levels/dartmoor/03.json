@@ -1,0 +1,47 @@
+{
+  "id": "dartmoor-03",
+  "name": "Clapper Bridge",
+  "biome": "dartmoor",
+  "seed": 2303,
+  "hint": "Over the humpback bridge by the old clapper bridge. Ease off on the crest, it goes light.",
+  "pieces": [
+    {"straight": 150, "grade": 0.06},
+    {"bend": "left", "radius": 130, "length": 120},
+    {"straight": 100, "grade": 0.07},
+    {"bend": "right", "radius": 80, "length": 90},
+    {"straight": 120, "grade": 0.05},
+    {"bend": "left", "radius": 110, "length": 110},
+    {"straight": 60, "grade": 0.06},
+    {"straight": 26, "grade": -0.05, "ramp": 12},
+    {"straight": 24, "grade": 0.09, "ramp": 12},
+    {"straight": 80, "grade": 0.05, "ramp": 20},
+    {"bend": "right", "radius": 90, "length": 110},
+    {"straight": 120},
+    {"bend": "left", "radius": 60, "length": 70, "grade": 0.06},
+    {"straight": 140},
+    {"bend": "right", "radius": 140, "length": 120},
+    {"straight": 120}
+  ],
+  "features": [
+    {"type": "walls", "from": 300, "to": 570},
+    {"type": "flat", "from": 580, "to": 700, "width": 45},
+    {"type": "stream", "at": 780, "span": 16}
+  ],
+  "props": [
+    {"type": "clapper", "at": 780, "d": -15, "yaw": "along"},
+    {"type": "car_blue", "at": 620, "d": 11, "yaw": "across"},
+    {"type": "car_red", "at": 626, "d": 11, "yaw": "across"},
+    {"type": "car_silver", "at": 638, "d": 12, "yaw": "across"},
+    {"type": "picnic", "at": 660, "d": 14},
+    {"type": "picnic", "at": 675, "d": 17},
+    {"type": "fingerpost", "at": 610, "d": -4.6},
+    {"scatter": ["hawthorn"], "from": 720, "to": 860, "near": 12, "far": 40, "count": 6},
+    {"scatter": ["sheep", "sheep", "sheep_dark"], "from": 100, "to": 1600, "near": 8, "far": 70, "count": 22},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 100, "to": 1600, "near": 6, "far": 60, "count": 30},
+    {"row": "fieldwall", "from": 300, "to": 570, "d": 30, "every": 4, "both": true}
+  ],
+  "sky": {"time": "day", "weather": "clear"},
+  "checkpoints": [],
+  "traffic": {"density": 0.25, "speed": 0.8},
+  "targets": {"time": 150, "score": 1800}
+}

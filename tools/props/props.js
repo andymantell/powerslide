@@ -1,5 +1,6 @@
 // Prop sheet: every model in props.glb on a lawn, lit like the game, with
-// its name. /tools/props/?only=chalet,church&dist=40&yaw=30 narrows it down.
+// its name. /tools/props/?only=chalet,church&dist=40&yaw=30 narrows it down;
+// ?pack=dartmoor shows props_dartmoor.glb instead.
 //   node tools/props/shoot.mjs out.png [query]
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -23,7 +24,8 @@ ground.receiveShadow = true;
 scene.add(ground);
 const mat = createPropMaterial(renderer);
 
-const gltf = await new GLTFLoader().loadAsync(new URL('../../src/assets/models/props.glb', import.meta.url).href);
+const pack = q.get('pack');
+const gltf = await new GLTFLoader().loadAsync(pack ? new URL(`../../src/assets/models/props_${pack}.glb`, import.meta.url).href : new URL('../../src/assets/models/props.glb', import.meta.url).href);
 const meshes = [];
 gltf.scene.traverse((o) => o.isMesh && (!only || only.includes(o.name)) && meshes.push(o));
 // Lay out in rows, sized by footprint.

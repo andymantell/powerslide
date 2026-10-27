@@ -278,7 +278,8 @@ export class Player {
     // Along the deck: rolling resistance, footbrake, pushing.
     const onGravel = Math.abs(this.d) > HALF_WIDTH;
     this.dirt = road.dirtAt(this.s, this.d);
-    const crr = CRR * mods.rolling + (onGravel ? 0.12 : 0) + this.dirt * 0.03;
+    // Water over the road (a ford, set by main.js from structures.waterAt) drags.
+    const crr = CRR * mods.rolling + (onGravel ? 0.12 : 0) + this.dirt * 0.03 + (this.water || 0) * 1.2;
     const boost = mods.boost * this.tuck;
     let long = -crr * g * cosGrade * Math.sign(vLong0) - FOOTBRAKE * this.brake * Math.sign(vLong0) + pushAcc + boost;
     // Don't let resistance reverse the board.

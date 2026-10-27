@@ -8,12 +8,14 @@
 // terraces, then build() once the terrain is final (piers need its height).
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { spanRange, SPAN_TYPES } from './road.js';
+import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
 import { mulberry32 } from './noise.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7;
-const W = 5.45; // structure half width: the parapet's inner face sits at the guardrail line (4.9 m)
+// Structure half width: the parapet's inner face sits at the guardrail line
+// (set per level, as narrow-lane biomes move the guardrail in).
+let W = 5.45;
 const STONE = '#9d968a';
 const COPING = '#b9b3a7';
 const CONCRETE = '#b3afa6';
@@ -272,6 +274,7 @@ export class Structures {
     this.rand = mulberry32((level?.seed ?? 1) + 4242);
     this.rocks = [];
     this.todo = [];
+    W = RAIL_OFFSET + 0.55;
     if (!level) return;
     const start = this.road.start;
     for (const f of level.features || []) {
@@ -312,6 +315,21 @@ export class Structures {
       this.rocks = [];
     }
     this.endless.push(job);
+  }
+
+  // A cattle grid under s: the board rattles over it.
+  rattleAt(s) {
+    for (const j of this.todo || []) if (j.f.type === 'grid' && Math.abs(s - j.s0) < 1.4) return true;
+    return false;
+  }
+
+  // How deep the water is over the road at s (a ford), 0 when dry.
+  waterAt(s) {
+    for (const j of this.todo || []) {
+      if (j.f.type !== 'ford' || s < j.s0 - 12 || s > j.s1 + 12) continue;
+      return Math.max(0, j.level - this.road.sample(s, this._w || (this._w = {})).y);
+    }
+    return 0;
   }
 
   // Endless: drops the structures that ended more than `behind` m back.
@@ -606,6 +624,66 @@ export const PLANS = {
     }
   },
 
+  // { type: 'walls', from, to, side } Dry-stone walls along the lane, on
+  // both sides or one ("side": "left" / "right"). You can crash into them.
+  walls(job) {
+    edgeBlock.call(this, job);
+  },
+
+  // { type: 'hedge', from, to, side } Devon hedge banks: stone-faced earth
+  // banks topped with hedge, taller than you.
+  hedge(job) {
+    edgeBlock.call(this, job);
+  },
+
+  // { type: 'grid', at } A cattle grid across the road, with wall ends, a
+  // gate beside it and a warning sign before it. It rattles as you cross.
+  grid(job) {
+    const road = this.road;
+    const s = job.s0;
+    const side = road.drive || 1;
+    const fr = road.sample(s, {});
+    // The gate stands beside the grid on the verge.
+    for (const k of [-1, 1]) {
+      const d = k * (RAIL_OFFSET + 0.6);
+      this.props.add('gate', fr.x + fr.rightX * d + fr.dirX * 2.5 * k, fr.z + fr.rightZ * d + fr.dirZ * 2.5 * k, Math.atan2(-fr.dirZ, fr.dirX) + (k < 0 ? Math.PI : 0));
+    }
+    const ws = s - 60;
+    if (ws > road.start + 20) {
+      const w = road.sample(ws, {});
+      const d = side * (HALF_WIDTH + 1.3);
+      this.props.add('sign_grid', w.x + w.rightX * d, w.z + w.rightZ * d, Math.atan2(-w.dirX, -w.dirZ));
+    }
+  },
+
+  // { type: 'ford', at, span } The lane dips through a stream (shape the
+  // dip with the pieces' grades). The water slows you down.
+  ford(job) {
+    const road = this.road;
+    const span = job.f.span ?? 14;
+    job.s0 = job.s0 - span / 2;
+    job.s1 = job.s0 + span;
+    job.mid = (job.s0 + job.s1) / 2;
+    let low = Infinity;
+    const f = {};
+    for (let s = job.s0 - 10; s <= job.s1 + 10; s++) low = Math.min(low, road.sample(s, f).y);
+    job.level = low + 0.2;
+    job.up = mountainSide(this.road, job.mid - 20, job.mid + 20);
+    const top = clearRun(road, job.mid, job.up, 120);
+    const bottom = clearRun(road, job.mid, -job.up, 200);
+    // The stream bed runs into the dip from both sides at water level.
+    const line = acrossLine(road, job.mid, job.up * top, -job.up * bottom, 5);
+    this.terrain.mods.push(channel(line, 5, (t, h) => Math.max(0, h - (job.level - 0.5 - Math.max(0, Math.abs(t - top) - 12) * 0.02))));
+    job.river = settle(this.terrain, line, 5);
+    for (let i = 0; i < job.river.length; i += 2) this.terrain.block(job.river[i], job.river[i + 1], 5);
+    const ws = job.s0 - 60;
+    if (ws > road.start + 20) {
+      const w = road.sample(ws, {});
+      const d = (road.drive || 1) * (HALF_WIDTH + 1.3);
+      this.props.add('sign_ford', w.x + w.rightX * d, w.z + w.rightZ * d, Math.atan2(-w.dirX, -w.dirZ));
+    }
+  },
+
   // { type: 'bunting', at, count, every } Strings of flags across the road.
   bunting(job) {
     const { f } = job;
@@ -861,6 +939,88 @@ const BUILDS = {
     this.mesh(geo);
   },
 
+  walls(job) {
+    const geo = new Geo();
+    for (const side of edgeSides(job)) edgeRun.call(this, geo, job, side, 'wall');
+    this.mesh(geo);
+  },
+
+  hedge(job) {
+    const geo = new Geo();
+    for (const side of edgeSides(job)) edgeRun.call(this, geo, job, side, 'hedge');
+    this.mesh(geo);
+  },
+
+  grid(job) {
+    const road = this.road;
+    const geo = new Geo();
+    const s = job.s0;
+    const { f, along, across } = frame(road, s);
+    const hw = HALF_WIDTH + 0.3;
+    // Dark pit, concrete ends and the steel bars across it.
+    geo.box(f.x, f.z, f.y - 0.5, f.y - 0.02, along, 1.3, across, hw, PAINT, '#1b1a18');
+    for (const k of [-1, 1]) {
+      const x = f.x + along.x * k * 1.45, z = f.z + along.z * k * 1.45;
+      geo.box(x, z, f.y - 0.5, f.y + 0.02, along, 0.18, across, hw, PLASTER, CONCRETE);
+    }
+    for (let k = -1.2; k <= 1.21; k += 0.16) {
+      const x = f.x + along.x * k, z = f.z + along.z * k;
+      geo.box(x, z, f.y - 0.06, f.y + 0.03, along, 0.04, across, hw, METAL, '#6d7175');
+    }
+    // Short wall ends either side, leaving room for the gate.
+    for (const side of [-1, 1]) {
+      const d = side * (RAIL_OFFSET + 0.4);
+      for (const k of [-1, 1]) {
+        const c = road.sample(s + k * 7, {});
+        geo.box(c.x + c.rightX * d, c.z + c.rightZ * d, c.y - 0.8, c.y + 1.15, new THREE.Vector3(c.dirX, 0, c.dirZ), 3.2, new THREE.Vector3(c.rightX, 0, c.rightZ), 0.35, MASONRY, '#7f7a70');
+      }
+    }
+    this.mesh(geo);
+  },
+
+  ford(job) {
+    const road = this.road;
+    // A sheet of water over the dipped road and its verges, where the road
+    // lies below the water; the stream carries on either side.
+    const pos = [], col = [], uv = [], idx = [];
+    const f = {};
+    let a = job.mid, b = job.mid;
+    while (a > job.s0 - 30 && road.sample(a - 1, f).y < job.level + 0.05) a--;
+    while (b < job.s1 + 30 && road.sample(b + 1, f).y < job.level + 0.05) b++;
+    a -= 1.5;
+    b += 1.5;
+    const n = Math.max(1, Math.ceil((b - a) / 1.5));
+    const e = RAIL_OFFSET + 2.5;
+    const across = [-e, -e * 0.6, -e * 0.3, 0, e * 0.3, e * 0.6, e];
+    for (let i = 0; i <= n; i++) {
+      const s = a + ((b - a) * i) / n;
+      road.sample(s, f);
+      for (const d of across) {
+        pos.push(f.x + f.rightX * d, job.level, f.z + f.rightZ * d);
+        // Rushing water where it pours across the road.
+        col.push(0.12, 0, 0);
+        uv.push(d / 4, s / 4);
+      }
+      if (i < n) {
+        for (let k = 0; k < across.length - 1; k++) {
+          const a = i * across.length + k, b = a + across.length;
+          idx.push(a, b, a + 1, a + 1, b, b + 1);
+        }
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, this.streamMat);
+    this.streamMat.side = THREE.DoubleSide;
+    m.receiveShadow = true;
+    this.group.add(m);
+    river.call(this, job.river, 4, false);
+  },
+
   bunting(job) {
     const pos = [];
     const col = [];
@@ -886,6 +1046,71 @@ const BUILDS = {
     this.group.add(m);
   },
 };
+
+// Walls and hedge banks: keep trees and rocks off the strip they stand on.
+function edgeBlock(job) {
+  const road = this.road;
+  const f = {};
+  for (let s = job.s0; s <= job.s1; s += 4) {
+    road.sample(s, f);
+    for (const side of edgeSides(job)) {
+      const d = side * (RAIL_OFFSET + 1.2);
+      this.terrain.block(f.x + f.rightX * d, f.z + f.rightZ * d, 2.2);
+    }
+  }
+}
+
+function edgeSides(job) {
+  return job.f.side === 'left' ? [-1] : job.f.side === 'right' ? [1] : [-1, 1];
+}
+
+// One side of a run of wall or hedge bank, following the ground: it stands
+// on whichever is lower, the road or the field, and rises above the higher.
+function edgeRun(geo, job, side, kind) {
+  const road = this.road;
+  const t = this.terrain;
+  const hedge = kind === 'hedge';
+  const d0 = side * (RAIL_OFFSET - 0.05);
+  const w = hedge ? 1.9 : 0.75;
+  const d1 = d0 + side * w;
+  const f = {};
+  const greens = ['#4d6a33', '#567438', '#46602f', '#5d7a3c'];
+  const ring = (s, k) => {
+    road.sample(s, f);
+    const g = t.heightAt(f.x + f.rightX * (d0 + d1) / 2, f.z + f.rightZ * (d0 + d1) / 2);
+    const base = Math.min(f.y, g) - 0.8;
+    const top = Math.max(f.y + (hedge ? 1.3 : 1.05), g + (hedge ? 1.0 : 0.85));
+    const n = this.rand();
+    const at = (d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
+    return {
+      a: at(d0, base), b: at(d0 + side * 0.08, top), c: at(d1 - side * 0.08, top), e: at(d1, base),
+      h: hedge ? [at(d0 + side * 0.1, top), at(d0 + side * 0.5, top + 0.9 + n * 0.5), at(d1 - side * 0.5, top + 1.0 + n * 0.4), at(d1 - side * 0.1, top)] : null,
+      cap: hedge ? null : [at(d0 - side * 0.05, top), at(d0 - side * 0.05, top + 0.22), at(d1 + side * 0.05, top + 0.22), at(d1 + side * 0.05, top)],
+    };
+  };
+  const step = 2;
+  let prev = ring(job.s0);
+  for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
+    const cur = ring(s);
+    const faces = [[prev.a, prev.b, cur.b, cur.a], [prev.b, prev.c, cur.c, cur.b], [prev.c, prev.e, cur.e, cur.c]];
+    const stone = hedge ? '#6e7362' : '#7f7a70';
+    for (const [p, q, r, u] of faces) quadOut(geo, p, q, r, u, side, MASONRY, stone);
+    const ext = hedge ? prev.h.map((v, i) => [v, cur.h[i]]) : prev.cap.map((v, i) => [v, cur.cap[i]]);
+    const kindTop = hedge ? PAINT : MASONRY;
+    const colTop = hedge ? greens[Math.floor(this.rand() * greens.length)] : '#8a857a';
+    for (let i = 0; i < ext.length - 1; i++) quadOut(geo, ext[i][0], ext[i + 1][0], ext[i + 1][1], ext[i][1], side, kindTop, colTop);
+    prev = cur;
+  }
+}
+
+// A quad facing up or away from the road's centre line, whichever its
+// winding gives (the walls are seen from both sides, so emit both faces).
+function quadOut(geo, a, b, c, d, side, kind, col) {
+  geo.tri(a, b, c, kind, col);
+  geo.tri(a, c, d, kind, col);
+  geo.tri(a, c, b, kind, col);
+  geo.tri(a, d, c, kind, col);
+}
 
 // Deck slab, string course and parapet walls with coping, s0..s1.
 function deckAndParapets(geo, road, s0, s1, kind, col) {

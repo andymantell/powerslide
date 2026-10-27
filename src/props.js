@@ -10,6 +10,10 @@ import { trackLoad } from './ground.js';
 import { createPropMaterial } from './propmat.js';
 
 const MODEL = new URL('./assets/models/props.glb', import.meta.url).href;
+// Each biome's own props (tools/blender/props_<biome>.py), loaded on top.
+const PACKS = {
+  dartmoor: new URL('./assets/models/props_dartmoor.glb', import.meta.url).href,
+};
 
 // r: keep-out radius for trees, rocks and grass (m). pad: buildings get a level
 // terrace of this radius cut into the slope. far: draw distance (m).
@@ -55,12 +59,55 @@ export const PROP_TYPES = {
   fan_b: { r: 0.4, ...SMALL },
   fan_c: { r: 0.4, ...SMALL },
   gondola: { r: 0, ...MID },
+  // Dartmoor
+  tor_big: { r: 22, ...BIG },
+  tor: { r: 14, ...BIG },
+  tor_small: { r: 7, ...BIG },
+  spoil: { r: 14, ...BIG },
+  mast: { r: 6, ...BIG },
+  prison: { r: 30, pad: 30, ...BIG },
+  church_uk: { r: 15, pad: 15, ...BIG },
+  inn: { r: 12, pad: 12, ...BIG },
+  cottage: { r: 8, pad: 8, ...BIG },
+  cottage_b: { r: 7, pad: 7, ...BIG },
+  cottage_slate: { r: 7, pad: 7, ...BIG },
+  tearoom: { r: 8, pad: 8, ...BIG },
+  hawthorn: { r: 3, ...MID },
+  sheep: { r: 0.8, ...MID },
+  sheep_dark: { r: 0.8, ...MID },
+  pony: { r: 1.2, ...MID },
+  pony_dark: { r: 1.2, ...MID },
+  pony_grey: { r: 1.2, ...MID },
+  fieldwall: { r: 0.6, ...MID },
+  ruin_a: { r: 3, ...MID },
+  ruin_b: { r: 3, ...MID },
+  clapper: { r: 6, ...MID },
+  footbridge: { r: 5, ...MID },
+  tractor: { r: 2, ...MID },
+  car_red: { r: 2, ...MID },
+  car_blue: { r: 2, ...MID },
+  car_silver: { r: 2, ...MID },
+  gorse: { r: 1, ...MID },
+  gorse_big: { r: 1.5, ...MID },
+  bracken: { r: 0.5, ...SMALL },
+  phonebox: { r: 0.8, ...MID },
+  picnic: { r: 1.2, ...SMALL },
+  fingerpost: { r: 0.6, ...SMALL },
+  sign_grid: { r: 0.5, ...SMALL },
+  sign_pony: { r: 0.5, ...SMALL },
+  sign_ford: { r: 0.5, ...SMALL },
+  gate: { r: 0.5, ...SMALL },
+  whitepost: { r: 0.3, ...SMALL },
+  peat: { r: 2, ...SMALL },
+  gauge: { r: 0.3, ...SMALL },
+  duck: { r: 0.2, ...SMALL },
+  duck_b: { r: 0.2, ...SMALL },
 };
 
 const DEG = Math.PI / 180;
 
 export class Props {
-  constructor(scene, renderer, terrain) {
+  constructor(scene, renderer, terrain, pack = null) {
     this.scene = scene;
     this.terrain = terrain;
     this.mat = createPropMaterial(renderer);
@@ -70,13 +117,16 @@ export class Props {
     this.list = []; // { type, x, y, z, yaw, scale } while building a level
     this.lastX = Infinity;
     this.lastZ = Infinity;
-    trackLoad(
-      new GLTFLoader().loadAsync(MODEL).then((gltf) => {
-        gltf.scene.traverse((o) => {
-          if (o.isMesh) this.geos.set(o.name, o.geometry);
-        });
-      }),
-    );
+    const loader = new GLTFLoader();
+    for (const url of [MODEL, PACKS[pack]].filter(Boolean)) {
+      trackLoad(
+        loader.loadAsync(url).then((gltf) => {
+          gltf.scene.traverse((o) => {
+            if (o.isMesh) this.geos.set(o.name, o.geometry);
+          });
+        }),
+      );
+    }
   }
 
   // World position and facing for a point beside the road: s along it, d

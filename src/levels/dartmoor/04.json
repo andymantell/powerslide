@@ -1,0 +1,41 @@
+{
+  "id": "dartmoor-04",
+  "name": "Pony Crossing",
+  "biome": "dartmoor",
+  "seed": 2404,
+  "hint": "Wild ponies graze right by the lane. No walls out here, so keep it on the tarmac.",
+  "pieces": [
+    {"straight": 130, "grade": 0.06},
+    {"bend": "right", "radius": 100, "length": 100},
+    {"straight": 110},
+    {"bend": "left", "radius": 45, "length": 60, "grade": 0.07},
+    {"straight": 120},
+    {"bend": "right", "radius": 60, "length": 75},
+    {"straight": 70, "grade": -0.03, "ramp": 25},
+    {"straight": 60, "grade": 0.06, "ramp": 25},
+    {"bend": "left", "radius": 130, "length": 140},
+    {"straight": 100},
+    {"bend": "right", "radius": 40, "length": 45, "grade": 0.07},
+    {"straight": 130},
+    {"bend": "left", "radius": 80, "length": 90},
+    {"straight": 80, "grade": -0.025, "ramp": 20},
+    {"straight": 80, "grade": 0.06, "ramp": 25},
+    {"bend": "right", "radius": 150, "length": 130},
+    {"straight": 140}
+  ],
+  "features": [
+    {"type": "grid", "at": 90}
+  ],
+  "props": [
+    {"type": "sign_pony", "at": 150, "d": -4.6},
+    {"type": "sign_pony", "at": 900, "d": -4.6},
+    {"scatter": ["pony", "pony_dark", "pony_grey"], "from": 150, "to": 1750, "near": 5, "far": 45, "count": 34},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 100, "to": 1800, "near": 5, "far": 70, "count": 50},
+    {"scatter": ["sheep", "sheep", "sheep_dark"], "from": 100, "to": 1800, "near": 15, "far": 70, "count": 10},
+    {"type": "tor", "at": 1200, "d": -140}
+  ],
+  "sky": {"time": "day", "weather": "cloudy"},
+  "checkpoints": [],
+  "traffic": {"density": 0.3, "speed": 0.8},
+  "targets": {"time": 160, "score": 2000}
+}

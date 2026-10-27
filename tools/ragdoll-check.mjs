@@ -24,6 +24,10 @@ class TestRoad {
   dirtAt() {
     return 0;
   }
+  // c is all 0: no guardrails.
+  barrierAt() {
+    return null;
+  }
   sample(s, out = {}) {
     Object.assign(out, { x: 0, y: -s * this.grade, z: -s, heading: 0, kappa: 0, grade: this.grade, cliff: 0, dirX: 0, dirZ: -1, rightX: 1, rightZ: 0 });
     return out;

@@ -10,10 +10,20 @@
 import { createNoise2D, mulberry32, clamp, smoothstep } from './noise.js';
 
 export const DS = 1; // metres between centreline samples
-export const LANE_WIDTH = 3.5;
-export const HALF_WIDTH = 4.25; // asphalt half width (two lanes + thin shoulder)
-export const GRAVEL_EDGE = 6.2; // where the gravel shoulder ends
-export const RAIL_OFFSET = 4.9; // guardrail lateral offset
+// Road widths. A biome may narrow them (setRoadWidth) once at start-up, before
+// anything reads them.
+export let LANE_WIDTH = 3.5;
+export let HALF_WIDTH = 4.25; // asphalt half width (two lanes + thin shoulder)
+export let GRAVEL_EDGE = 6.2; // where the gravel shoulder ends
+export let RAIL_OFFSET = 4.9; // guardrail lateral offset
+
+// Sets the lane width; the asphalt, verge and guardrail follow it.
+export function setRoadWidth(lane = 3.5) {
+  LANE_WIDTH = lane;
+  HALF_WIDTH = lane + 0.75;
+  GRAVEL_EDGE = HALF_WIDTH + 1.95;
+  RAIL_OFFSET = HALF_WIDTH + 0.65;
+}
 export const MAX_HEADING = 1.15; // ~66 degrees
 export const START_S = 400; // where a run starts; the road behind is the approach
 const RUNOUT = 600; // straight past a level's finish
@@ -29,7 +39,10 @@ export function railSide(cliff) {
 
 // Feature types that are structures carrying or covering the road; each
 // replaces the guardrail and verge along its stretch (see src/structures.js).
-export const SPAN_TYPES = { bridge: 'parapet', covered: 'wall', gallery: 'wall', stream: 'parapet' };
+export const SPAN_TYPES = { bridge: 'parapet', covered: 'wall', gallery: 'wall', stream: 'parapet', walls: 'wall', hedge: 'hedge bank' };
+// Of those, the ones that stand on the ground beside the road (on one side
+// with "side": "left" or "right") rather than carry it.
+export const GROUND_SPANS = new Set(['walls', 'hedge']);
 
 export class Road {
   constructor(seed = 1337, level = null) {
@@ -62,11 +75,15 @@ export class Road {
     this.checkpoints = [];
     this.queue = null;
     this.headingOver = 0; // furthest |heading| past MAX_HEADING, for the level checker
+    // Which side traffic keeps to: 1 right, -1 left, and whether drops get
+    // guardrails (main.js sets both per biome).
+    this.drive = 1;
+    this.rails = true;
 
     const grade = level ? level.pieces.find((p) => p.grade !== undefined)?.grade ?? 0.06 : 0.06 * this.shape.steep;
     this.state = {
       x: 0, y: 0, z: 0, heading: 0, kappa: 0, kappaTarget: 0, segLeft: 120,
-      grade, gradeTarget: level ? grade : 0.07 * this.shape.steep, gradeLeft: 200,
+      grade, gradeTarget: level ? grade : 0.07 * this.shape.steep, gradeLeft: 200, gradeRate: 0.0004,
     };
     if (level) {
       let len = 0;
@@ -79,7 +96,8 @@ export class Road {
           this.patches.push({ s: this.start + f.at, d: f.d ?? 0, len: f.len ?? 6, width: f.width ?? 1.5 });
         } else if (SPAN_TYPES[f.type]) {
           const [a, b] = spanRange(f);
-          this.spans.push({ type: f.type, s0: this.start + a, s1: this.start + b, f });
+          const side = f.side === 'left' ? -1 : f.side === 'right' ? 1 : 0;
+          this.spans.push({ type: f.type, s0: this.start + a, s1: this.start + b, side, f });
         }
       }
       this.patches.sort((a, b) => a.s - b.s);
@@ -119,11 +137,14 @@ export class Road {
       s.kappaTarget = p.bend ? (p.bend === 'right' ? 1 : -1) / p.radius : 0;
       s.segLeft = pieceLength(p);
       if (p.grade !== undefined) s.gradeTarget = p.grade;
+      // The grade eases in at 0.04% per metre, or within `ramp` metres.
+      s.gradeRate = p.grade !== undefined && p.ramp ? Math.max(0.0004, Math.abs(p.grade - s.grade) / p.ramp) : 0.0004;
       // Hold this grade until the queue runs out.
       s.gradeLeft = Infinity;
       return;
     }
     if (s.gradeLeft === Infinity) s.gradeLeft = 0;
+    s.gradeRate = 0.0004;
     const { corners, sharp } = this.shapeHere();
     // Chances of a straight, big sweeper and tight bend (the rest are
     // near-hairpins): 0.14, 0.44, 0.28, 0.14 with the default shape.
@@ -179,7 +200,7 @@ export class Road {
     }
     const dk = 0.0016 * DS;
     s.kappa += clamp(target - s.kappa, -dk, dk);
-    s.grade += clamp(s.gradeTarget - s.grade, -0.0004 * DS, 0.0004 * DS);
+    s.grade += clamp(s.gradeTarget - s.grade, -s.gradeRate * DS, s.gradeRate * DS);
 
     s.heading += s.kappa * DS;
     s.x += Math.sin(s.heading) * DS;
@@ -225,6 +246,7 @@ export class Road {
 
   // The guardrail side drawn at sample i (structures bring their own walls).
   railAt(i) {
+    if (!this.rails) return 0;
     return this.spans.length && this.spanAt(i * DS) ? 0 : railSide(this.c[i]);
   }
 
@@ -232,7 +254,8 @@ export class Road {
   // 'guardrail', a structure's 'wall' or 'parapet', or null for open verge.
   barrierAt(s, side) {
     const sp = this.spans.length ? this.spanAt(s) : null;
-    if (sp) return SPAN_TYPES[sp.type];
+    if (sp) return !sp.side || sp.side === side ? SPAN_TYPES[sp.type] : null;
+    if (!this.rails) return null;
     return railSide(this.c[clamp(Math.round(s / DS), 0, this.count - 1)]) === side ? 'guardrail' : null;
   }
 

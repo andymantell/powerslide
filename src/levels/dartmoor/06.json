@@ -1,0 +1,48 @@
+{
+  "id": "dartmoor-06",
+  "name": "Hound Tor",
+  "biome": "dartmoor",
+  "seed": 2606,
+  "hint": "Blind crests: you can't see what's over the top. Stay left and be ready to brake.",
+  "pieces": [
+    {"straight": 150, "grade": 0.06},
+    {"bend": "right", "radius": 90, "length": 90},
+    {"straight": 60, "grade": -0.03, "ramp": 20},
+    {"straight": 50, "grade": 0.08, "ramp": 20},
+    {"bend": "left", "radius": 60, "length": 70},
+    {"straight": 60, "grade": -0.03, "ramp": 20},
+    {"straight": 50, "grade": 0.08, "ramp": 20},
+    {"bend": "right", "radius": 110, "length": 120},
+    {"straight": 140, "grade": 0.06},
+    {"bend": "left", "radius": 35, "length": 50},
+    {"straight": 120},
+    {"bend": "right", "radius": 45, "length": 60, "grade": 0.07},
+    {"straight": 60, "grade": -0.035, "ramp": 20},
+    {"straight": 60, "grade": 0.08, "ramp": 20},
+    {"bend": "left", "radius": 120, "length": 120},
+    {"straight": 150},
+    {"bend": "right", "radius": 30, "length": 32, "grade": 0.06},
+    {"straight": 130},
+    {"bend": "left", "radius": 70, "length": 90},
+    {"straight": 60, "grade": -0.03, "ramp": 20},
+    {"straight": 80, "grade": 0.07, "ramp": 20},
+    {"bend": "right", "radius": 160, "length": 120},
+    {"straight": 140}
+  ],
+  "features": [
+    {"type": "walls", "from": 0, "to": 300},
+    {"type": "walls", "from": 1400, "to": 1700, "side": "left"}
+  ],
+  "props": [
+    {"type": "tor_big", "at": 1120, "d": 55, "scale": 1.4},
+    {"scatter": ["ruin_a", "ruin_b"], "from": 1000, "to": 1250, "near": 14, "far": 55, "count": 10, "side": "valley"},
+    {"type": "hawthorn", "at": 880, "d": -14},
+    {"scatter": ["sheep", "sheep", "sheep_dark", "pony", "pony_dark", "pony_grey"], "from": 100, "to": 2200, "near": 8, "far": 70, "count": 24},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 100, "to": 2200, "near": 6, "far": 70, "count": 40},
+    {"row": "fieldwall", "from": 1400, "to": 1700, "d": 30, "every": 4, "both": true}
+  ],
+  "sky": {"time": "dusk", "weather": "clear"},
+  "checkpoints": [1100],
+  "traffic": {"density": 0.4, "speed": 0.85},
+  "targets": {"time": 195, "score": 2600}
+}

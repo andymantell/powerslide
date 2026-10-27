@@ -3,12 +3,11 @@
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { DS, HALF_WIDTH, RAIL_OFFSET, railSide } from './road.js';
+import { DS, HALF_WIDTH, RAIL_OFFSET, GROUND_SPANS, railSide } from './road.js';
 import { makeGritTexture } from './textures.js';
 import { createRoadMaterial } from './roadmat.js';
 import { groundTexture } from './ground.js';
 
-const VERGE = HALF_WIDTH + 0.75; // road mesh carries on past the asphalt as a gravel verge
 
 const CHUNK = 160; // samples per chunk
 const AHEAD = 1600; // metres
@@ -77,6 +76,7 @@ export class RoadMesh {
     const i0 = ci * CHUNK;
     const i1 = Math.min(i0 + CHUNK, road.count - 1);
     const n = i1 - i0 + 1;
+    const VERGE = HALF_WIDTH + 0.75; // the mesh carries on past the asphalt as a gravel verge
     const across = [-VERGE, -HALF_WIDTH, -HALF_WIDTH * 0.5, 0, HALF_WIDTH * 0.5, HALF_WIDTH, VERGE];
     // Slight camber for drainage, then the verge falls away past the asphalt.
     const crown = (u) => -0.04 * (Math.min(Math.abs(u), HALF_WIDTH) / HALF_WIDTH) ** 2 - Math.max(0, Math.abs(u) - HALF_WIDTH) * 0.12;
@@ -96,7 +96,8 @@ export class RoadMesh {
         uv.push(u, s);
       }
       // Bridges and galleries have their own edges: no bank there.
-      const bank = road.spans.length && road.spanAt(s) ? 0 : 1;
+      const sp = road.spans.length ? road.spanAt(s) : null;
+      const bank = sp && !GROUND_SPANS.has(sp.type) ? 0 : 1;
       for (const side of [-1, 1]) {
         const u = side * VERGE;
         // A shallow bank down to below the terrain, so the edge never shows a dark wall.

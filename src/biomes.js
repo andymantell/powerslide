@@ -16,7 +16,18 @@ export const BIOMES = [
     rules: { minRadius: 18, maxGrade: 0.11, minGrade: 0.02 },
     look: { atmosphere: 'alpine', ground: 'alpine', markings: 'alpine', species: 'spruce' },
   },
-  { id: 'dartmoor', name: 'Dartmoor', blurb: 'Narrow lanes, stone walls, ponies and mist.' },
+  {
+    id: 'dartmoor',
+    name: 'Dartmoor',
+    blurb: 'Narrow lanes, stone walls, ponies and mist.',
+    // Narrow lanes with tight, blind bends, steep pitches and short climbs
+    // (negative grades) you carry speed into or push up. Traffic keeps left,
+    // and there are no guardrails: walls and hedge banks line the lanes.
+    rules: { minRadius: 16, maxGrade: 0.15, minGrade: -0.06 },
+    drive: 'left',
+    rails: false,
+    look: { markings: 'uk', lane: 2.7 },
+  },
   { id: 'suburbs', name: 'Hillside Suburbs', blurb: 'Parked cars, speed bumps and side roads.' },
   { id: 'forest', name: 'Pine Forest', blurb: 'Blind bends and grit on the inside line.' },
   { id: 'canyon', name: 'Desert Canyon', blurb: 'Long, steep straights fast enough to wobble.' },
@@ -29,5 +40,5 @@ export const BIOMES = [
 // A level's "sky" block ({ time, weather }) adds its time of day and weather.
 export function lookOf(biome, level) {
   const id = biome?.id || 'alpine';
-  return { atmosphere: id, ground: id, markings: id, species: 'spruce', time: 'day', weather: 'clear', ...biome?.look, ...level?.sky };
+  return { atmosphere: id, ground: id, markings: id, species: 'spruce', lane: 3.5, time: 'day', weather: 'clear', ...biome?.look, ...level?.sky };
 }

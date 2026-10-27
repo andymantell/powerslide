@@ -1,0 +1,41 @@
+{
+  "id": "dartmoor-02",
+  "name": "Haytor Down",
+  "biome": "dartmoor",
+  "seed": 2202,
+  "hint": "A short climb up to the tor. Tuck to carry your speed into it, and push if you have to.",
+  "pieces": [
+    {"straight": 140, "grade": 0.06},
+    {"bend": "right", "radius": 150, "length": 110},
+    {"straight": 120, "grade": 0.05},
+    {"bend": "left", "radius": 90, "length": 100},
+    {"straight": 80, "grade": -0.035, "ramp": 25},
+    {"straight": 90},
+    {"straight": 60, "grade": 0.07, "ramp": 30},
+    {"bend": "right", "radius": 120, "length": 140},
+    {"straight": 110},
+    {"bend": "left", "radius": 70, "length": 90, "grade": 0.06},
+    {"straight": 160, "grade": 0.08},
+    {"bend": "right", "radius": 200, "length": 120, "grade": 0.05},
+    {"straight": 130}
+  ],
+  "features": [
+    {"type": "grid", "at": 120},
+    {"type": "walls", "from": -40, "to": 112}
+  ],
+  "props": [
+    {"type": "tor_big", "at": 650, "d": -70, "scale": 1.7},
+    {"type": "tor_small", "at": 560, "d": -24},
+    {"type": "tor_small", "at": 720, "d": 30},
+    {"type": "spoil", "at": 1120, "d": 70},
+    {"scatter": ["tor_small"], "from": 450, "to": 900, "near": 25, "far": 120, "count": 5},
+    {"scatter": ["gorse", "gorse_big", "bracken", "bracken"], "from": 130, "to": 1450, "near": 6, "far": 70, "count": 40},
+    {"scatter": ["sheep", "sheep", "sheep_dark", "pony", "pony_dark", "pony_grey"], "from": 150, "to": 1400, "near": 8, "far": 70, "count": 20},
+    {"type": "car_red", "at": 600, "d": -9, "yaw": "along"},
+    {"type": "car_silver", "at": 610, "d": -9.5, "yaw": "along"}
+  ],
+  "sky": {"time": "day", "weather": "clear"},
+  "checkpoints": [],
+  "traffic": {"density": 0.2, "speed": 0.8},
+  "targets": {"time": 140, "score": 1500}
+}

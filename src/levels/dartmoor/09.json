@@ -1,0 +1,50 @@
+{
+  "id": "dartmoor-09",
+  "name": "Widecombe Hill",
+  "biome": "dartmoor",
+  "seed": 2909,
+  "hint": "A really steep lane between high hedge banks. Brake early for the tight bends, all the way down to the village.",
+  "pieces": [
+    {"straight": 120, "grade": 0.07},
+    {"bend": "right", "radius": 80, "length": 80},
+    {"straight": 100, "grade": 0.1, "ramp": 40},
+    {"bend": "left", "radius": 30, "length": 45},
+    {"straight": 110, "grade": 0.13, "ramp": 40},
+    {"bend": "right", "radius": 22, "length": 35, "grade": 0.1},
+    {"straight": 120, "grade": 0.14, "ramp": 30},
+    {"bend": "left", "radius": 26, "length": 40, "grade": 0.11},
+    {"straight": 110, "grade": 0.13, "ramp": 30},
+    {"bend": "right", "radius": 28, "length": 40, "grade": 0.1},
+    {"straight": 100, "grade": 0.14, "ramp": 30},
+    {"bend": "left", "radius": 20, "length": 35, "grade": 0.1},
+    {"straight": 120, "grade": 0.12, "ramp": 30},
+    {"bend": "right", "radius": 60, "length": 70, "grade": 0.08},
+    {"straight": 150, "grade": 0.05, "ramp": 40},
+    {"bend": "left", "radius": 90, "length": 90, "grade": 0.03},
+    {"straight": 160, "grade": 0.02, "ramp": 40},
+    {"bend": "right", "radius": 200, "length": 100},
+    {"straight": 120}
+  ],
+  "features": [
+    {"type": "hedge", "from": 160, "to": 1260},
+    {"type": "flat", "from": 1350, "to": 1640, "width": 60},
+    {"type": "bunting", "at": 1560, "count": 3, "every": 14}
+  ],
+  "props": [
+    {"type": "church_uk", "at": 1470, "d": -32},
+    {"type": "cottage", "at": 1400, "d": 15},
+    {"type": "cottage_b", "at": 1430, "d": -16},
+    {"type": "tearoom", "at": 1500, "d": 16},
+    {"type": "cottage", "at": 1540, "d": -16},
+    {"type": "cottage_b", "at": 1590, "d": 15},
+    {"type": "hawthorn", "at": 1525, "d": 30},
+    {"type": "bench", "at": 1520, "d": 7},
+    {"type": "phonebox", "at": 1450, "d": 6.5},
+    {"scatter": ["fan_a", "fan_b", "fan_c"], "from": 1555, "to": 1590, "near": 5.6, "far": 8, "count": 26, "face": "road"},
+    {"scatter": ["sheep", "sheep", "sheep_dark"], "from": 100, "to": 1300, "near": 15, "far": 70, "count": 10}
+  ],
+  "sky": {"time": "day", "weather": "clear"},
+  "checkpoints": [],
+  "traffic": {"density": 0.35, "speed": 0.8},
+  "targets": {"time": 200, "score": 3200}
+}

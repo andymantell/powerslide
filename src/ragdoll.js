@@ -7,8 +7,7 @@
 
 import * as THREE from 'three';
 import { RiderPose, JOINT_NAMES, DECK_HEIGHT } from './riderpose.js';
-import { DS, GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
-import { RoadMesh } from './roadmesh.js';
+import { GRAVEL_EDGE, RAIL_OFFSET } from './road.js';
 
 const G = 9.81;
 const STEP = 1 / 120;
@@ -77,7 +76,7 @@ function ground(world, x, z, s, out) {
   out.off = Math.abs(p.d) > GRAVEL_EDGE;
   out.y = out.off ? Math.max(p.y - 3, world.terrain.heightAt(x, z)) : p.y;
   const side = Math.sign(p.d);
-  out.rail = RoadMesh.railSide(world.road.c[Math.round(p.s / DS)]) === side ? side : 0;
+  out.rail = world.road.barrierAt(p.s, side) ? side : 0;
   return out;
 }
 

@@ -1,0 +1,47 @@
+{
+  "id": "dartmoor-07",
+  "name": "Mist Mire",
+  "biome": "dartmoor",
+  "seed": 2707,
+  "hint": "Mist rolls over the bog. Follow the white posts, and stop at the inn for a cuppa.",
+  "pieces": [
+    {"straight": 160, "grade": 0.05},
+    {"bend": "left", "radius": 140, "length": 120},
+    {"straight": 120, "grade": 0.06},
+    {"bend": "right", "radius": 70, "length": 80},
+    {"straight": 150, "grade": 0.04},
+    {"bend": "left", "radius": 110, "length": 130},
+    {"straight": 140},
+    {"bend": "right", "radius": 40, "length": 55, "grade": 0.06},
+    {"straight": 130},
+    {"bend": "left", "radius": 90, "length": 100},
+    {"straight": 160, "grade": 0.03},
+    {"bend": "right", "radius": 150, "length": 120},
+    {"straight": 120, "grade": 0.06},
+    {"bend": "left", "radius": 35, "length": 40},
+    {"straight": 120},
+    {"bend": "right", "radius": 60, "length": 80},
+    {"straight": 100, "grade": -0.03, "ramp": 25},
+    {"straight": 90, "grade": 0.06, "ramp": 25},
+    {"bend": "left", "radius": 130, "length": 110},
+    {"straight": 150}
+  ],
+  "features": [
+    {"type": "lake", "from": 560, "to": 820, "far": 70},
+    {"type": "flat", "from": 1380, "to": 1540, "width": 50}
+  ],
+  "props": [
+    {"row": "whitepost", "from": 300, "to": 1350, "d": 4.7, "every": 25, "both": true},
+    {"scatter": ["peat"], "from": 250, "to": 1300, "near": 12, "far": 60, "count": 14},
+    {"type": "inn", "at": 1460, "d": 20},
+    {"type": "phonebox", "at": 1430, "d": 6.2},
+    {"type": "car_blue", "at": 1490, "d": 9.5, "yaw": "along"},
+    {"type": "car_red", "at": 1500, "d": 10, "yaw": "along"},
+    {"scatter": ["pony", "pony_dark", "pony_grey"], "from": 100, "to": 2300, "near": 10, "far": 70, "count": 14},
+    {"scatter": ["bracken", "bracken", "gorse"], "from": 100, "to": 2300, "near": 6, "far": 70, "count": 40}
+  ],
+  "sky": {"time": "day", "weather": "mist"},
+  "checkpoints": [1200],
+  "traffic": {"density": 0.45, "speed": 0.85},
+  "targets": {"time": 210, "score": 2900}
+}
