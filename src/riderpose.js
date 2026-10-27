@@ -19,6 +19,10 @@ export const UPPER_ARM = 0.3;
 export const FOREARM = 0.29;
 export const FOOT_Z_FRONT = -0.26;
 export const FOOT_Z_REAR = 0.25;
+const FOOT_TURN_F = 0.87;
+const FOOT_TURN_R = 0.44;
+const HIP_OPEN = 0.3; // hips turn part way towards the front foot
+const SHOULDER_OPEN = 0.15;
 const PIVOT_Y = -0.06; // trucks' roll axis, relative to the deck top
 const ANKLE = 0.05; // ankle above the sole
 const GROUND = -DECK_HEIGHT;
@@ -54,8 +58,10 @@ export class RiderPose {
     for (const k of JOINT_NAMES) this.joints[k] = new THREE.Vector3();
     this.headYaw = 0;
     this.headPitch = 0;
-    this.footYawF = Math.PI / 2 - 0.25;
-    this.footYawR = Math.PI / 2 + 0.15;
+    // Downhill stance: toes point across the board and turn towards the nose,
+    // the front foot about 50 degrees, the back foot about 25.
+    this.footYawF = Math.PI / 2 + FOOT_TURN_F;
+    this.footYawR = Math.PI / 2 + FOOT_TURN_R;
     this.footRollF = 0; // soles follow the deck roll
     this.footRollR = 0;
     this.torsoDir = new THREE.Vector3(0, 1, 0);
@@ -101,11 +107,12 @@ export class RiderPose {
     _a.set(-0.04 - tuck * 0.05 - bend * 0.06 - spread * 0.03, hipH, 0).applyQuaternion(_q);
     J.hip.set(0, ANKLE, midZ).add(_a);
     this.bodyUp.copy(Y).applyQuaternion(_q);
-    // Air brake: the chest turns square to the road ahead, and the hips
-    // follow it part of the way (the feet stay planted sideways).
+    // Hips open a little towards the nose with the feet. Air brake: the
+    // chest turns square to the road ahead, and the hips follow it part of
+    // the way (the feet stay planted).
     const twist = spread * 1.4;
     _n.set(0, 0, -0.1).applyQuaternion(_q);
-    if (twist) _n.applyAxisAngle(Y, twist * 0.3);
+    _n.applyAxisAngle(Y, HIP_OPEN + twist * 0.3);
     J.hipF.copy(J.hip).add(_n);
     J.hipR.copy(J.hip).sub(_n);
 
@@ -126,8 +133,11 @@ export class RiderPose {
       J.footR.lerp(_b, lift);
       this.footRollR = -roll * (1 - lift);
     }
-    twoBoneIK(J.hipF, J.footF, THIGH, SHIN, _pole.set(1, 0, -0.1).applyQuaternion(_q), J.kneeF, J.footF);
-    twoBoneIK(J.hipR, J.footR, THIGH, SHIN, _pole.set(1, 0, 0.2).applyQuaternion(_q), J.kneeR, J.footR);
+    // Knees bend the way the toes point.
+    _pole.set(Math.cos(FOOT_TURN_F), 0, -Math.sin(FOOT_TURN_F)).applyQuaternion(_q);
+    twoBoneIK(J.hipF, J.footF, THIGH, SHIN, _pole, J.kneeF, J.footF);
+    _pole.set(Math.cos(FOOT_TURN_R), 0, -Math.sin(FOOT_TURN_R)).applyQuaternion(_q);
+    twoBoneIK(J.hipR, J.footR, THIGH, SHIN, _pole, J.kneeR, J.footR);
 
     // Torso: upright, folding over the front knee in a tuck, standing tall and
     // leaning back into the wind for an air brake.
@@ -140,10 +150,8 @@ export class RiderPose {
     J.chest.copy(J.hip).addScaledVector(t, 0.5);
     J.neck.copy(J.hip).addScaledVector(t, 0.6);
     J.head.copy(J.hip).addScaledVector(t, 0.78);
-    _n.set(0, 0, -0.19).applyQuaternion(_q);
-    if (twist) _n.applyAxisAngle(t, twist);
-    this.chestFacing.set(1, 0, 0).applyQuaternion(_q);
-    if (twist) this.chestFacing.applyAxisAngle(t, twist);
+    _n.set(0, 0, -0.19).applyQuaternion(_q).applyAxisAngle(t, SHOULDER_OPEN + twist);
+    this.chestFacing.set(1, 0, 0).applyQuaternion(_q).applyAxisAngle(t, SHOULDER_OPEN + twist);
     J.shF.copy(J.chest).add(_n).addScaledVector(t, -0.03);
     J.shR.copy(J.chest).sub(_n).addScaledVector(t, -0.03);
 
