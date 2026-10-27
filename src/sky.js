@@ -61,7 +61,7 @@ export const TIME = {
 export const WEATHER = {
   clear: {},
   cloudy: { cloudCover: 0.86, sunIntensity: 0.45, envIntensity: 1.35, grey: 0.45, fogScale: 1.4, cloudSun: 0.75 },
-  mist: { cloudCover: 0.72, sunIntensity: 0.5, envIntensity: 1.3, grey: 0.7, fogScale: 5, cloudAmb: 1.5, cloudSun: 0.6 },
+  mist: { cloudCover: 0.8, sunIntensity: 0.5, envIntensity: 1.3, grey: 0.7, fogScale: 11, cloudAmb: 1.5, cloudSun: 0.6, cloudHaze: 5 },
   rain: { cloudCover: 0.97, sunIntensity: 0.22, envIntensity: 1.15, grey: 0.75, dim: 0.72, fogScale: 2.6, wet: 1, precip: 1, cloudSun: 0.3, cloudAmb: 0.85 },
   snow: { cloudCover: 0.93, sunIntensity: 0.3, envIntensity: 1.4, grey: 0.8, fogScale: 3, precip: 1, snow: true, cloudSun: 0.45 },
 };
@@ -101,6 +101,7 @@ export function atmosphereFor(biomeId, time = 'day', weather = 'clear') {
   a.moon = !!t.moon;
   a.cloudAmb = (t.cloudAmb ?? 1) * (w.cloudAmb ?? 1);
   a.cloudSun = (t.cloudSun ?? 1) * (w.cloudSun ?? 1);
+  a.cloudHaze = w.cloudHaze ?? 1;
   Object.assign(ENV, {
     time: TIME[time] ? time : 'day',
     weather: WEATHER[weather] ? weather : 'clear',
@@ -172,7 +173,7 @@ const skyFrag = `varying vec3 vDir;
   uniform vec3 uZenith; uniform vec3 uHorizon; uniform vec3 uHaze; uniform vec3 uSunHaze;
   uniform vec3 uSun; uniform vec3 uSunCol; uniform float uCloud; uniform vec3 uCloudCol;
   uniform float uDisc; uniform float uStars; uniform float uMoon; uniform float uLining;
-  uniform sampler3D tCloud; uniform vec3 uSunLight; uniform vec2 uCloudSteps; uniform vec2 uCloudLight;
+  uniform sampler3D tCloud; uniform vec3 uSunLight; uniform vec2 uCloudSteps; uniform vec3 uCloudLight;
 
   float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
   float vnoise(vec2 p) {
@@ -289,7 +290,7 @@ const skyFrag = `varying vec3 vDir;
         t += dt;
       }
       // Distant clouds fade into the horizon haze.
-      float far = 1.0 - exp(-t0 / 26000.0);
+      float far = 1.0 - exp(-t0 * uCloudLight.z / 26000.0);
       float horizonFade = smoothstep(-0.02, 0.06, d.y);
       cloudLight = mix(cloudLight, haze * (1.0 - trans), far);
       trans = mix(1.0, trans, horizonFade);
@@ -329,7 +330,7 @@ export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE.alpine) {
     uCloudCol: { value: v3(atmo.cloudColor) },
     tCloud: { value: cloudNoise(q.cloudNoise ?? 64) },
     uSunLight: { value: v3(atmo.sunColor).multiplyScalar(atmo.sunIntensity) },
-    uCloudLight: { value: new THREE.Vector2(atmo.cloudAmb ?? 1, atmo.cloudSun ?? 1) },
+    uCloudLight: { value: new THREE.Vector3(atmo.cloudAmb ?? 1, atmo.cloudSun ?? 1, atmo.cloudHaze ?? 1) },
     uCloudSteps: { value: new THREE.Vector2(q.cloudSteps ?? 64, q.cloudLightSteps ?? 4) },
     uDisc: { value: night ? 0.07 : 1 },
     uStars: { value: night * (1 - smoothstep01((atmo.cloudCover - 0.5) / 0.45)) },

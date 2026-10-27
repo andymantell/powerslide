@@ -12,7 +12,7 @@ import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
 import { mulberry32 } from './noise.js';
 
-const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7;
+const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8;
 // Structure half width: the parapet's inner face sits at the guardrail line
 // (set per level, as narrow-lane biomes move the guardrail in).
 let W = 5.45;
@@ -227,7 +227,7 @@ export class Structures {
     // Streams and falls: vertex colour runs from clear water to white foam.
     this.flowTex = tex.foam.clone();
     this.flowTex.needsUpdate = true;
-    this.streamMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.25, metalness: 0, normalMap: tex.normal, normalScale: new THREE.Vector2(0.6, 0.6) });
+    this.streamMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.25, metalness: 0, normalMap: tex.normal, normalScale: new THREE.Vector2(0.6, 0.6), transparent: true });
     this.streamMat.onBeforeCompile = (sh) => {
       sh.uniforms.tFoam = { value: tex.foam };
       sh.uniforms.uFlow = this.flowUniform = { value: 0 };
@@ -243,7 +243,11 @@ export class Structures {
           // vColor.r carries how fast the water runs: 0 calm, 1 a fall.
           float rush = vColor.r;
           float foam = clamp(mix(foamA * 0.35, max(foamA, foamB) * 1.2, rush) + rush * 0.35, 0.0, 1.0);
-          diffuseColor.rgb = mix(vec3(0.05, 0.13, 0.14), vec3(0.92, 0.95, 0.96), foam);`,
+          diffuseColor.rgb = mix(vec3(0.05, 0.13, 0.14), vec3(0.92, 0.95, 0.96), foam);
+          // A ford is a few centimetres of peaty water over the road: you see
+          // the tarmac through it, tinted brown, with streaks of foam.
+          diffuseColor.rgb = mix(diffuseColor.rgb, mix(vec3(0.16, 0.1, 0.05), vec3(0.85, 0.85, 0.8), foam), vColor.g);
+          diffuseColor.a = mix(1.0, 0.35 + foam * 0.55, vColor.g);`,
         )
         .replace('#include <color_fragment>', '')
         .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = mix(0.08, 0.6, foam);');
@@ -1020,8 +1024,8 @@ const BUILDS = {
       road.sample(s, f);
       for (const d of across) {
         pos.push(f.x + f.rightX * d, job.level, f.z + f.rightZ * d);
-        // Rushing water where it pours across the road.
-        col.push(0.12, 0, 0);
+        // Rushing water where it pours across the road (g: shallow, see-through).
+        col.push(0.12, 1, 0);
         uv.push(d / 4, s / 4);
       }
       if (i < n) {
@@ -1097,7 +1101,9 @@ function edgeRun(geo, job, side, kind) {
   const w = 1.9;
   const d1 = d0 + side * w;
   const f = {};
-  const greens = ['#4d6a33', '#567438', '#46602f', '#5d7a3c'];
+  // Hawthorn, hazel and holly greens, with a few dead brown and gorse sprigs.
+  const greens = ['#4d6a33', '#567438', '#46602f', '#5d7a3c', '#3f5a2a', '#62803f', '#4a5f2c', '#5f6a33'];
+  const LUMPS = 6;
   const ring = (s) => {
     road.sample(s, f);
     const g = t.heightAt(f.x + f.rightX * (d0 + d1) / 2, f.z + f.rightZ * (d0 + d1) / 2);
@@ -1107,17 +1113,24 @@ function edgeRun(geo, job, side, kind) {
     const at = (d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
     return {
       a: at(d0, base), b: at(d0 + side * 0.08, top), c: at(d1 - side * 0.08, top), e: at(d1, base),
-      h: [at(d0 + side * 0.1, top), at(d0 + side * 0.5, top + 0.9 + n * 0.5), at(d1 - side * 0.5, top + 1.0 + n * 0.4), at(d1 - side * 0.1, top)],
+      // The hedge on top: a rounded, lumpy crown, bulging out over the road.
+      h: Array.from({ length: LUMPS + 1 }, (_, i) => {
+        const u = i / LUMPS;
+        const lump = Math.sin(u * Math.PI) * (1.0 + n * 0.5) + (this.rand() - 0.5) * 0.35 * Math.sin(u * Math.PI);
+        return at(d0 + side * (-0.15 + u * (w + 0.3)), top + lump);
+      }),
     };
   };
-  const step = 2;
+  const step = 1;
   let prev = ring(job.s0);
   for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
     const cur = ring(s);
     const faces = [[prev.a, prev.b, cur.b, cur.a], [prev.b, prev.c, cur.c, cur.b], [prev.c, prev.e, cur.e, cur.c]];
     for (const [p, q, r, u] of faces) quadOut(geo, p, q, r, u, side, MASONRY, '#6e7362');
-    const col = greens[Math.floor(this.rand() * greens.length)];
-    for (let i = 0; i < 3; i++) quadOut(geo, prev.h[i], prev.h[i + 1], cur.h[i + 1], cur.h[i], side, PAINT, col);
+    for (let i = 0; i < LUMPS; i++) {
+      const col = greens[Math.floor(this.rand() * greens.length)];
+      quadOut(geo, prev.h[i], prev.h[i + 1], cur.h[i + 1], cur.h[i], side, LEAVES, col);
+    }
     prev = cur;
   }
 }

@@ -36,11 +36,18 @@ export function texturesReady() {
 export const GROUND_SETS = {
   alpine: { base: 'grass', rock: 'rock', gravel: 'gravel', snow: 'snow' },
   // Rolling moorland: gentler hills, granite, heather and bracken, no snow.
-  dartmoor: { base: 'moor', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'moor_tuft', relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.15 },
+  dartmoor: {
+    base: 'moor', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'moor_tuft',
+    // Dark heathery hollows, tawny moor grass, rusty bracken patches.
+    patchLo: [0.72, 0.66, 0.62], patchHi: [1.12, 1.0, 0.8], patchC: [1.15, 0.7, 0.45, 0.7],
+    relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.15,
+  },
 };
 
 const SHARED = /* glsl */ `
   uniform sampler2D tBaseA, tBaseN, tRockA, tRockN, tGravA, tGravN, tSnowA, tSnowN;
+  uniform vec3 uPatchLo, uPatchHi;
+  uniform vec4 uPatchC;
   varying vec3 vGWorld;
   varying vec3 vGNormal;
   varying vec4 vSplat;
@@ -77,6 +84,11 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     tGravN: { value: T(set.gravel, 'normal') },
     tSnowA: { value: T(set.snow, 'albedo') },
     tSnowN: { value: T(set.snow, 'normal') },
+    // Large-scale tints: lush and dry patches, and a third patch colour
+    // (heather, say) with its strength in w.
+    uPatchLo: { value: new THREE.Vector3(...(set.patchLo ?? [0.74, 0.84, 0.68])) },
+    uPatchHi: { value: new THREE.Vector3(...(set.patchHi ?? [1.15, 1.08, 0.86])) },
+    uPatchC: { value: new THREE.Vector4(...(set.patchC ?? [1, 1, 1, 0])) },
   };
   const detail = !far && !simple;
   mat.onBeforeCompile = (shader) => {
@@ -135,7 +147,9 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         `}
         // Large patches of lusher and drier grass.
         float gN2 = texture2D(tSnowA, gp.xz * 0.0031 + 0.5).a;
-        aBase.rgb *= mix(vec3(0.74, 0.84, 0.68), vec3(1.15, 1.08, 0.86), smoothstep(0.2, 0.8, gN2));
+        aBase.rgb *= mix(uPatchLo, uPatchHi, smoothstep(0.2, 0.8, gN2));
+        float gN3 = texture2D(tSnowA, gp.zx * 0.0057 + 0.27).a;
+        aBase.rgb = mix(aBase.rgb, aBase.rgb * uPatchC.rgb, smoothstep(0.55, 0.7, gN3) * uPatchC.w);
         // Height blend: each layer's weight is lifted by its own height map.
         vec4 sw = vSplat;
         float wB = max(1.0 - sw.x - sw.y - sw.z, 0.0);

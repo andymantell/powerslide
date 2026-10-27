@@ -54,6 +54,9 @@ export class Grass {
       uTime: { value: 0 },
       uFade: { value: new THREE.Vector2(this.radius * 0.3, this.radius) },
       tPatch: { value: groundTexture('snow', 'albedo', renderer) },
+      uPatchLo: { value: new THREE.Vector3(...(terrain.groundSet?.patchLo ?? [0.74, 0.84, 0.68])) },
+      uPatchHi: { value: new THREE.Vector3(...(terrain.groundSet?.patchHi ?? [1.15, 1.08, 0.86])) },
+      uPatchC: { value: new THREE.Vector4(...(terrain.groundSet?.patchC ?? [1, 1, 1, 0])) },
     };
     const mat = new THREE.MeshStandardMaterial({
       map,
@@ -99,6 +102,8 @@ export class Grass {
           '#include <common>',
           `#include <common>
           uniform sampler2D tPatch;
+          uniform vec3 uPatchLo, uPatchHi;
+          uniform vec4 uPatchC;
           varying vec3 vTuft;`,
         )
         .replace(
@@ -106,7 +111,9 @@ export class Grass {
           `#include <map_fragment>
           // Same lush and dry patches as the ground shader, so tufts blend in.
           float gN2 = texture2D(tPatch, vTuft.xy * 0.0031 + 0.5).a;
-          diffuseColor.rgb *= mix(vec3(0.74, 0.84, 0.68), vec3(1.15, 1.08, 0.86), smoothstep(0.2, 0.8, gN2));
+          diffuseColor.rgb *= mix(uPatchLo, uPatchHi, smoothstep(0.2, 0.8, gN2));
+          float gN3 = texture2D(tPatch, vTuft.yx * 0.0057 + 0.27).a;
+          diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * uPatchC.rgb, smoothstep(0.55, 0.7, gN3) * uPatchC.w);
           diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.12, 0.8), vTuft.z);
           // Darker in the base of the clump.
           diffuseColor.rgb *= mix(0.32, 0.92, smoothstep(0.0, 0.7, vMapUv.y));`,

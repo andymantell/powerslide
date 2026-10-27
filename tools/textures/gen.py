@@ -100,7 +100,7 @@ def moor():
     """Dartmoor: tussocky moor grass, bracken and heather."""
     grass('moor', dict(soil='#3a2d22', dark='#45481f', mid='#6b6a33', light='#a09a58', dry='#a26f3c', heather='#4f3a38'), seed=3)
     # Tussocks: tawny moor grass, gorse yellow in the flowering clumps.
-    tuft('moor_tuft', dict(dark='#4a4a22', mid='#77703a', light='#b0a466', dry='#b08a55', flowers=['#f0c419', '#e8b40f']), seed=83)
+    tuft('moor_tuft', dict(dark='#3c3a1f', mid='#605b35', light='#8a8150', dry='#94704a', flowers=['#e6b81a', '#d9a514']), seed=83)
 
 
 def ridged(size, period, octaves, seed):

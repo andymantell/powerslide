@@ -4,6 +4,7 @@
 // texture (tools/textures/props.py), projected from the prop's own axes so it
 // sticks to the model, and bumps the normal from it:
 //   0 paint   1 planks   2 shingles   3 masonry   4 plaster   5 glass   6 metal   7 emissive
+//   8 leaves (hedges built in src/structures.js; uv.x runs past 1 for it)
 import * as THREE from 'three';
 
 const DETAIL = new URL('./assets/textures/props_detail.png', import.meta.url).href;
@@ -67,9 +68,19 @@ export function createPropMaterial(renderer) {
           float amt = pk < 3.5 ? 0.95 : 0.22;
           diffuseColor.rgb *= 1.0 + (ph - 0.5) * amt;
         }
+        if (pk > 7.5) {
+          // Leaves: clumps from two scales of the detail texture, with dark
+          // gaps between them and lighter tips catching the sky.
+          vec2 luv = puv * 1.6;
+          float l1 = texture2D(tDetail, luv * 0.9).a;
+          float l2 = texture2D(tDetail, luv * 2.7 + 0.31).b;
+          ph = l1 * 0.6 + l2 * 0.4;
+          diffuseColor.rgb *= 0.45 + smoothstep(0.25, 0.75, ph) * 0.95;
+          diffuseColor.rgb *= mix(vec3(0.92, 1.0, 0.85), vec3(1.08, 1.0, 1.1), l2);
+        }
         // Ground contact: a little darker near the base of each prop.
         diffuseColor.rgb *= 0.72 + 0.28 * smoothstep(-0.2, 1.6, vPLocal.y);
-        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : 0.5;
+        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : pk < 7.5 ? 0.5 : 0.95;
         float pMetal = (pk > 5.5 && pk < 6.5) ? 0.75 : 0.0;
         `,
       )
@@ -77,9 +88,9 @@ export function createPropMaterial(renderer) {
       .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = pMetal;')
       .replace(
         '#include <normal_fragment_maps>',
-        `if (pk > 0.5 && pk < 4.5) {
+        `if ((pk > 0.5 && pk < 4.5) || pk > 7.5) {
           // Bump from the detail height (as three's bumpmap), fading with distance.
-          float bump = (pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
+          float bump = (pk > 7.5 ? 2.5 : pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
           vec3 sx = normalize(dFdx(-vViewPosition)), sy = normalize(dFdy(-vViewPosition));
           vec2 dh = vec2(dFdx(ph), dFdy(ph)) * bump;
           vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
@@ -90,7 +101,7 @@ export function createPropMaterial(renderer) {
       .replace(
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
-        if (pk > 6.5) totalEmissiveRadiance += diffuseColor.rgb * (0.6 + uNight * 2.4);
+        if (pk > 6.5 && pk < 7.5) totalEmissiveRadiance += diffuseColor.rgb * (0.6 + uNight * 2.4);
         else if (pk > 4.5 && pk < 5.5) totalEmissiveRadiance += vec3(1.0, 0.78, 0.45) * uNight * 0.9;`,
       );
   };
