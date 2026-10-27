@@ -85,7 +85,12 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         float onRoad = 1.0 - verge;
         rcol *= mix(1.0, uSurface.x, onRoad);
         rcol *= mix(1.0, 0.55, uSurface.z * onRoad);
-        rough = mix(rough, 0.28 + (rough - 0.6) * 0.5, uSurface.z * onRoad);
+        rough = mix(rough, 0.42 + (rough - 0.6) * 0.4, uSurface.z * onRoad);
+        // Puddles in the dips and wheel tracks: smooth water, mirror-like.
+        float pudN = texture2D(tAspA, vec2(ru * 0.045 + 0.31, rs * 0.021)).r * 0.6 + rNoise(rs * 0.13 + floor(ru * 0.5) * 3.7) * 0.4;
+        float puddle = uSurface.z * onRoad * smoothstep(0.52, 0.6, pudN + track * 0.12 - asp.a * 0.08);
+        rcol *= 1.0 - puddle * 0.35;
+        rough = mix(rough, 0.12, puddle);
         diffuseColor.rgb *= rcol;
         `,
       )
@@ -94,7 +99,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         '#include <normal_fragment_maps>',
         `{
           vec3 tn = texture2D(tAspN, vec2(ru, rs) * 0.75).xyz * 2.0 - 1.0;
-          tn.xy *= (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7) * mix(1.0, uSurface.y, 1.0 - verge);
+          tn.xy *= (1.0 - puddle * 0.95) * (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7) * mix(1.0, uSurface.y, 1.0 - verge);
           // Tangent frame from screen-space derivatives of the road UVs.
           vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition);
           vec2 st0 = dFdx(vRoad), st1 = dFdy(vRoad);

@@ -52,7 +52,7 @@ export class Grass {
     map.anisotropy = 4;
     this.uniforms = {
       uTime: { value: 0 },
-      uFade: { value: new THREE.Vector2(this.radius * 0.6, this.radius) },
+      uFade: { value: new THREE.Vector2(this.radius * 0.3, this.radius) },
       tPatch: { value: groundTexture('snow', 'albedo', renderer) },
     };
     const mat = new THREE.MeshStandardMaterial({
@@ -77,8 +77,14 @@ export class Grass {
           '#include <begin_vertex>',
           `#include <begin_vertex>
           vec3 tBase = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-          float tFade = 1.0 - smoothstep(uFade.x, uFade.y, distance(tBase.xz, cameraPosition.xz));
-          transformed.y *= tFade;
+          // Thin out with distance instead of stopping at a line: each tuft
+          // has its own threshold and sinks into the ground as it's passed,
+          // so there's no front of grass popping up ahead of the rider.
+          // Those that stay grow a little to keep the coverage even.
+          float thin = smoothstep(uFade.x, uFade.y, distance(tBase.xz, cameraPosition.xz));
+          float tH0 = fract(sin(dot(tBase.xz, vec2(12.9898, 78.233))) * 43758.5453);
+          float tFade = clamp((tH0 + 0.3 - thin * 1.3) / 0.3, 0.0, 1.0);
+          transformed *= vec3(1.0 + thin * 0.5, tFade * (1.0 + thin * 0.35), 1.0 + thin * 0.5);
           // Wind: gusts roll across the slope, tips move most.
           float tH = uv.y * uv.y;
           float gust = sin(uTime * 1.3 + tBase.x * 0.21 + tBase.z * 0.13) * 0.5 + 0.5;

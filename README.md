@@ -206,12 +206,18 @@ preset.
   lamps). `/tools/garage/` shows them all in the game's materials
   (`?types=hatch,van&views=fq,side,rq,front&night=1`), and
   `node tools/garage/shoot.mjs out.png [query]` saves it.
+- `/tools/sky/?biome=alpine&time=dusk&weather=rain&quality=medium` draws just
+  the sky (volumetric clouds included) in four directions, in a few seconds;
+  `node tools/sky/shoot.mjs out.png [query]` saves it. In the game,
+  `?time=` (dawn, day, dusk, night) and `?weather=` (clear, cloudy, mist,
+  rain, snow) override the level's own sky for testing.
 - `node tools/levelshots.mjs <levelId> [outDir] [quality] [at:view,...]`
   screenshots a level at points along the road (views: chase, high, side,
   back) for before/after comparisons of level dressing.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
   vista, trees, forest, verge, cutting, distant, boulder, traffic, tail; `SHOT_PR=0.6` mimics a lowered render scale, `SHOT_NIGHT=1` darkens the scene to check headlamps and `SHOT_LEFT=1` switches to keep-left traffic) for before/after comparisons.
+  vista, trees, forest, verge, cutting, distant, boulder, and sun and sky looking up; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.
 
 ## Sound
 

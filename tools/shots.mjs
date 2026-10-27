@@ -46,6 +46,9 @@ const views = {
   verge: { back: 0, up: 0.9, ahead: 14, lookUp: 0.4, side: 3.5 },
   cutting: { target: 'cutting' },
   distant: { target: 'distant' },
+  // The sky, looking 18° up towards the sun and away from it.
+  sun: { target: 'sky', toSun: 1 },
+  sky: { target: 'sky', toSun: -1 },
   boulder: { target: 'boulder', back: 4, up: 1.5, ahead: 0, lookUp: 0.5, side: 1 },
   // The nearest vehicles: from the roadside, and following one.
   traffic: { target: 'traffic', side: 5, up: 1.6, back: -6 },
@@ -62,6 +65,16 @@ for (const [name, v] of Object.entries(views)) {
     const fx = Math.sin(player.yaw), fz = -Math.cos(player.yaw);
     const rx = -fz, rz = fx;
     let p = player.pos;
+    if (v.target === 'sky') {
+      const d = P.SUN_DIR;
+      const h = Math.hypot(d.x, d.z) || 1;
+      camera.position.set(p.x, p.y + 1.6, p.z);
+      camera.lookAt(p.x + (d.x / h) * v.toSun * 100, p.y + 1.6 + 32, p.z + (d.z / h) * v.toSun * 100);
+      camera.fov = 75;
+      camera.updateProjectionMatrix();
+      P.renderFrame();
+      return;
+    }
     if (v.target === 'boulder') {
       // Frame the biggest boulder near the rider.
       let best = null;

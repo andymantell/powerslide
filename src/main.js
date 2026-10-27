@@ -9,7 +9,8 @@ import { Audio, VOLUMES } from './audio.js';
 import { TILT_SENSITIVITIES } from './tilt.js';
 import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
-import { createSky, SUN_DIR, ATMOSPHERE } from './sky.js';
+import { createSky, SUN_DIR, atmosphereFor, ENV } from './sky.js';
+import { Precipitation } from './weather.js';
 import { Post } from './post.js';
 import { texturesReady, GROUND_SETS } from './ground.js';
 import { MARKINGS } from './roadmat.js';
@@ -69,19 +70,29 @@ setRoadWidth(look.lane);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12000);
-const { sky, sun } = createSky(scene, renderer, Q, pick(ATMOSPHERE, look.atmosphere));
+// Time of day and weather come with the look; ?time= and ?weather= override
+// them for testing.
+const atmo = atmosphereFor(look.atmosphere, params.get('time') || look.time, params.get('weather') || look.weather);
+const { sky, sun, fogDensity } = createSky(scene, renderer, Q, atmo);
+const precip = new Precipitation(scene, Q);
+const camVel = new THREE.Vector3();
+const camPrev = new THREE.Vector3();
 const post = new Post(renderer, scene, camera, Q);
 
 // The world is rebuilt for each level (see loadWorld); start with a stub road.
 const road = new Road(1);
 road.ensure(START_S + 200);
-const terrain = new Terrain(scene, road, 12, Q, renderer, pick(GROUND_SETS, look.ground));
+// Falling snow settles everywhere, not just on the peaks.
+const groundSet = { ...pick(GROUND_SETS, look.ground) };
+if (ENV.snow) groundSet.snowLine = Math.min(groundSet.snowLine ?? 240, -20);
+const terrain = new Terrain(scene, road, 12, Q, renderer, groundSet);
 const forest = new Forest(scene, renderer, Q, look.species);
 terrain.forest = forest;
 const boulders = new Boulders(scene, renderer, pick(GROUND_SETS, look.ground));
 terrain.boulders = boulders;
 const grass = new Grass(scene, renderer, terrain, Q);
 const props = new Props(scene, renderer, terrain, look.atmosphere);
+props.mat.userData.uniforms.uNight.value = ENV.night;
 const structures = new Structures(scene, renderer, road, terrain, props, boulders);
 const scenery = new Scenery(road, terrain, props, structures);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
@@ -213,9 +224,12 @@ async function loadWorld(level) {
   game.trafficBase = traffic.density;
   player.diff = mix.tuning;
   Object.assign(player.mods, mix.mods);
-  setRoadSurface(roadMesh.roadMat, mix.surface);
-  scene.fog.density = Q.fog * mix.fog;
+  setRoadSurface(roadMesh.roadMat, { ...mix.surface, wet: Math.max(mix.surface.wet ?? 0, ENV.wet) });
+  scene.fog.density = fogDensity * mix.fog;
   audio.setScene({ biome: (level ? biomeOf(level) : mix.biome)?.id, level, road, mix });
+  // The sky this page was built with (a level's own, or a ?time= / ?weather= test).
+  audio.setWeather(ENV.weather);
+  audio.setTimeOfDay(ENV.time);
   player.reset(road.start);
   cam.init = false;
   roadMesh.update(player.s);
@@ -1286,6 +1300,9 @@ function frame(now) {
   sun.position.copy(player.pos).addScaledVector(SUN_DIR, 150);
   sun.target.position.copy(player.pos);
   sky.position.copy(camera.position);
+  if (dt > 0) camVel.subVectors(camera.position, camPrev).divideScalar(dt);
+  camPrev.copy(camera.position);
+  precip.update(now / 1000, camVel);
 
   updateResolution(dt);
   updateCamera(dt, time);
@@ -1338,4 +1355,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, props, structures, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, sparks, props, structures, renderFrame: () => post.render() });
