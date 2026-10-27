@@ -417,13 +417,11 @@ export class Traffic {
   }
 }
 
-// Headlamp level for a look (biomes.js lookOf) and its atmosphere: full at
-// night, partly at dusk and dawn, dipped in rain and mist.
-export function carLights(atmo = {}, look = {}) {
-  if (atmo.night !== undefined) return atmo.night;
-  const time = { night: 1, dusk: 0.6, dawn: 0.5, evening: 0.6 }[look.time] ?? 0;
-  const weather = { rain: 0.35, storm: 0.5, fog: 0.4, mist: 0.3, snow: 0.35 }[look.weather] ?? 0;
-  const dim = clamp((1.4 - (atmo.sunIntensity ?? 3)) / 1.2, 0, 1);
-  const misty = (atmo.fogScale ?? 1) > 1.5 ? 0.12 : 0;
-  return Math.max(time, weather, dim, misty);
+// Headlamp level for the page's sky: atmo from sky.js atmosphereFor() and
+// its ENV (night 0..1, precip 0..1). Full at night, partly at dusk and dawn,
+// dipped in rain, snow and thick mist.
+export function carLights(atmo = {}, env = {}) {
+  const dim = clamp((1.2 - (atmo.sunIntensity ?? 3)) / 1.0, 0, 1);
+  const misty = (atmo.fogScale ?? 1) > 1.5 ? 0.15 : 0;
+  return Math.max(env.night ?? 0, (env.precip ?? 0) * 0.4, dim, misty);
 }

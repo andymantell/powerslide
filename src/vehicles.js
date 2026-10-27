@@ -303,7 +303,7 @@ VehicleFleet.prototype.drawExtras = function drawExtras(cars, camera) {
       _s.set(c.cls === 'bike' ? 4.5 : 7, 1, reach);
       _m.compose(_p, _q, _s);
       pools.setMatrixAt(np, _m);
-      const k = lit.has(c) ? 0.25 : 1;
+      const k = lit.has(c) ? 0.6 : 1;
       pools.setColorAt(np++, _c.setRGB(night * k, night * k, night * k));
     }
     // Lamp glows: two heads and two tails (one each on a bike).
