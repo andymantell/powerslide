@@ -967,15 +967,17 @@ const BUILDS = {
     const at = (k) => road.sample(s + k, {});
     for (let k = -1.2; k <= 1.21; k += 0.4) {
       const p = at(k);
-      geo.box(p.x, p.z, p.y - 0.5, p.y - 0.04, along, 0.21, across, hw, PAINT, '#1b1a18');
+      // The road is drawn right across, so the pit's dark mouth sits just
+      // on top of it: looking between the bars you see black, not tarmac.
+      geo.box(p.x, p.z, p.y - 0.5, p.y + 0.015, along, 0.21, across, hw, PAINT, '#000000');
     }
     for (const k of [-1, 1]) {
       const p = at(k * 1.45);
-      geo.box(p.x, p.z, p.y - 0.5, p.y + 0.04, along, 0.18, across, hw, PLASTER, CONCRETE);
+      geo.box(p.x, p.z, p.y - 0.5, p.y + 0.03, along, 0.18, across, hw, PLASTER, CONCRETE);
     }
-    for (let k = -1.2; k <= 1.21; k += 0.16) {
+    for (let k = -1.2; k <= 1.21; k += 0.2) {
       const p = at(k);
-      geo.box(p.x, p.z, p.y - 0.06, p.y + 0.05, along, 0.04, across, hw, METAL, '#6d7175');
+      geo.box(p.x, p.z, p.y - 0.06, p.y + 0.05, along, 0.025, across, hw, METAL, '#6d7175');
     }
     // Walls along both sides, right by the grid, with a gap for the gate
     // just past it (on the right after the grid, on the left before it).
