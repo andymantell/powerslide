@@ -96,6 +96,8 @@ const PANELS = ['loading', 'title', 'help', 'whatsnew', 'intro', 'crash', 'finis
 function show(id) {
   for (const p of PANELS) $(p).classList.toggle('hidden', p !== id);
   $('hud').classList.toggle('hidden', !!id && id !== 'crash' && id !== 'finish' && id !== 'pause');
+  // The in-run menu and restart buttons only show while riding.
+  $('runbtns').classList.toggle('hidden', !!id);
   if (id) focusFirst($(id));
 }
 
@@ -488,6 +490,25 @@ $('quit').addEventListener('click', () => {
   togglePause();
   toTitle();
 });
+$('restart').addEventListener('click', restart);
+// In-run buttons (top right, outside the touch steering area, which is the
+// canvas underneath). They never take focus, so Space can't press them.
+for (const [id, act] of [['run-menu', () => game.mode === 'play' && togglePause()], ['run-restart', restart]]) {
+  $(id).addEventListener('pointerdown', (e) => e.preventDefault());
+  $(id).addEventListener('click', act);
+}
+
+// Back to the top of the level (or a fresh endless run) from a run or the pause menu.
+async function restart() {
+  if (game.mode !== 'play' && game.mode !== 'paused') return;
+  if (game.mode === 'paused') audio.ctx?.resume();
+  if (!game.level) {
+    player.reset(road.start);
+    cam.init = false;
+    await buildTiles();
+  }
+  startRun('start');
+}
 
 function togglePause() {
   game.mode = game.mode === 'play' ? 'paused' : 'play';
@@ -684,6 +705,8 @@ function frame(now) {
   if (input.wasPressed('KeyC') || (pad(3) && game.mode === 'play')) game.camMode = (game.camMode + 1) % 3;
   if ((input.wasPressed('KeyP') || input.wasPressed('Escape') || pad(9)) && (game.mode === 'play' || game.mode === 'paused')) {
     togglePause();
+  } else if ((input.wasPressed('KeyR') || pad(8)) && (game.mode === 'play' || game.mode === 'paused')) {
+    restart();
   } else if (game.mode === 'title' && pad(3)) {
     setQuality(QUALITY_ORDER[(QUALITY_ORDER.indexOf(settings.qualityChoice) + 1) % QUALITY_ORDER.length]);
   } else if (game.mode !== 'play' && !(game.mode === 'crashed' && player.crashTime < 1)) {
