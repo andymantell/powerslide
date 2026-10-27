@@ -140,6 +140,8 @@ preset.
 - `/tools/poses/` (with `npm run dev` running) draws the rider in every pose
   from several sides; `?pose=tuck,airbrake&view=front,side&zoom=neck&focus=haF`
   narrows it down. `node tools/poses/shoot.mjs out.png [query]` saves it.
+  `node tools/poses/check.mjs` (no browser) measures arms going into the body
+  and how far off centre the rider sits, across every pose and the steps between.
 - `node tools/shots.mjs [url] [outDir] [quality] [views]` boots the game in
   headless Chromium and saves fixed camera views (chase, rider, board, road,
   vista, trees, forest, verge, cutting, boulder) for before/after comparisons.

@@ -23,6 +23,8 @@ const FOOT_TURN_F = 1.25;
 const FOOT_TURN_R = 1.05;
 const HIP_OPEN = 0.85; // hips turn most of the way towards the nose with the feet
 const SHOULDER_OPEN = 0.5;
+const SLIDE_TWIST_TOE = -0.3; // chest square to the toe side
+const SLIDE_TWIST_HEEL = -0.9;
 const PIVOT_Y = -0.06; // trucks' roll axis, relative to the deck top
 const ANKLE = 0.05; // ankle above the sole
 const GROUND = -DECK_HEIGHT;
@@ -36,6 +38,8 @@ const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _c = new THREE.Vector3();
 const _n = new THREE.Vector3();
+const _f = new THREE.Vector3();
+const _s = new THREE.Vector3();
 const _pole = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 const _qx = new THREE.Quaternion();
@@ -92,8 +96,8 @@ export class RiderPose {
     const weight = p.weight ?? 0;
 
     // Feet planted on the rolling deck.
-    deckPoint(0.02, FOOT_Z_FRONT, roll, ANKLE, J.footF);
-    deckPoint(0.02, FOOT_Z_REAR, roll, ANKLE, J.footR);
+    deckPoint(0, FOOT_Z_FRONT, roll, ANKLE, J.footF);
+    deckPoint(0, FOOT_Z_REAR, roll, ANKLE, J.footR);
     this.footRollF = this.footRollR = -roll;
 
     // The body leans as one about the line through the feet (the balance
@@ -104,15 +108,21 @@ export class RiderPose {
     _qx.setFromAxisAngle(X, -pitch);
     _q.multiply(_qx);
     const midZ = (FOOT_Z_FRONT + FOOT_Z_REAR) * 0.5 + tuck * 0.08 - weight * 0.11;
-    _a.set(-0.04 - tuck * 0.05 - bend * 0.06 - spread * 0.03, hipH, 0).applyQuaternion(_q);
+    // The hips face part way down the hill; bending pushes the seat back
+    // the opposite way, so the body stays over the middle of the board.
+    const hipTurn = HIP_OPEN + spread * 0.1 + tuck * 0.6;
+    _f.set(Math.cos(hipTurn), 0, -Math.sin(hipTurn));
+    _a.set(0, hipH, 0).addScaledVector(_f, -0.04 - tuck * 0.05 - bend * 0.06 - spread * 0.03).applyQuaternion(_q);
     J.hip.set(0, ANKLE, midZ).add(_a);
     this.bodyUp.copy(Y).applyQuaternion(_q);
     // Hips open towards the nose with the feet. The chest turns further:
     // square to the road ahead in a tuck (shoulders across the board) and
     // nearly so for the air brake, and the hips follow it a little.
-    const twist = Math.min(Math.PI / 2, SHOULDER_OPEN + spread * (1.4 - SHOULDER_OPEN) + tuck * (Math.PI / 2 - SHOULDER_OPEN));
-    _n.set(0, 0, -0.1).applyQuaternion(_q);
-    _n.applyAxisAngle(Y, HIP_OPEN + spread * 0.1 + tuck * 0.25);
+    let twist = Math.min(Math.PI / 2, SHOULDER_OPEN + spread * (1.4 - SHOULDER_OPEN) + tuck * (Math.PI / 2 - SHOULDER_OPEN));
+    // Hand down in a slide: the chest turns towards that side, so the arm
+    // reaches out from its own shoulder instead of across the body.
+    if (p.slideHand) twist = THREE.MathUtils.lerp(twist, p.slideHand > 0 ? SLIDE_TWIST_TOE : SLIDE_TWIST_HEEL, p.handAmount ?? 1);
+    _n.set(0, 0, -0.1).applyAxisAngle(Y, hipTurn).applyQuaternion(_q);
     J.hipF.copy(J.hip).add(_n);
     J.hipR.copy(J.hip).sub(_n);
 
@@ -141,8 +151,8 @@ export class RiderPose {
 
     // Torso: upright, folding over the front knee in a tuck, standing tall and
     // leaning back into the wind for an air brake.
-    const t = this.torsoDir.set(0.15 + bend * 0.25, 1, 0);
-    t.lerp(_a.set(0.12, 0.4, -0.9), tuck);
+    const t = this.torsoDir.set(0, 1, 0).addScaledVector(_f, 0.15 + bend * 0.25);
+    t.lerp(_a.set(0, 0.4, -0.92), tuck);
     t.lerp(_a.set(0.04, 1, 0.18), spread);
     t.lerp(_a.set(0.35, 1, -0.25), push * 0.6);
     t.normalize().applyQuaternion(_q);
@@ -162,11 +172,20 @@ export class RiderPose {
 
     // Hands: relaxed by the sides, behind the back in a tuck, wide for the air
     // brake, swinging for balance while pushing, and puck down in a slide.
-    const handF = _b.copy(J.shF).add(_a.set(0.18, -0.48, -0.08).applyQuaternion(_q));
-    const handR = _c.copy(J.shR).add(_a.set(0.12, -0.5, 0.12).applyQuaternion(_q));
+    // Shoulder line (front to back shoulder), for hands and elbows.
+    _s.subVectors(J.shR, J.shF).normalize();
+    // Relaxed: hanging just outside the hips and a little in front.
+    _n.copy(Y_DOWN).applyQuaternion(_q);
+    // Crouching, they come forward and out, clear of the knees.
+    const handF = _b.copy(J.shF).addScaledVector(_n, 0.48 - bend * 0.12).addScaledVector(_s, -0.2 - bend * 0.08).addScaledVector(this.chestFacing, -0.04 + bend * 0.2);
+    const handR = _c.copy(J.shR).addScaledVector(_n, 0.48 - bend * 0.12).addScaledVector(_s, 0.16 + bend * 0.08).addScaledVector(this.chestFacing, -0.04 + bend * 0.2);
     if (tuck > 0) {
-      handF.lerp(_a.copy(J.hip).add(_n.set(-0.2, 0.12, 0.05).applyQuaternion(_q)), tuck);
-      handR.lerp(_a.copy(J.hip).add(_n.set(-0.2, 0.08, 0.15).applyQuaternion(_q)), tuck);
+      // Hands clasped on the small of the back, clear of the leathers.
+      const back = (side, out) => out.copy(J.hip).addScaledVector(t, 0.16).addScaledVector(this.chestFacing, -0.19).addScaledVector(_s, side * 0.05);
+      // On the way, they swing out and round the hips rather than through them.
+      const arc = Math.sin(Math.PI * tuck);
+      handF.lerp(back(-1, _a), tuck).addScaledVector(_s, -0.12 * arc).addScaledVector(this.chestFacing, -0.16 * arc);
+      handR.lerp(back(1, _a), tuck).addScaledVector(_s, 0.12 * arc).addScaledVector(this.chestFacing, -0.16 * arc);
     }
     if (spread > 0) {
       // Arms out wide to the sides, a touch above the shoulders and slightly
@@ -184,17 +203,29 @@ export class RiderPose {
       handR.lerp(_a.copy(J.shR).add(_n.set(0.25, -0.45, 0.05 - sw)), push * 0.7);
     }
     if (p.handTarget && p.slideHand) {
-      if (p.slideHand > 0) handF.lerp(p.handTarget, p.handAmount ?? 1);
-      else handR.lerp(p.handTarget, p.handAmount ?? 1);
+      // One hand down on the road, the other out wide for balance.
+      const k = p.handAmount ?? 1;
+      const [down, free, sh, side] = p.slideHand > 0 ? [handF, handR, J.shR, 1] : [handR, handF, J.shF, -1];
+      // The hand on its way down swings out round the knee.
+      const arc = Math.sin(Math.PI * k);
+      down.lerp(p.handTarget, k).addScaledVector(_s, -side * 0.2 * arc).addScaledVector(this.chestFacing, 0.15 * arc);
+      free.lerp(_a.copy(sh).addScaledVector(_s, side * 0.32).addScaledVector(this.chestFacing, 0.2).addScaledVector(t, -0.2), k);
+      free.addScaledVector(_s, side * 0.15 * arc).addScaledVector(this.chestFacing, 0.1 * arc);
     }
     if (limp) {
       handF.lerp(_a.copy(J.chest).add(_n.set(0.4, 0.3, -0.3)), limp);
       handR.lerp(_a.copy(J.chest).add(_n.set(0.4, 0.2, 0.3)), limp);
     }
-    // Elbows point back along the board, or down and back when spread wide.
-    _n.copy(this.chestFacing).multiplyScalar(-0.5).add(Y_DOWN);
-    twoBoneIK(J.shF, handF, UPPER_ARM, FOREARM, _pole.set(-0.3, -0.2, -1).lerp(_n, spread), J.elF, J.haF);
-    twoBoneIK(J.shR, handR, UPPER_ARM, FOREARM, _pole.set(-0.6, -0.2, 1).lerp(_n, spread), J.elR, J.haR);
+    // Elbows point out to the side and back, down and back when spread wide,
+    // and up off the back with the hands behind it in a tuck.
+    for (const [sh, hand, el, ha, side] of [[J.shF, handF, J.elF, J.haF, -1], [J.shR, handR, J.elR, J.haR, 1]]) {
+      _pole.copy(_s).multiplyScalar(side).addScaledVector(this.chestFacing, -0.6).addScaledVector(t, -0.2);
+      _n.copy(this.chestFacing).multiplyScalar(-0.5).add(Y_DOWN);
+      _pole.lerp(_n, spread);
+      _n.copy(_s).multiplyScalar(side).addScaledVector(this.chestFacing, -0.3);
+      _pole.lerp(_n, tuck);
+      twoBoneIK(sh, hand, UPPER_ARM, FOREARM, _pole, el, ha);
+    }
 
     // Look down the hill (rig -Z, or +Z when riding fakie).
     this.headPitch = -0.15 - tuck * 0.2 + limp * 0.8;
