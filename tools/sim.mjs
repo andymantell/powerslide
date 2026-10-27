@@ -132,6 +132,18 @@ for (const steer of [-1, 0, 1]) {
   console.log(`brake held (full scrub): ${fmt(p.speed)}, slip ${(p.slip * 57.3).toFixed(0)}°`);
 }
 
+console.log('\n== Letting go of a slide keeps your line (50 km/h on 6%, 1.5 s slide, then 1.5 s)');
+for (const steer of [-0.5, 0, 0.5]) {
+  const p = make(0.06, 50 / 3.6);
+  run(p, 1.5, { slide: true, steer });
+  const before = Math.atan2(p.vel.x, -p.vel.y);
+  let swing = 0;
+  const crash = run(p, 1.5, { steer: 0 }, (pp) => {
+    swing = Math.max(swing, Math.abs(Math.atan2(pp.vel.x, -pp.vel.y) - before));
+  });
+  console.log(`slide steer ${String(steer).padStart(4)}: heading swing after release ${(swing * 57.3).toFixed(0).padStart(3)}°, ${crash !== null ? 'CRASH: ' + p.crashReason : 'rode away'}`);
+}
+
 console.log('\n== 180 to fakie: open the slide wide, then let go (30 km/h, flat)');
 {
   const p = make(0.0, 30 / 3.6);

@@ -43,6 +43,7 @@ const CDA_SLIDE = 0.08; // extra while side-on in a slide
 const CRR = 0.012; // urethane on asphalt
 const SLIDE_ANGLE = 0.7; // rad: default slide angle to travel (~40°)
 const SLIDE_STEER = 0.45; // g of path steering available mid-slide
+const SLIDE_PULL = 0.08; // share of the wheels' natural sideways pull kept mid-slide
 const STEP = 1 / 120;
 
 // A typical downhill setup: 48° front and a calmer 42° rear baseplate.
@@ -118,6 +119,7 @@ export class Player {
     this.sliding = false; // wheels currently sliding
     this.slideMode = false; // rider is throwing a slide
     this.slideDir = 1;
+    this.slideRecover = false; // board straightening after a slide
     this.slip = 0; // angle between deck and travel
     this.slipRate = 0;
     this.tuck = 0;
@@ -214,10 +216,16 @@ export class Player {
     // Slide initiation / release.
     if (input.slide && !this.slideMode && speed > 3) {
       this.slideMode = true;
-      this.slideDir = Math.abs(this.steer) > 0.15 ? Math.sign(this.steer) : this.slideDir;
+      // Steering picks the side; otherwise throw it towards the inside of the
+      // bend coming up, so the side is never a surprise.
+      const ahead = road.sample(this.s + 15 + speed * 0.8, this.frame).kappa;
+      if (Math.abs(this.steer) > 0.15) this.slideDir = Math.sign(this.steer);
+      else if (Math.abs(ahead) > 1 / 400) this.slideDir = Math.sign(ahead);
+      this.slideRecover = false;
       this.events.push('slideStart');
     } else if (!input.slide && this.slideMode) {
       this.slideMode = false;
+      this.slideRecover = true;
       const a = Math.abs(this.slip);
       if (d.highside && speed > d.highsideSpeed && a > d.highsideSlip && a < Math.PI - 0.7) {
         this.crash('Highsided: the wheels hooked up while sideways');
@@ -342,7 +350,13 @@ export class Player {
       latImpulse += a.acc * (a.nx * rx + a.nz * rz);
       longImpulse += a.acc * (a.nx * ux + a.nz * uz);
     }
-    if (this.slideMode) [vx, vz] = this.steerSlide(vx0, vz0, vx, vz, dt, gripScale);
+    // The stick keeps the path while the slide is held and while the board
+    // straightens up after it; otherwise the wheels would drag the rider off
+    // towards where the nose pointed. A little natural pull stays mid-slide.
+    if (this.slideRecover && Math.abs(this.slip) < 0.08) this.slideRecover = false;
+    if (this.slideMode || this.slideRecover) {
+      [vx, vz] = this.steerSlide(vx0, vz0, vx, vz, dt, gripScale, this.slideMode ? SLIDE_PULL : 0);
+    }
     this.vel.set(vx, vz);
     this.yawRate = r;
     const aLat = latImpulse / (MASS * dt);
@@ -409,13 +423,13 @@ export class Player {
   // sideways pull the wheels give is replaced by one the stick asks for (a
   // little of the natural pull towards the nose stays), within what sliding
   // urethane can deliver. The board's slip target follows the new heading.
-  steerSlide(vx0, vz0, vx, vz, dt, gripScale) {
+  steerSlide(vx0, vz0, vx, vz, dt, gripScale, pull) {
     const v = Math.hypot(vx, vz);
     if (v < 2) return [vx, vz];
     const rx = -vz / v, rz = vx / v; // right of travel
     const aWheels = ((vx - vx0) * rx + (vz - vz0) * rz) / dt;
     const cap = this.diff.muKinetic * G * gripScale;
-    const want = clamp(this.steer * SLIDE_STEER * G * gripScale + 0.3 * aWheels, -cap, cap);
+    const want = clamp(this.steer * SLIDE_STEER * G * gripScale + pull * aWheels, -cap, cap);
     const dv = (want - aWheels) * dt;
     return [vx + rx * dv, vz + rz * dv];
   }
