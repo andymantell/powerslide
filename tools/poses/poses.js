@@ -27,6 +27,7 @@ const VIEWS = {
   back: [-1, 0.35, 0.3],
   rear: [0.3, 0.3, 1],
   top: [0.25, 1, 0.05],
+  noseSide: [1, 0.15, -0.9],
 };
 const ZOOM = { full: [0.75, 1.5], hips: [0.8, 0.6], shoulders: [1.3, 0.6], neck: [1.45, 0.45], knees: [0.45, 0.6], feet: [0.1, 0.9], hands: [0.9, 0.9], wrist: [0.8, 0.35] };
 

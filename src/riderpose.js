@@ -19,10 +19,10 @@ export const UPPER_ARM = 0.3;
 export const FOREARM = 0.29;
 export const FOOT_Z_FRONT = -0.26;
 export const FOOT_Z_REAR = 0.25;
-const FOOT_TURN_F = 0.87;
-const FOOT_TURN_R = 0.44;
-const HIP_OPEN = 0.3; // hips turn part way towards the front foot
-const SHOULDER_OPEN = 0.15;
+const FOOT_TURN_F = 1.25;
+const FOOT_TURN_R = 1.05;
+const HIP_OPEN = 0.85; // hips turn most of the way towards the nose with the feet
+const SHOULDER_OPEN = 0.5;
 const PIVOT_Y = -0.06; // trucks' roll axis, relative to the deck top
 const ANKLE = 0.05; // ankle above the sole
 const GROUND = -DECK_HEIGHT;
@@ -59,7 +59,7 @@ export class RiderPose {
     this.headYaw = 0;
     this.headPitch = 0;
     // Downhill stance: toes point across the board and turn towards the nose,
-    // the front foot about 50 degrees, the back foot about 25.
+    // the front foot about 70 degrees, the back foot about 60.
     this.footYawF = Math.PI / 2 + FOOT_TURN_F;
     this.footYawR = Math.PI / 2 + FOOT_TURN_R;
     this.footRollF = 0; // soles follow the deck roll
@@ -110,9 +110,10 @@ export class RiderPose {
     // Hips open a little towards the nose with the feet. Air brake: the
     // chest turns square to the road ahead, and the hips follow it part of
     // the way (the feet stay planted).
-    const twist = spread * 1.4;
+    // Chest turn from the stance: about 80 degrees in all for the air brake.
+    const twist = SHOULDER_OPEN + spread * (1.4 - SHOULDER_OPEN);
     _n.set(0, 0, -0.1).applyQuaternion(_q);
-    _n.applyAxisAngle(Y, HIP_OPEN + twist * 0.3);
+    _n.applyAxisAngle(Y, HIP_OPEN + spread * 0.1);
     J.hipF.copy(J.hip).add(_n);
     J.hipR.copy(J.hip).sub(_n);
 
@@ -150,8 +151,8 @@ export class RiderPose {
     J.chest.copy(J.hip).addScaledVector(t, 0.5);
     J.neck.copy(J.hip).addScaledVector(t, 0.6);
     J.head.copy(J.hip).addScaledVector(t, 0.78);
-    _n.set(0, 0, -0.19).applyQuaternion(_q).applyAxisAngle(t, SHOULDER_OPEN + twist);
-    this.chestFacing.set(1, 0, 0).applyQuaternion(_q).applyAxisAngle(t, SHOULDER_OPEN + twist);
+    _n.set(0, 0, -0.19).applyQuaternion(_q).applyAxisAngle(t, twist);
+    this.chestFacing.set(1, 0, 0).applyQuaternion(_q).applyAxisAngle(t, twist);
     J.shF.copy(J.chest).add(_n).addScaledVector(t, -0.03);
     J.shR.copy(J.chest).sub(_n).addScaledVector(t, -0.03);
 
