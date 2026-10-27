@@ -290,7 +290,7 @@ export class Player {
       // A controllable drift by default, about 40° to travel, so most of the
       // speed carries. Steering into the slide opens it a little; brake throws
       // it fully sideways to scrub hard; tuck closes it down to carry speed.
-      const base = (this.handDown ? HAND_ANGLE : SLIDE_ANGLE) + 0.25 * this.steer * this.slideDir + (input.down ? 0.9 : 0) - (input.up ? 0.25 : 0);
+      const base = (this.handDown ? HAND_ANGLE : SLIDE_ANGLE) + 0.25 * this.steer * this.slideDir + (input.down ? 0.9 : 0) - 0.25 * Math.max(input.up ? 1 : 0, input.tuck || 0);
       const target = this.slideDir * clamp(base, 0.4, 1.9);
       yawAcc = clamp(40 * (target - slip) - 9 * this.slipRate, -45, 45);
     } else {

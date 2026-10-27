@@ -22,10 +22,10 @@ Then open the URL Vite prints (usually http://localhost:5173).
 | Keyboard | Xbox controller | Touch | Action |
 | --- | --- | --- | --- |
 | `A` / `D` or `←` / `→` | Left stick | Drag left / right | Lean and carve |
-| `W` / `↑` | RT | Tap / drag forward | Push (slow) or tuck (fast). On touch, a tap is one push and dragging further forward tucks lower |
+| `W` / `↑` | A (push), RT (tuck, analogue) | Tap / drag forward | Push (slow) or tuck (fast). On touch, a tap is one push and dragging further forward tucks lower; on a controller, squeezing RT harder tucks lower |
 | | | Drag back | Air brake: stand tall with arms out to catch the wind |
 | `S` / `↓` | LT (analogue) | | Air brake at speed (stand tall, chest to the road, arms wide); footbrake once slow |
-| `Space` / `Shift` (hold) | A, LB or RB (hold) | Flick back and hold (or hold a second finger) | Powerslide. Steer left/right to guide it (into the slide opens it a little); hold brake to throw it fully sideways and scrub hard, tuck to close it down and carry speed |
+| `Space` / `Shift` (hold) | X, LB or RB (hold) | Flick back and hold (or hold a second finger) | Powerslide. Steer left/right to guide it (into the slide opens it a little); hold brake to throw it fully sideways and scrub hard, tuck to close it down and carry speed |
 | `C` | Y | | Cycle camera (chase, low, helmet) |
 | `P` / `Esc` | ☰ Menu | ☰ button (top right) | Pause |
 | `R` | ⧉ View | ↻ button (top right) | Restart the level (or a fresh endless run) |

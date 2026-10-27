@@ -157,6 +157,8 @@ export class Input {
     let downAmount = down ? 1 : 0; // how hard: LT is analogue
     let slide = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight');
 
+    let padTuck = 0;
+    let padPush = false;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) {
       if (!gp) continue;
@@ -164,12 +166,18 @@ export class Input {
       // Deadzone plus a gentle curve for fine control at speed.
       const dz = 0.12;
       if (Math.abs(ax) > dz) steer = Math.sign(ax) * Math.pow((Math.abs(ax) - dz) / (1 - dz), 1.4);
+      // Standard mapping: RT (7) analogue tuck, LT (6) analogue brake, A (0)
+      // push, X (2) slide (LB / RB too). The stick only steers, so a hard
+      // diagonal never tucks or brakes by accident. D-pad up / down still work.
       const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
-      if (b(7) || b(12) || (gp.axes[1] || 0) < -0.5) up = true;
-      if (b(6) || b(13) || (gp.axes[1] || 0) > 0.5) down = true;
-      const lt = gp.buttons[6] ? gp.buttons[6].value : 0;
-      downAmount = Math.max(downAmount, b(13) || (gp.axes[1] || 0) > 0.5 ? 1 : 0, b(6) ? Math.max(0.35, lt) : 0);
-      if (b(0) || b(5) || b(4)) slide = true;
+      const val = (i) => (gp.buttons[i] ? gp.buttons[i].value : 0);
+      const rt = val(7) > 0.05 ? Math.min(1, (val(7) - 0.05) / 0.85) : 0;
+      padTuck = Math.max(padTuck, rt, b(7) ? 0.35 : 0);
+      if (b(0)) padPush = true;
+      if (b(12)) up = true;
+      if (b(6) || b(13)) down = true;
+      downAmount = Math.max(downAmount, b(13) ? 1 : 0, b(6) ? Math.max(0.35, val(6)) : 0);
+      if (b(2) || b(5) || b(4)) slide = true;
       // Rising edges for menu navigation: reported as Pad0, Pad1, ...
       const prev = (this.padPrev[gp.index] ||= []);
       gp.buttons.forEach((btn, i) => {
@@ -187,9 +195,9 @@ export class Input {
     this.state.down = down;
     this.state.downAmount = downAmount;
     this.state.slide = slide;
-    this.state.tuck = t.tuck;
+    this.state.tuck = Math.max(t.tuck, padTuck);
     this.state.air = t.air;
-    this.state.push = t.pushTime > 0;
+    this.state.push = t.pushTime > 0 || padPush;
     return this.state;
   }
 
