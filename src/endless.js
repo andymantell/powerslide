@@ -52,6 +52,7 @@ export const GROUPS = [
     title: 'World',
     items: [
       { id: 'biome', label: 'Biome', options: () => builtBiomes().map((b) => [b.id, b.name]), def: () => builtBiomes()[0]?.id ?? 'alpine' },
+      { id: 'sets', label: 'Bridges and villages', note: 'Bridges, galleries, lakes, farms', min: 0, max: 2, step: 0.5, def: 1, show: words([0, 'None'], [0.5, 'Few'], [1, 'Normal'], [1.5, 'Lots']) },
       { id: 'surface', label: 'Road surface', options: [['smooth', 'Smooth'], ['normal', 'Normal'], ['rough', 'Bumpy']], def: 'normal' },
       { id: 'weather', label: 'Weather', options: [['sunny', 'Sunny'], ['misty', 'Misty'], ['wet', 'Wet']], def: 'sunny' },
       { id: 'traffic', label: 'Traffic', min: 0, max: 3, step: 0.25, def: 1, show: words([0, 'None'], [0.25, 'Quiet'], [0.75, 'Normal'], [1.5, 'Busy'], [2.25, 'Rush hour']) },
@@ -190,6 +191,7 @@ export function derive(cfg) {
     seed: seedNumber(cfg.seed),
     shape: { steep: cfg.steep, corners: cfg.corners, sharp: cfg.sharp, grit: cfg.grit, wilder: cfg.wilder },
     extras: { works: cfg.works, radar: cfg.radar },
+    sets: cfg.sets,
     traffic: { density: ENDLESS_TRAFFIC.density * cfg.traffic, speed: ENDLESS_TRAFFIC.speed * cfg.carSpeed },
     tuning: {
       ...TUNING,

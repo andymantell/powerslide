@@ -299,6 +299,10 @@ export class Extras {
       this.nextWorks += len + (900 + rand() * 1400) / this.worksRate;
       // Close the left or right edge; cones taper in over 24 m and out over 12.
       const side = rand() < 0.5 ? -1 : 1;
+      // Not on a bridge or in a gallery.
+      let span = false;
+      for (let a = start - 30; a < start + len + 30; a += 10) if (road.spanAt(a)) span = true;
+      if (span) continue;
       const z = { start, end: start + len, cones: [], clean: true, scored: false, entered: false };
       for (let a = 0; a <= len; a += CONE_GAP / (a < 24 || a > len - 12 ? 2 : 1)) {
         const into = Math.min(1, a / 24, (len - a) / 12);
@@ -319,7 +323,7 @@ export class Extras {
     while (this.radar && this.nextSign < s + AHEAD) {
       const at = this.nextSign;
       this.nextSign += 1200 + rand() * 1800;
-      if (this.zones.some((z) => at > z.start - 120 && at < z.end + 20)) continue;
+      if (this.zones.some((z) => at > z.start - 120 && at < z.end + 20) || road.spanAt(at)) continue;
       const { canvas, ctx, tex } = face(256, 192);
       if (!ctx) continue;
       const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: 1, roughness: 0.4 });

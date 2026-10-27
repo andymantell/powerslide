@@ -259,6 +259,8 @@ export class Structures {
     }
     if (this.rockSet) this.boulders.remove(this.rockSet);
     this.rockSet = null;
+    for (const job of this.endless || []) if (job.rocks) this.boulders.remove(job.rocks);
+    this.endless = [];
     this.gondolas = [];
     this.lines = [];
   }
@@ -280,6 +282,52 @@ export class Structures {
       plan.call(this, job);
       this.todo.push(job);
     }
+  }
+
+  // Endless: one feature at a time, as the road is generated. f is a level
+  // feature (distances from the start line). Returns the job to build once
+  // the stretch's props are shaped; its terrain mods are kept on the job so
+  // prune() can drop them later.
+  add(f) {
+    if (!PLANS[f.type]) return null;
+    if (!this.rand) this.rand = mulberry32(4242);
+    this.rocks = [];
+    this.endless ||= [];
+    const start = this.road.start;
+    const [a, b] = SPAN_TYPES[f.type] || f.from !== undefined ? spanRange(f) : [f.at ?? 0, f.at ?? 0];
+    const job = { f, s0: start + a, s1: start + b };
+    const mods = this.terrain.mods.length;
+    PLANS[f.type].call(this, job);
+    job.mods = this.terrain.mods.slice(mods);
+    return job;
+  }
+
+  buildJob(job) {
+    const before = new Set(this.group.children);
+    BUILDS[job.f.type]?.call(this, job);
+    job.objects = this.group.children.filter((o) => !before.has(o));
+    if (this.rocks.length) {
+      job.rocks = new Float32Array(this.rocks);
+      this.boulders.add(job.rocks);
+      this.rocks = [];
+    }
+    this.endless.push(job);
+  }
+
+  // Endless: drops the structures that ended more than `behind` m back.
+  prune(s, behind = 600) {
+    const old = (this.endless || []).filter((j) => j.s1 < s - behind);
+    if (!old.length) return;
+    for (const job of old) {
+      for (const o of job.objects) {
+        this.group.remove(o);
+        o.geometry?.dispose();
+        if (o.isInstancedMesh) o.dispose();
+      }
+      if (job.rocks) this.boulders.remove(job.rocks);
+      this.terrain.mods = this.terrain.mods.filter((m) => !job.mods.includes(m));
+    }
+    this.endless = this.endless.filter((j) => !old.includes(j));
   }
 
   // Meshes, once the terrain mods (including building terraces) are final.
@@ -422,7 +470,7 @@ function mountainSide(road, s0, s1) {
 }
 
 // ---------------------------------------------------------------- plans
-const PLANS = {
+export const PLANS = {
   // { type: 'bridge', from, to, depth } A stone viaduct over a gorge with a river.
   bridge(job) {
     const { f } = job;

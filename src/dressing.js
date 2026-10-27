@@ -24,9 +24,22 @@ import { Props } from './props.js';
 
 export function dressLevel(level, road, props, terrain = props.terrain) {
   const rand = mulberry32((level?.seed ?? 7) + 777);
-  const S = road.start;
   if (!level) return;
-  for (const e of level.props || []) {
+  dressEntries(level.props || [], road, props, rand, terrain);
+  if (level.chevrons !== false) bendSigns(road, props);
+}
+
+// Endless: dresses one stretch of road, s0..s1, as it is generated. `entries`
+// are "props" entries as above (distances from the start line); the bend
+// signs go on every bend whose apex is in the stretch.
+export function dressRange(road, props, s0, s1, entries, rand, terrain = props.terrain) {
+  dressEntries(entries, road, props, rand, terrain);
+  bendSigns(road, props, s0, s1);
+}
+
+function dressEntries(entries, road, props, rand, terrain) {
+  const S = road.start;
+  for (const e of entries) {
     if (e.type) {
       const p = Props.at(road, S + e.at, onSide(road, S + e.at, e.d ?? 0, e.side), e.yaw);
       props.add(e.type, p.x, p.z, p.yaw, e.scale ?? 1);
@@ -73,7 +86,6 @@ export function dressLevel(level, road, props, terrain = props.terrain) {
       }
     }
   }
-  if (level.chevrons !== false) bendSigns(road, props);
 }
 
 // d moved to the valley (downhill) or mountain side of the road at s, for
@@ -85,11 +97,11 @@ function onSide(road, s, d, side) {
   return Math.abs(d) * (side === 'valley' ? valley : -valley);
 }
 
-// The bends tighter than curvature K: { start, end, peak, dir } in road
-// distance, dir +1 turning right.
-export function findBends(road, K) {
+// The bends tighter than curvature K between from and to (the level by
+// default): { start, end, peak, dir } in road distance, dir +1 turning right.
+export function findBends(road, K, from = road.start, to = road.finish) {
   const out = [];
-  const i0 = Math.round(road.start), i1 = Math.round(road.finish);
+  const i0 = Math.max(0, Math.round(from)), i1 = Math.min(road.count - 1, Math.round(to));
   let i = i0;
   while (i < i1) {
     if (Math.abs(road.k[i]) < K) {
@@ -108,9 +120,11 @@ export function findBends(road, K) {
 }
 
 // Chevrons on the outside of every tight bend (radius under 45 m), and a
-// warning sign on the approach.
-function bendSigns(road, props) {
-  for (const { start, end, peak, dir } of findBends(road, 1 / 45)) {
+// warning sign on the approach. With from/to, only bends whose apex is in
+// that stretch (it looks a little either side to find them whole).
+function bendSigns(road, props, from, to) {
+  const bends = from === undefined ? findBends(road, 1 / 45) : findBends(road, 1 / 45, from - 200, to + 200).filter((b) => b.peak >= from && b.peak < to);
+  for (const { start, end, peak, dir } of bends) {
     const outside = -dir;
     const rail = road.barrierAt(peak, outside) === 'guardrail';
     const d = outside * (rail ? 5.5 : 6.3);

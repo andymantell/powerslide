@@ -129,18 +129,35 @@ export class Props {
   }
 
   // Settles the remaining props on the finished terrain and fills the meshes.
-  finish() {
+  // append (endless, which dresses the road a stretch at a time): add these
+  // to the props already placed instead of replacing them.
+  finish(append = false) {
     const by = new Map();
     for (const p of this.list) {
       if (p.y === null) p.y = this.terrain.heightAt(p.x, p.z);
-      if (!by.has(p.type)) by.set(p.type, []);
+      if (!by.has(p.type)) by.set(p.type, append && this.items.has(p.type) ? [...this.items.get(p.type)] : []);
       by.get(p.type).push(p.x, p.y, p.z, p.yaw, p.scale);
     }
     for (const [type, arr] of by) this.items.set(type, new Float32Array(arr));
-    for (const [type, mesh] of this.meshes) {
-      if (!by.has(type)) mesh.count = 0;
+    if (!append) {
+      for (const [type, mesh] of this.meshes) {
+        if (!by.has(type)) mesh.count = 0;
+      }
     }
     this.lastX = Infinity;
+  }
+
+  // Endless: forgets props more than `dist` m from (px, pz), so the lists
+  // don't grow without end on a long ride.
+  prune(px, pz, dist) {
+    const d2 = dist * dist;
+    for (const [type, arr] of this.items) {
+      const keep = [];
+      for (let i = 0; i < arr.length; i += 5) {
+        if ((arr[i] - px) ** 2 + (arr[i + 2] - pz) ** 2 <= d2) keep.push(arr[i], arr[i + 1], arr[i + 2], arr[i + 3], arr[i + 4]);
+      }
+      if (keep.length < arr.length) this.items.set(type, new Float32Array(keep));
+    }
   }
 
   clear() {

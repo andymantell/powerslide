@@ -62,7 +62,10 @@ keeps its own best score. Endless also has things the campaign never does
 (`src/extras.js`): roadworks, where cones close the edge of the road over loose
 chippings (a clean run through scores a bonus), "YOUR SPEED" radar signs that
 score how fast you pass, and a road that gets steeper, twistier and busier the
-further you go.
+further you go. It shares the campaign's set pieces and roadside furniture:
+`src/scenery.js` dresses the endless road a stretch at a time, 2.3 km ahead of
+the rider (before the terrain there builds), using `Structures.add`/`buildJob`,
+`dressRange` and `Props.finish(true)`, and drops them again behind.
 
 Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,
 Pine Forest, Desert Canyon, City at Night, Coastal Cliffs and High Alpine Pass)

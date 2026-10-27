@@ -18,6 +18,7 @@ import { Grass } from './grass.js';
 import { Props } from './props.js';
 import { Structures } from './structures.js';
 import { dressLevel } from './dressing.js';
+import { Scenery } from './scenery.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
@@ -79,6 +80,7 @@ terrain.boulders = boulders;
 const grass = new Grass(scene, renderer, terrain, Q);
 const props = new Props(scene, renderer, terrain);
 const structures = new Structures(scene, renderer, road, terrain, props, boulders);
+const scenery = new Scenery(road, terrain, props, structures);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
 const player = new Player(scene, road, terrain);
 const traffic = new Traffic(scene, road);
@@ -167,6 +169,7 @@ async function loadWorld(level) {
   game.level = level;
   const mix = level ? levelMix(level) : derive(endless);
   worldKey = level ? null : setupKey();
+  game.worldRidden = false;
   game.seed = level ? level.seed : mix.seed;
   road.reset(game.seed, level, mix.shape);
   road.ensure(START_S + 7000);
@@ -178,6 +181,12 @@ async function loadWorld(level) {
   props.shape();
   structures.build();
   props.finish();
+  // Endless dresses its road as it goes; the first stretch before any tiles.
+  if (level) scenery.clear();
+  else {
+    scenery.reset(game.seed, mix.biome?.id, mix.sets);
+    scenery.update(road.start);
+  }
   grass.clear();
   roadMesh.clear();
   marks.clear();
@@ -517,16 +526,8 @@ async function rideEndless(reroll) {
     return;
   }
   game.best = loadBest();
-  // The road on screen is already this one: just go back to the top.
-  if (!game.level && worldKey === setupKey()) {
-    player.reset(road.start);
-    cam.init = false;
-    traffic.configure(derive(endless).traffic, game.seed);
-    extras.reset(game.seed, derive(endless).extras);
-    await buildTiles();
-  } else {
-    await loadWorld(null);
-  }
+  // The road on screen is already this one and nobody has ridden it yet.
+  if (game.level || worldKey !== setupKey() || game.worldRidden) await loadWorld(null);
   startRun();
 }
 $('crash-setup').addEventListener('click', openSetup);
@@ -592,6 +593,7 @@ async function startRun(from = game.level ? 'start' : 'here') {
     game.bonus = 0;
   }
   game.mode = 'play';
+  game.worldRidden = true;
   show(null);
   game.combo = 0;
   game.slidePts = 0;
@@ -812,12 +814,8 @@ for (const [id, act] of [['run-menu', () => game.mode === 'play' && togglePause(
 async function restart() {
   if (game.mode !== 'play' && game.mode !== 'paused') return;
   if (game.mode === 'paused') audio.ctx?.resume();
-  if (!game.level) {
-    player.reset(road.start);
-    cam.init = false;
-    extras.reset(game.seed, derive(endless).extras);
-    await buildTiles();
-  }
+  // Endless drops scenery behind the rider, so the top of the road is rebuilt.
+  if (!game.level) await loadWorld(null);
   startRun('start');
 }
 
@@ -1157,6 +1155,7 @@ function frame(now) {
   sparks.update(dt, glove, player.vel, glove ? glove.y - 0.05 : 0);
 
   road.ensure(player.s + 7000);
+  if (scenery.update(player.s)) props.update(player.pos.x, player.pos.z, true);
   roadMesh.update(player.s);
   terrain.update(player.pos.x, player.pos.z, 4);
   forest.update(player.pos.x, player.pos.z);
