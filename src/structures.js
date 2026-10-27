@@ -959,36 +959,38 @@ const BUILDS = {
     const road = this.road;
     const geo = new Geo();
     const s = job.s0;
-    const { f, along, across } = frame(road, s);
+    const { along, across } = frame(road, s);
     // Right across the verges to the walls, so nothing can walk round it.
     const hw = RAIL_OFFSET + 0.06;
-    // Dark pit, concrete ends and the steel bars across it.
-    geo.box(f.x, f.z, f.y - 0.5, f.y - 0.02, along, 1.3, across, hw, PAINT, '#1b1a18');
+    // Dark pit, concrete ends and the steel bars across it, each at the
+    // road's height where it lies, so the grid follows the slope.
+    const at = (k) => road.sample(s + k, {});
+    for (let k = -1.2; k <= 1.21; k += 0.4) {
+      const p = at(k);
+      geo.box(p.x, p.z, p.y - 0.5, p.y - 0.04, along, 0.21, across, hw, PAINT, '#1b1a18');
+    }
     for (const k of [-1, 1]) {
-      const x = f.x + along.x * k * 1.45, z = f.z + along.z * k * 1.45;
-      geo.box(x, z, f.y - 0.5, f.y + 0.02, along, 0.18, across, hw, PLASTER, CONCRETE);
+      const p = at(k * 1.45);
+      geo.box(p.x, p.z, p.y - 0.5, p.y + 0.04, along, 0.18, across, hw, PLASTER, CONCRETE);
     }
     for (let k = -1.2; k <= 1.21; k += 0.16) {
-      const x = f.x + along.x * k, z = f.z + along.z * k;
-      geo.box(x, z, f.y - 0.06, f.y + 0.03, along, 0.04, across, hw, METAL, '#6d7175');
+      const p = at(k);
+      geo.box(p.x, p.z, p.y - 0.06, p.y + 0.05, along, 0.04, across, hw, METAL, '#6d7175');
     }
-    // Short wall ends either side: up to the grid, except where the gate
-    // hangs (the gate is on the right after the grid and the left before it).
+    // Walls along both sides, right by the grid, with a gap for the gate
+    // just past it (on the right after the grid, on the left before it).
     for (const side of [-1, 1]) {
       const d = side * (RAIL_OFFSET + 0.4);
-      for (const k of [-1, 1]) {
-        const from = k === side ? GATE_AT + 4.3 : 1.65;
-        const half = (GRID_WALL - from) / 2;
-        const c = road.sample(s + k * (from + half), {});
-        // Rough stones in courses, ragged at the top.
-        const a1 = { x: c.dirX, z: c.dirZ }, a2 = { x: c.rightX, z: c.rightZ };
+      const runs = side > 0 ? [[-GRID_WALL, GATE_AT - 0.1], [GATE_AT + 4.0, GRID_WALL]] : [[-GRID_WALL, -GATE_AT - 4.0], [-GATE_AT + 0.1, GRID_WALL]];
+      for (const [r0, r1] of runs) {
+        // Rough stones in courses, ragged at the top, each sat at the road's
+        // height beside it.
         for (let y = -0.8; y < 1.0; y += 0.3) {
-          for (let u = -half; u < half - 0.1;) {
-            const l = 0.45 + this.rand() * 0.45;
-            const m = Math.min(u + l, half);
-            const o = (u + m) / 2;
-            const ctr = new THREE.Vector3(c.x + c.rightX * d + c.dirX * o, c.y + y, c.z + c.rightZ * d + c.dirZ * o);
-            lump(geo, ctr, a1, a2, (m - u) / 2 + 0.03, 0.36, 0.34 + (y > 0.8 ? this.rand() * 0.15 : 0), STONES[Math.floor(this.rand() * STONES.length)], this.rand);
+          for (let u = r0; u < r1 - 0.1;) {
+            const m = Math.min(u + 0.45 + this.rand() * 0.45, r1);
+            const c = road.sample(s + (u + m) / 2, {});
+            const ctr = new THREE.Vector3(c.x + c.rightX * d, c.y + y, c.z + c.rightZ * d);
+            lump(geo, ctr, { x: c.dirX, z: c.dirZ }, { x: c.rightX, z: c.rightZ }, (m - u) / 2 + 0.03, 0.36, 0.34 + (y > 0.8 ? this.rand() * 0.15 : 0), STONES[Math.floor(this.rand() * STONES.length)], this.rand);
             u = m;
           }
         }

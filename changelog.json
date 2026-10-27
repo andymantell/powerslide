@@ -2,6 +2,7 @@
   {
     "date": "2026-10-27",
     "items": [
+      "Fixed: cattle grids sit flat in the road instead of poking through it, with the walls running right alongside them",
       "Fixed: the game no longer gets stuck loading on some phones and tablets. The clouds now appear a moment after the level starts",
       "Fixed: cattle grids reach right across to the walls, so no sheep can sneak round them",
       "Fixed: gates at cattle grids sit neatly in the gap in the wall now",
