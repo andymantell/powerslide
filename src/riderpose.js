@@ -107,13 +107,12 @@ export class RiderPose {
     _a.set(-0.04 - tuck * 0.05 - bend * 0.06 - spread * 0.03, hipH, 0).applyQuaternion(_q);
     J.hip.set(0, ANKLE, midZ).add(_a);
     this.bodyUp.copy(Y).applyQuaternion(_q);
-    // Hips open a little towards the nose with the feet. Air brake: the
-    // chest turns square to the road ahead, and the hips follow it part of
-    // the way (the feet stay planted).
-    // Chest turn from the stance: about 80 degrees in all for the air brake.
-    const twist = SHOULDER_OPEN + spread * (1.4 - SHOULDER_OPEN);
+    // Hips open towards the nose with the feet. The chest turns further:
+    // square to the road ahead in a tuck (shoulders across the board) and
+    // nearly so for the air brake, and the hips follow it a little.
+    const twist = Math.min(Math.PI / 2, SHOULDER_OPEN + spread * (1.4 - SHOULDER_OPEN) + tuck * (Math.PI / 2 - SHOULDER_OPEN));
     _n.set(0, 0, -0.1).applyQuaternion(_q);
-    _n.applyAxisAngle(Y, HIP_OPEN + spread * 0.1);
+    _n.applyAxisAngle(Y, HIP_OPEN + spread * 0.1 + tuck * 0.25);
     J.hipF.copy(J.hip).add(_n);
     J.hipR.copy(J.hip).sub(_n);
 
@@ -143,7 +142,7 @@ export class RiderPose {
     // Torso: upright, folding over the front knee in a tuck, standing tall and
     // leaning back into the wind for an air brake.
     const t = this.torsoDir.set(0.15 + bend * 0.25, 1, 0);
-    t.lerp(_a.set(0.32, 0.38, -0.86), tuck);
+    t.lerp(_a.set(0.12, 0.4, -0.9), tuck);
     t.lerp(_a.set(0.04, 1, 0.18), spread);
     t.lerp(_a.set(0.35, 1, -0.25), push * 0.6);
     t.normalize().applyQuaternion(_q);
@@ -151,8 +150,13 @@ export class RiderPose {
     J.chest.copy(J.hip).addScaledVector(t, 0.5);
     J.neck.copy(J.hip).addScaledVector(t, 0.6);
     J.head.copy(J.hip).addScaledVector(t, 0.78);
-    _n.set(0, 0, -0.19).applyQuaternion(_q).applyAxisAngle(t, twist);
-    this.chestFacing.set(1, 0, 0).applyQuaternion(_q).applyAxisAngle(t, twist);
+    // Shoulder line: the stance's (front shoulder towards the nose) turned
+    // about the vertical, then made square to the spine. Turning about the
+    // spine instead does nothing once the spine itself points at the nose.
+    _n.set(0, 0, -1).applyAxisAngle(Y, twist).applyQuaternion(_q);
+    _n.addScaledVector(t, -_n.dot(t)).normalize();
+    this.chestFacing.crossVectors(_n, t).normalize();
+    _n.multiplyScalar(0.19);
     J.shF.copy(J.chest).add(_n).addScaledVector(t, -0.03);
     J.shR.copy(J.chest).sub(_n).addScaledVector(t, -0.03);
 
