@@ -960,7 +960,8 @@ const BUILDS = {
     const geo = new Geo();
     const s = job.s0;
     const { f, along, across } = frame(road, s);
-    const hw = HALF_WIDTH + 0.3;
+    // Right across the verges to the walls, so nothing can walk round it.
+    const hw = RAIL_OFFSET + 0.06;
     // Dark pit, concrete ends and the steel bars across it.
     geo.box(f.x, f.z, f.y - 0.5, f.y - 0.02, along, 1.3, across, hw, PAINT, '#1b1a18');
     for (const k of [-1, 1]) {
