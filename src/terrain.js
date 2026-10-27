@@ -26,6 +26,12 @@ export class Terrain {
     // Near tiles always cover at least nearRadius tiles from the rider.
     this.nearCut = { value: this.nearRadius * NEAR_SIZE - 40 };
     this.road = road;
+    // Biome shape: relief scales the hills, snowLine is metres above the road.
+    this.groundSet = groundSet;
+    this.relief = groundSet?.relief ?? 1;
+    this.maxRelief = groundSet?.maxRelief ?? Infinity; // caps the far hills (m)
+    this.snowLine = groundSet?.snowLine ?? 240;
+    this.treeDensity = groundSet?.treeDensity ?? 1;
     this.noise = createNoise2D(seed);
     this.noise2 = createNoise2D(seed + 1);
     this.noise3 = createNoise2D(seed + 2);
@@ -71,11 +77,11 @@ export class Terrain {
   heightFromField(x, z, f, coarse) {
     const e = Math.max(0, f.dist - SHOULDER);
     const k = f.uphill;
-    const up = (0.9 * e) / (1 + e / 320);
-    const down = (-0.75 * e) / (1 + e / 110);
+    const up = (0.9 * e * this.relief) / (1 + e / 320);
+    const down = (-0.75 * e * this.relief) / (1 + e / 110);
     const base = lerp(down, up, (k + 1) * 0.5);
     const ridge = ridged(this.noise, x / 1100, z / 1100, coarse ? 4 : 5);
-    const amp = smoothstep(4, 140, e) * (12 + Math.min(e, 1600) * 0.24);
+    const amp = smoothstep(4, 140, e) * Math.min(this.maxRelief, (12 + Math.min(e, 1600) * 0.24) * this.relief);
     const detail = fbm(this.noise2, x / 55, z / 55, 3) * smoothstep(1, 25, e) * (2 + e * 0.02);
     let h = f.roadY - 0.4 + base + (ridge - 0.3) * amp + detail;
     // Gentle ditch on the shoulder.
@@ -95,7 +101,7 @@ export class Terrain {
     // Road cuts: the uphill bank right beside the road is blasted rock.
     const cut = smoothstep(1.5, 4, rel) * (1 - smoothstep(14, 30, dist)) * (1 - smoothstep(0.8, 0.95, ny)) * smoothstep(0.3, 0.6, v + v2 * 0.5);
     const rock = Math.min(1, 1 - smoothstep(0.62, 0.84, ny) + outcrop * 0.8 + cut);
-    const snowLine = 240 + this.noise3(x / 150, z / 150) * 50;
+    const snowLine = this.snowLine + this.noise3(x / 150, z / 150) * 50;
     out.v = v;
     out.v2 = v2;
     out.snow = smoothstep(snowLine, snowLine + 40, rel) * smoothstep(0.55, 0.75, ny);
@@ -188,7 +194,7 @@ export class Terrain {
           }
           continue;
         }
-        if (f.dist < 9 || (r > forest * 0.9 && r > 0.04)) continue;
+        if (f.dist < 9 || (r > forest * 0.9 * this.treeDensity && r > 0.04)) continue;
         if (r <= 0.04 && slope < 1.2) {
           // A boulder, sometimes with a few smaller ones tumbled around it.
           const sc = 0.35 + rand() ** 2 * 1.8;

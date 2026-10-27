@@ -35,6 +35,8 @@ export function texturesReady() {
 // Surface sets per biome, keyed by the name in its biomes.js `look.ground`.
 export const GROUND_SETS = {
   alpine: { base: 'grass', rock: 'rock', gravel: 'gravel', snow: 'snow' },
+  // Rolling moorland: gentler hills, granite, heather and bracken, no snow.
+  dartmoor: { base: 'moor', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'moor_tuft', relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.15 },
 };
 
 const SHARED = /* glsl */ `

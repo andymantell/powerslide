@@ -87,8 +87,20 @@ def grass(name='grass', pal=None, seed=1):
     rgb = rgb * (0.85 + macro[..., None] * 0.3)
     lum = rgb.mean(-1, keepdims=True)
     rgb = lerp(rgb, lum * dry / dry.mean(), dryness * 0.55)
+    if 'heather' in pal:
+        # Moorland: low heather clumps (purple-brown) and rusty bracken.
+        heather = smoothstep(0.55, 0.7, norm01(fbm(N, 8, 4, seed + 11))) * (0.6 + 0.4 * norm01(fbm(N, 64, 2, seed + 12)))
+        rgb = lerp(rgb, hexcol(pal['heather']) * (0.8 + 0.4 * h[..., None]), heather[..., None] * 0.6)
+        h = np.maximum(h, heather * 0.8)
     height = norm01(h * 0.75 + clump * 0.25)
     save(name, rgb, height, normal_from_height(blur(height, 1), 3.0), quality=72)
+
+
+def moor():
+    """Dartmoor: tussocky moor grass, bracken and heather."""
+    grass('moor', dict(soil='#3a2d22', dark='#45481f', mid='#6b6a33', light='#a09a58', dry='#a26f3c', heather='#4f3a38'), seed=3)
+    # Tussocks: tawny moor grass, gorse yellow in the flowering clumps.
+    tuft('moor_tuft', dict(dark='#4a4a22', mid='#77703a', light='#b0a466', dry='#b08a55', flowers=['#f0c419', '#e8b40f']), seed=83)
 
 
 def ridged(size, period, octaves, seed):
@@ -105,7 +117,7 @@ def ridged(size, period, octaves, seed):
     return s / norm
 
 
-def rock(name='rock', pal=None, seed=11):
+def rock(name='rock', pal=None, seed=11, speckle=0.005, crystal=0.0):
     """Jointed rock as seen in a road cutting: bedding planes split into
     blocks by vertical joints, each block a slightly tilted facet with
     chamfered edges and dark open cracks between them."""
@@ -168,11 +180,21 @@ def rock(name='rock', pal=None, seed=11):
     streak = norm01(row[xx.astype(int)]) * np.exp(-(Y - y0) / 60)
     col = lerp(col, stain, smoothstep(0.35, 0.8, streak) * 0.45)
     sp = rng.random((N, N))
-    col = lerp(col, speck, (sp > 0.995) * 0.3)
+    col = lerp(col, speck, (sp > 1 - speckle) * 0.3)
+    if crystal:
+        # Coarse crystalline grain: pale feldspar and dark mica flecks.
+        g = blur(np.random.default_rng(seed + 30).random((N, N)), 1)
+        col = col * (1 + (norm01(g)[..., None] - 0.5) * crystal)
     col = lerp(col, c * 0.35, crack * 0.9)
     lich = smoothstep(0.68, 0.82, norm01(fbm(N, 10, 4, seed + 9))) * smoothstep(0.5, 0.7, h)
     col = lerp(col, lichen, lich * 0.45)
     save(name, col, h, normal_from_height(h, 7.0))
+
+
+def granite():
+    """Dartmoor granite: pale, coarse and speckled, with white and
+    yellow lichen."""
+    rock('granite', dict(a='#8b877f', b='#aaa59b', c='#4b4842', stain='#86745c', lichen='#c9c49a', speck='#e8e4da'), seed=17, speckle=0.02, crystal=0.9)
 
 
 def stones(size, cells, seed, gap=0.06, round_=0.35, vary=0.0):
@@ -435,7 +457,7 @@ def tuft(name='grass_tuft', pal=None, seed=81, size=512):
     print('wrote', name)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft)
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

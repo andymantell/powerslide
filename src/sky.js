@@ -20,6 +20,21 @@ export const ATMOSPHERE = {
     cloudColor: '#ffffff',
     envIntensity: 0.55,
   },
+  // Overcast, soft and misty, with a low sun breaking through.
+  dartmoor: {
+    sunAzimuth: -2.0,
+    sunElevation: 0.36,
+    zenith: '#5f7690',
+    horizon: '#c3c9cc',
+    haze: '#b3b9b9',
+    sunHaze: '#ddd3c0',
+    sunColor: '#f4ead8',
+    sunIntensity: 2.1,
+    cloudCover: 0.78,
+    cloudColor: '#e4e6e8',
+    envIntensity: 0.75,
+    fogScale: 2.2, // thicker mist than the alpine air
+  },
 };
 
 export const SUN_DIR = new THREE.Vector3();
@@ -131,7 +146,7 @@ export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE.alpine) {
   installFog(atmo);
   const sun3 = sunDir(atmo);
   SUN_DIR.copy(sun3);
-  scene.fog = new THREE.FogExp2(new THREE.Color(atmo.haze), q.fog ?? 0.00032);
+  scene.fog = new THREE.FogExp2(new THREE.Color(atmo.haze), (q.fog ?? 0.00032) * (atmo.fogScale ?? 1));
 
   const uniforms = {
     uZenith: { value: v3(atmo.zenith) },

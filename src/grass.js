@@ -9,7 +9,7 @@ import { mulberry32, smoothstep } from './noise.js';
 import { groundTexture, trackLoad } from './ground.js';
 import { boostAlpha } from './forest.js';
 
-const TEX = new URL('./assets/textures/grass_tuft.webp', import.meta.url).href;
+const tuftUrl = (name) => new URL(`./assets/textures/${name}.webp`, import.meta.url).href;
 const CELL = 8;
 const GRID = 4; // height samples per cell side (GRID + 1 points)
 const MAX = 32000;
@@ -47,7 +47,7 @@ export class Grass {
     if (!this.radius) return;
 
     let map;
-    trackLoad(new Promise((res) => (map = new THREE.TextureLoader().load(TEX, res, undefined, res))));
+    trackLoad(new Promise((res) => (map = new THREE.TextureLoader().load(tuftUrl(terrain.groundSet?.tuft ?? 'grass_tuft'), res, undefined, res))));
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = 4;
     this.uniforms = {
