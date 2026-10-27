@@ -132,6 +132,9 @@ export class Props {
   // append (endless, which dresses the road a stretch at a time): add these
   // to the props already placed instead of replacing them.
   finish(append = false) {
+    // A new level starts from nothing: props of a type it doesn't use would
+    // otherwise linger at the old road's positions, floating in its sky.
+    if (!append) this.items.clear();
     const by = new Map();
     for (const p of this.list) {
       if (p.y === null) p.y = this.terrain.heightAt(p.x, p.z);
@@ -145,6 +148,20 @@ export class Props {
       }
     }
     this.lastX = Infinity;
+  }
+
+  // A check for props that don't sit on the ground: every instance more than
+  // `tol` m above or below the terrain under it, as { type, x, z, off }.
+  // Run it from the console: __powerslide.props.floating().
+  floating(tol = 1) {
+    const out = [];
+    for (const [type, arr] of this.items) {
+      for (let i = 0; i < arr.length; i += 5) {
+        const off = arr[i + 1] - this.terrain.heightAt(arr[i], arr[i + 2]);
+        if (Math.abs(off) > tol) out.push({ type, x: arr[i], z: arr[i + 2], off: Math.round(off * 10) / 10 });
+      }
+    }
+    return out;
   }
 
   // Endless: forgets props more than `dist` m from (px, pz), so the lists

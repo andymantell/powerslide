@@ -187,6 +187,11 @@ async function loadWorld(level) {
     scenery.reset(game.seed, mix.biome?.id, mix.sets);
     scenery.update(road.start);
   }
+  // Dev builds: shout about any prop that isn't sitting on the ground.
+  if (import.meta.env.DEV) {
+    const off = props.floating();
+    if (off.length) console.warn(`${off.length} props off the ground`, off.slice(0, 10));
+  }
   grass.clear();
   roadMesh.clear();
   marks.clear();
