@@ -344,26 +344,93 @@ export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE.alpine) {
   skyScene.add(dome);
 
   // Background cube (with the sun disc) and a lighting cube without it, since
-  // the directional light already carries the sun's energy.
+  // the directional light already carries the sun's energy. A clear sky
+  // goes up at once; the clouds are raymarched afterwards, a strip at a time
+  // over several frames (see bakeClouds), because baking them in one go can
+  // stall a phone GPU long enough for the browser to drop the context.
   const bgSize = q.skySize ?? 512;
   // No mipmaps: the sky is smooth enough without, and some Android GPUs
   // sampled mismatched mip levels across cube faces, which showed as a seam.
-  const bgRT = new THREE.WebGLCubeRenderTarget(bgSize, { type: THREE.HalfFloatType, generateMipmaps: false, minFilter: THREE.LinearFilter });
-  new THREE.CubeCamera(0.1, 100, bgRT).update(renderer, skyScene);
-  uniforms.uDisc.value = 0;
-  const envRT = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType });
-  new THREE.CubeCamera(0.1, 100, envRT).update(renderer, skyScene);
+  const cubeOpts = { type: THREE.HalfFloatType, generateMipmaps: false, minFilter: THREE.LinearFilter };
+  const steps = uniforms.uCloudSteps.value.x;
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const env = pmrem.fromCubemap(envRT.texture);
-  pmrem.dispose();
-  envRT.dispose();
-  uniforms.tCloud.value.dispose();
-  dome.geometry.dispose();
-  dome.material.dispose();
-
+  const bakeEnv = () => {
+    uniforms.uDisc.value = 0;
+    const envRT = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType });
+    new THREE.CubeCamera(0.1, 100, envRT).update(renderer, skyScene);
+    const env = pmrem.fromCubemap(envRT.texture);
+    envRT.dispose();
+    scene.environment?.dispose();
+    scene.environment = env.texture;
+    uniforms.uDisc.value = night ? 0.07 : 1;
+  };
+  uniforms.uCloudSteps.value.x = 0;
+  let bgRT = new THREE.WebGLCubeRenderTarget(bgSize, cubeOpts);
+  new THREE.CubeCamera(0.1, 100, bgRT).update(renderer, skyScene);
+  bakeEnv();
   scene.background = bgRT.texture;
-  scene.environment = env.texture;
   scene.environmentIntensity = atmo.envIntensity;
+
+  // Cloud bake state: the next face and row, into a second cube that
+  // replaces the clear one when it's finished.
+  let job = steps > 0 ? { rt: new THREE.WebGLCubeRenderTarget(bgSize, cubeOpts), face: 0, row: 0, cam: null } : null;
+  const finish = () => {
+    if (uniforms.tCloud.value) uniforms.tCloud.value.dispose();
+    dome.geometry.dispose();
+    dome.material.dispose();
+    pmrem.dispose();
+    job = null;
+  };
+  if (!job) finish();
+  // Bakes up to `budget` pixels of cloud this frame; true once done.
+  const bakeClouds = (budget = 32768) => {
+    if (!job) return true;
+    const prevTarget = renderer.getRenderTarget();
+    try {
+      uniforms.uCloudSteps.value.x = steps;
+      if (!job.cam) {
+        job.cam = new THREE.CubeCamera(0.1, 100, job.rt);
+        job.cam.coordinateSystem = renderer.coordinateSystem;
+        job.cam.updateCoordinateSystem();
+        job.cam.updateMatrixWorld(true);
+      }
+      const rows = Math.max(8, Math.min(bgSize, Math.floor(budget / bgSize)));
+      let left = budget;
+      while (job.face < 6 && left > 0) {
+        const h = Math.min(rows, bgSize - job.row);
+        const rt = job.rt;
+        rt.viewport.set(0, 0, bgSize, bgSize);
+        rt.scissor.set(0, job.row, bgSize, h);
+        rt.scissorTest = true;
+        renderer.setRenderTarget(rt, job.face);
+        renderer.render(skyScene, job.cam.children[job.face]);
+        left -= h * bgSize;
+        job.row += h;
+        if (job.row >= bgSize) {
+          job.row = 0;
+          job.face++;
+        }
+      }
+      if (job.face < 6) return false;
+      job.rt.scissorTest = false;
+      const old = bgRT;
+      bgRT = job.rt;
+      scene.background = bgRT.texture;
+      old.dispose();
+      bakeEnv();
+      finish();
+      return true;
+    } catch (e) {
+      // Keep the clear sky rather than break the game.
+      console.warn('Cloud bake failed', e);
+      job.rt.dispose();
+      finish();
+      return true;
+    } finally {
+      uniforms.uCloudSteps.value.x = 0;
+      renderer.setRenderTarget(prevTarget);
+    }
+  };
 
   // Fill for the few non-PBR materials; IBL does the real work.
   const hemi = new THREE.HemisphereLight('#cfe0ff', '#4d4636', night ? 0.06 : 0.25);
@@ -386,5 +453,5 @@ export function createSky(scene, renderer, q = {}, atmo = ATMOSPHERE.alpine) {
   scene.add(sun, sun.target);
   // No separate sky mesh any more; kept in the return for callers.
   const sky = new THREE.Object3D();
-  return { sky, sun, hemi, fogDensity };
+  return { sky, sun, hemi, fogDensity, bakeClouds };
 }

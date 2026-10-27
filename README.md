@@ -217,6 +217,10 @@ preset.
   the rider beside it for scale, plus `index.json`. Numbers live in
   `tools/props/sheet-ids.json`, so feedback like "#42" keeps meaning the same
   prop; new props get the next free numbers.
+- `node tools/loadcheck.mjs [levelId] [low,high]` boots a level at each
+  preset and fails if it doesn't load, logs an error, or has a single draw
+  call that runs for seconds (phones drop the GPU when that happens). Run it
+  before pushing anything that renders at load time.
 - `node tools/levelshots.mjs <levelId> [outDir] [quality] [at:view,...]`
   screenshots a level at points along the road (views: chase, high, side,
   back) for before/after comparisons of level dressing.

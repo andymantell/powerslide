@@ -33,6 +33,7 @@ page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript((q) => localStorage.setItem('powerslide.quality', JSON.stringify(q)), quality);
 await page.goto(`${base}?level=${id}`);
 await page.waitForFunction(() => window.__powerslide && window.__powerslide.game.mode === 'intro', null, { timeout: 590000 });
+await page.evaluate(() => window.__powerslide.bakeClouds?.(Infinity));
 
 const length = await page.evaluate(() => window.__powerslide.road.finish - window.__powerslide.road.start);
 const points = list

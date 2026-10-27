@@ -32,6 +32,7 @@ await page.addInitScript((q) => {
 }, quality);
 await page.goto(url);
 await page.waitForFunction(() => window.__powerslide && ['title', 'intro'].includes(window.__powerslide.game.mode), null, { timeout: 590000 });
+await page.evaluate(() => window.__powerslide.bakeClouds?.(Infinity));
 await page.waitForTimeout(1500);
 
 const views = {

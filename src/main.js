@@ -74,7 +74,7 @@ const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 12
 // Time of day and weather come with the look; ?time= and ?weather= override
 // them for testing.
 const atmo = atmosphereFor(look.atmosphere, params.get('time') || look.time, params.get('weather') || look.weather);
-const { sky, sun, fogDensity } = createSky(scene, renderer, Q, atmo);
+const { sky, sun, fogDensity, bakeClouds } = createSky(scene, renderer, Q, atmo);
 const precip = new Precipitation(scene, Q);
 const camVel = new THREE.Vector3();
 const camPrev = new THREE.Vector3();
@@ -1226,6 +1226,7 @@ let last = performance.now();
 let time = 0;
 
 function frame(now) {
+  bakeClouds();
   requestAnimationFrame(frame);
   let dt = debug.dt || Math.min(0.05, (now - last) / 1000);
   last = now;
@@ -1458,4 +1459,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, sparks, props, structures, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, bakeClouds, sparks, props, structures, renderFrame: () => post.render() });
