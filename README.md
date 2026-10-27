@@ -190,11 +190,43 @@ run fullscreen and offline.
 - **Android:** open it in Chrome, tap **⋮ → Install app** (or accept the install banner).
 - **Xbox / PC:** in Edge, open the **⋯** menu → **Apps → Install Powerslide**.
 
-`pwa/plugin.js` writes `dist/sw.js` at build time. It precaches every built file
-under a cache named after a hash of the build, so each deploy gets a fresh
-cache and the old one is deleted. Page loads go network first, so an online
-player always gets the latest build; an open app picks up a new build when it
-returns to the title or crash screen, never mid-run. The service worker is
-only registered in production builds, not under `npm run dev`.
+`public/sw.js` is the service worker (only registered in production builds, not
+under `npm run dev`). It goes network first for the page and unhashed files, so an
+online player gets exactly what a browser tab would, and keeps a copy for offline
+play. Hashed bundles in `assets/` are served from its cache.
+
+### Updates
+
+Each build gets an ID (the commit SHA in CI) baked into the bundle, stamped into
+`index.html` as `<meta name="build-id">`, and written to `version.json` along with
+the release notes. `src/version.js` polls `version.json` every minute, and whenever
+the app comes back to the foreground. When a newer build is live, and a fresh
+`index.html` really serves it, the game offers it:
+
+- On a menu, a **New version!** box lists what's new with **RELOAD** and **LATER**.
+  LATER shrinks it to a small pill.
+- In a run, it's a small chip at the top. Tapping it ends the run and shows the
+  notes on the title screen.
+
+RELOAD unregisters the service worker, clears its cache and reloads with a
+cache-busting `?v=` (iOS Safari and the GitHub Pages CDN otherwise hand back the
+old page). If the reload still lands on an old build it retries up to 3 times.
+After an update, **What's New** opens with the new updates marked NEW, and the title
+screen shows the version and build time.
+
+This is ported from [push-pump-pop](https://github.com/andymantell/push-pump-pop).
+
+### Release notes
+
+**Every change a player would notice needs a line in `changelog.json`,** in the same
+commit as the change. Add it at the top of the top entry's `items`. Write it in plain
+words for a kid, starting with `New:`, `Better:` or `Fixed:`, e.g. `"New: grit on the
+road!"`.
+
+The build groups lines into updates by the commit that added them (via `git blame`,
+so the deploy checks out full history), and the game shows them that way: the update
+prompt lists the lines the running copy doesn't have, and after an update the What's
+New screen opens with the new updates marked. Don't reword old lines: a reworded line
+moves to the commit that changed it and shows up as new.
 
 The icons are rendered from `public/icons/icon.svg` with `npm run icons`.

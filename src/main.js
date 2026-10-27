@@ -15,6 +15,8 @@ import { Boulders } from './boulders.js';
 import { Grass } from './grass.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
+import { watchForUpdates } from './version.js';
+import { registerOffline, keepSaves } from './pwa.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, ENDLESS_TRAFFIC, autoQuality } from './settings.js';
 import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
 
@@ -90,7 +92,7 @@ const BEST_KEY = 'powerslide.best.endless';
 game.best = store.get(BEST_KEY, store.get('powerslide.best.pro', 0));
 
 // ---------------------------------------------------------------- world
-const PANELS = ['loading', 'title', 'help', 'intro', 'crash', 'finish', 'pause'];
+const PANELS = ['loading', 'title', 'help', 'whatsnew', 'intro', 'crash', 'finish', 'pause'];
 function show(id) {
   for (const p of PANELS) $(p).classList.toggle('hidden', p !== id);
   $('hud').classList.toggle('hidden', !!id && id !== 'crash' && id !== 'finish' && id !== 'pause');
@@ -380,8 +382,10 @@ function finishRun() {
 // the open panel; A or Enter presses the focused one, B or Esc goes back.
 function panelButtons() {
   const panel = PANELS.map($).find((p) => !p.classList.contains('hidden'));
-  if (!panel) return [];
-  return [...panel.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent !== null);
+  // The update prompt floats over the menus; its buttons join the D-pad order.
+  const update = [...document.querySelectorAll('#update button')];
+  if (!panel) return update.filter((b) => b.offsetParent !== null);
+  return [...panel.querySelectorAll('button'), ...update].filter((b) => !b.disabled && b.offsetParent !== null);
 }
 
 function focusFirst(panel) {
@@ -455,6 +459,9 @@ function back() {
   else if (!$('help').classList.contains('hidden')) {
     show('title');
     $('howto').focus();
+  } else if (!$('whatsnew').classList.contains('hidden')) {
+    show('title');
+    $('newsbtn')?.focus();
   }
 }
 
@@ -817,4 +824,21 @@ boot();
 
 // Exposed for debugging in the console.
 const debug = { freeze: false };
+// Updates: offer a reload when a newer build is live, with what's new (src/version.js).
+watchForUpdates({
+  inRun: () => game.mode === 'play' || game.mode === 'paused',
+  leaveRun: () => {
+    if (game.mode === 'paused') audio.ctx?.resume();
+    toTitle();
+  },
+  showNews: () => show('whatsnew'),
+  hideNews: () => {
+    show('title');
+    $('newsbtn')?.focus();
+  },
+  onMenu: () => game.mode === 'title' && !$('title').classList.contains('hidden'),
+});
+registerOffline();
+keepSaves();
+
 window.__powerslide = Object.assign(debug, { game, player, road, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, renderFrame: () => post.render() });
