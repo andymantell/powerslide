@@ -30,7 +30,18 @@ export const BIOMES = [
     rails: false,
     look: { markings: 'uk', lane: 2.7 },
   },
-  { id: 'suburbs', name: 'Hillside Suburbs', blurb: 'Parked cars, speed bumps and side roads.', drive: 'left' },
+  {
+    id: 'suburbs',
+    name: 'Hillside Suburbs',
+    blurb: 'Parked cars, speed bumps and side roads.',
+    // Streets down a steep hillside town: kerbs instead of guardrails, speed
+    // humps to brake for, side roads cars pull out of, and some very steep
+    // terraced streets. Traffic keeps left.
+    rules: { minRadius: 14, maxGrade: 0.16, minGrade: -0.04 },
+    drive: 'left',
+    rails: false,
+    look: { markings: 'uk', lane: 3.0 },
+  },
   { id: 'forest', name: 'Pine Forest', blurb: 'Blind bends and grit on the inside line.' },
   { id: 'canyon', name: 'Desert Canyon', blurb: 'Long, steep straights fast enough to wobble.' },
   { id: 'city', name: 'City at Night', blurb: 'Steep streets, tram lines and buses.' },

@@ -8,7 +8,8 @@
 //       number turns it that many degrees from facing the road. "side":
 //       "valley" or "mountain" puts it on that side whatever the sign of d.
 //   { "row": "fence", "from": 100, "to": 400, "d": -8, "every": 3 }
-//       Props along the road, turned to run with it ("both": true mirrors it).
+//       Props along the road, turned to run with it ("both": true mirrors it;
+//       "face": "road" turns each to face the road instead, as houses do).
 //   { "scatter": ["cow", "cow_pied"], "from": 100, "to": 500, "side": "left",
 //     "near": 12, "far": 60, "count": 12 }
 //       Props dotted about a stretch beside the road, facing any way
@@ -51,7 +52,7 @@ function dressEntries(entries, road, props, rand, terrain) {
       for (const d of e.both ? [d0, -d0] : [d0]) {
         let k = 0;
         for (let s = e.from; s <= e.to; s += every) {
-          const p = Props.at(road, S + s, d, e.across ? 'across' : 'along');
+          const p = Props.at(road, S + s, d, e.across ? 'across' : e.face === 'road' ? undefined : 'along');
           props.add(types[k++ % types.length], p.x, p.z, p.yaw, e.scale ?? 1);
         }
       }

@@ -1224,6 +1224,10 @@ const trafficEvents = [];
 const extraEvents = [];
 let last = performance.now();
 let time = 0;
+// The speed hump under the board last frame, and the speed (m/s, 47 km/h)
+// above which hitting one throws you off.
+let lastHump = null;
+const HUMP_CRASH = 13;
 
 function frame(now) {
   bakeClouds();
@@ -1270,6 +1274,18 @@ function frame(now) {
     player.update(dt, game.mode === 'play' ? state : game.mode === 'finished' ? runOut() : { steer: 0 });
     if (structures.rattleAt(player.s) && !player.crashed) player.shake = Math.max(player.shake, 0.45);
     audio.onGrid = structures.rattleAt(player.s) && !player.crashed;
+    // Speed humps: a jolt and some speed lost, or over you go if you hit
+    // one flat out.
+    const hump = structures.bumpAt(player.s);
+    if (hump && hump !== lastHump && !player.crashed) {
+      const v = player.speed;
+      if (v > HUMP_CRASH) player.crash('Hit the speed hump too fast');
+      else {
+        player.shake = Math.max(player.shake, 0.3 + (0.7 * v) / HUMP_CRASH);
+        player.vel.multiplyScalar(1 - (0.12 * v) / HUMP_CRASH);
+      }
+    }
+    lastHump = hump;
     if (game.mode === 'play' && !player.crashed) game.time += dt;
     // Past the finish, coast to a stop.
     if (game.mode === 'finished' && !player.crashed) player.vel.multiplyScalar(Math.exp(-dt * 0.8));

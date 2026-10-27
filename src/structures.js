@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
-import { mulberry32 } from './noise.js';
+import { mulberry32, clamp } from './noise.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8;
 // Structure half width: the parapet's inner face sits at the guardrail line
@@ -328,6 +328,12 @@ export class Structures {
     return false;
   }
 
+  // The speed hump under s, if any.
+  bumpAt(s) {
+    for (const j of this.todo || []) if (j.f.type === 'bump' && Math.abs(s - j.s0) < BUMP_LEN / 2) return j;
+    return null;
+  }
+
   // How deep the water is over the road at s (a ford), 0 when dry.
   waterAt(s) {
     for (const j of this.todo || []) {
@@ -377,6 +383,36 @@ export class Structures {
     if (this.flowUniform) this.flowUniform.value = (this.time * 0.35) % 100;
     this.waterNormal.offset.set(this.time * 0.01, this.time * 0.013);
     for (const g of this.gondolas) g.update(this.time);
+  }
+
+  // Side roads coming in on a side (-1 left, +1 right): where each meets
+  // the main road (s), from junctions and mini roundabouts.
+  mouths(side) {
+    const out = [];
+    for (const j of [...(this.todo || []), ...(this.endless || [])]) {
+      const t = j.f.type;
+      if (t === 'roundabout' || (t === 'junction' && (j.f.side === 'left' ? -1 : 1) === side)) out.push(j.s0);
+    }
+    return out;
+  }
+
+  // Whether a side road comes in within `w` m of s on that side.
+  mouthAt(s, side, w) {
+    return this.mouths(side).some((m) => Math.abs(s - m) < SIDE_HALF + w);
+  }
+
+  // s0..s1 split into the runs left between side roads on that side, each
+  // mouth `half` m either side of its middle.
+  openRuns(s0, s1, side, half) {
+    const cuts = this.mouths(side).filter((m) => m + half > s0 && m - half < s1).sort((a, b) => a - b);
+    const runs = [];
+    let a = s0;
+    for (const m of cuts) {
+      if (m - half > a + 0.5) runs.push([a, m - half]);
+      a = Math.max(a, m + half);
+    }
+    if (s1 > a + 0.5) runs.push([a, s1]);
+    return runs;
   }
 
   // Half-buried boulders along a stream bed.
@@ -707,6 +743,120 @@ export const PLANS = {
       }
       job.poles.push(pair);
     }
+  },
+
+  // { type: 'street', from, to, side } A suburban street edge: kerb,
+  // pavement and front-garden walls, hedges and fences, with lampposts.
+  // The kerb is what stops you (barrier 'kerb').
+  street(job) {
+    const { s0, s1 } = job;
+    const sides = edgeSides(job);
+    const P = HALF_WIDTH + PAVE + 0.4;
+    // Level the pavement with the road, then let the gardens blend back
+    // into the hillside behind.
+    this.terrain.mods.push((x, z, f, h) => {
+      const s = f.index;
+      if (s < s0 - 12 || s > s1 + 12 || f.dist > P + 34 || !sides.includes(f.side)) return h;
+      const w = smooth(s0 - 12, s0, s) * (1 - smooth(s1, s1 + 12, s)) * (1 - smooth(P + 16, P + 34, f.dist));
+      // Under the pavement the ground sits just below it; gardens a touch up.
+      return h + (f.roadY + (f.dist < HALF_WIDTH + PAVE + 0.2 ? -0.15 : 0.05) - h) * w;
+    });
+    const fr = {};
+    for (const side of sides) {
+      for (let s = s0 + 6 + (side > 0 ? 16 : 0); s < s1 - 4; s += 34) {
+        if (this.mouthAt(s, side, 4)) continue;
+        this.road.sample(s, fr);
+        const d = side * (HALF_WIDTH + 0.55);
+        this.props.add('lamppost', fr.x + fr.rightX * d, fr.z + fr.rightZ * d, Math.atan2(-fr.rightX * side, -fr.rightZ * side));
+      }
+      for (let s = s0; s <= s1; s += 4) {
+        this.road.sample(s, fr);
+        const d = side * (HALF_WIDTH + 3);
+        this.terrain.block(fr.x + fr.rightX * d, fr.z + fr.rightZ * d, 3);
+      }
+    }
+  },
+
+  // { type: 'junction', at, side, length } A side road joining at a T, with
+  // give-way lines where it meets the main road. Cars pull out of it.
+  junction(job) {
+    const road = this.road;
+    const side = job.f.side === 'left' ? -1 : 1;
+    const m = road.sample(job.s0, {});
+    const L = job.f.length ?? 60;
+    const ux = m.rightX * side, uz = m.rightZ * side;
+    const ex = m.x + ux * (HALF_WIDTH + L), ez = m.z + uz * (HALF_WIDTH + L);
+    // The side road climbs or falls with the hill, no steeper than 1 in 8.
+    const rise = clamp(this.terrain.heightAt(ex, ez) - m.y, -0.12 * L, 0.12 * L);
+    Object.assign(job, { side, L, ox: m.x, oz: m.z, ux, uz, vx: m.dirX, vz: m.dirZ, y0: m.y, rise });
+    const W = SIDE_HALF + PAVE + 0.3;
+    this.terrain.mods.push((x, z, f, h) => {
+      const t = (x - m.x) * ux + (z - m.z) * uz;
+      // The main road's own verge and pavement are its business.
+      if (t < HALF_WIDTH + PAVE + 0.2 || t > HALF_WIDTH + L + 20) return h;
+      const n = Math.abs((x - m.x) * m.dirX + (z - m.z) * m.dirZ);
+      if (n > W + 14) return h;
+      const w = (1 - smooth(W, W + 14, n)) * (1 - smooth(HALF_WIDTH + L, HALF_WIDTH + L + 20, t));
+      return h + (junctionY(job, t) + (n < SIDE_HALF + PAVE ? -0.15 : 0.05) - h) * w;
+    });
+    for (let t = HALF_WIDTH + 4; t < HALF_WIDTH + L; t += 4) {
+      for (const k of [-1, 1]) this.terrain.block(m.x + ux * t + m.dirX * k * 2, m.z + uz * t + m.dirZ * k * 2, 4);
+    }
+    // Houses down the side road, facing it.
+    for (let t = HALF_WIDTH + 16; t < HALF_WIDTH + L - 6; t += 15) {
+      for (const k of [-1, 1]) {
+        const x = m.x + ux * t + m.dirX * k * 14, z = m.z + uz * t + m.dirZ * k * 14;
+        const type = ['semi', 'semi_b', 'semi_c', 'bungalow'][Math.floor(this.rand() * 4)];
+        this.props.add(type, x, z, Math.atan2(-m.dirX * k, -m.dirZ * k));
+      }
+    }
+  },
+
+  // { type: 'roundabout', at } A mini roundabout: a painted white dome in
+  // the middle and side roads off both sides.
+  roundabout(job) {
+    for (const side of ['left', 'right']) {
+      const j = { f: { ...job.f, type: 'junction', side, length: job.f.length ?? 50 }, s0: job.s0, s1: job.s1 };
+      PLANS.junction.call(this, j);
+      (job.arms ||= []).push(j);
+    }
+  },
+
+  // { type: 'zebra', at } A zebra crossing: stripes, zigzags and a flashing
+  // Belisha beacon each side.
+  zebra(job) {
+    const fr = this.road.sample(job.s0, {});
+    for (const side of [-1, 1]) {
+      const d = side * (HALF_WIDTH + 0.45);
+      job.beacons ||= [];
+      job.beacons.push(this.props.add('belisha', fr.x + fr.rightX * d + fr.dirX * 1.8, fr.z + fr.rightZ * d + fr.dirZ * 1.8, 0));
+    }
+  },
+
+  // { type: 'bump', at } A speed hump across the road.
+  bump() {},
+
+  // { type: 'railbridge', at, span } The road dips under a brick railway
+  // bridge on an embankment; a train rumbles over now and then.
+  railbridge(job) {
+    const road = this.road;
+    const at = (job.s0 + job.s1) / 2;
+    const m = road.sample(at, {});
+    const top = m.y + RAIL_CLEAR + 1.0;
+    Object.assign(job, { at, ox: m.x, oz: m.z, ux: m.rightX, uz: m.rightZ, vx: m.dirX, vz: m.dirZ, top });
+    // The embankment: a flat-topped bank along the railway, slopes 1 in 1.5,
+    // cut away where the road goes under it.
+    this.terrain.mods.push((x, z, f, h) => {
+      const n = Math.abs((x - m.x) * m.dirX + (z - m.z) * m.dirZ);
+      if (n > 30) return h;
+      const t = Math.abs((x - m.x) * m.rightX + (z - m.z) * m.rightZ);
+      if (t > RAIL_LINE + 40) return h;
+      // Bank up to the railway, or cut down to it where the hill is higher.
+      const slope = Math.max(0, n - 4) / 1.5;
+      const want = h < top ? Math.max(h, top - slope) : Math.min(h, top + slope);
+      const w = (1 - smooth(RAIL_LINE, RAIL_LINE + 40, t)) * smooth(RAIL_OFFSET + 0.5, RAIL_OFFSET + 2, t);
+      return h + (want - h) * w;
+    });
   },
 };
 
@@ -1072,6 +1222,191 @@ const BUILDS = {
     const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.8 }));
     this.group.add(m);
   },
+
+  street(job) {
+    const geo = new Geo();
+    const rand = this.rand;
+    for (const side of edgeSides(job)) {
+      // Runs of kerb and pavement, broken where a side road comes in.
+      for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + 0.15)) {
+        const o = side * HALF_WIDTH;
+        sweep(geo, this.road, a, b, [[o, -0.25], [o + side * 0.15, -0.25], [o + side * 0.15, 0.12], [o, 0.12]], PLASTER, '#c4c1b9', { step: 1 });
+      }
+      for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + 0.15)) {
+        const o = side * (HALF_WIDTH + 0.15);
+        sweep(geo, this.road, a, b, [[o, -0.3], [o + side * (PAVE - 0.15), -0.3], [o + side * (PAVE - 0.15), 0.1], [o, 0.1]], PLASTER, '#a3a19b', { step: 1 });
+      }
+      // Front gardens: a wall, hedge or fence each, with a gap for the drive.
+      const g = side * (HALF_WIDTH + PAVE + 0.25);
+      const styles = job.f.style === 'prom' ? ['railing'] : ['brick', 'brick', 'hedge', 'picket', 'hedge', 'low'];
+      for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + PAVE + 0.5)) {
+        let s = a;
+        while (s < b - 1) {
+          const plot = job.f.style === 'prom' ? b - s : 9 + rand() * 6;
+          const e = Math.min(b, s + plot - (job.f.style === 'prom' ? 0 : 3));
+          if (e - s > 1) gardenEdge(geo, this.road, s, e, g, side, styles[Math.floor(rand() * styles.length)], rand);
+          s += plot;
+        }
+      }
+    }
+    this.mesh(geo);
+  },
+
+  junction(job) {
+    const geo = new Geo();
+    junctionMesh.call(this, geo, job);
+    this.mesh(geo);
+  },
+
+  roundabout(job) {
+    const geo = new Geo();
+    for (const arm of job.arms) junctionMesh.call(this, geo, arm);
+    // The painted mini-roundabout: a white dome with a ring of give-way
+    // dashes on each approach.
+    const f = this.road.sample(job.s0, {});
+    const R = 1.4;
+    const c = new THREE.Vector3(f.x, f.y + 0.02, f.z);
+    for (let k = 0; k < 16; k++) {
+      const a0 = (k / 16) * Math.PI * 2, a1 = ((k + 1) / 16) * Math.PI * 2;
+      const p0 = new THREE.Vector3(f.x + Math.cos(a0) * R, f.y + 0.02, f.z + Math.sin(a0) * R);
+      const p1 = new THREE.Vector3(f.x + Math.cos(a1) * R, f.y + 0.02, f.z + Math.sin(a1) * R);
+      geo.tri(new THREE.Vector3(c.x, f.y + 0.08, c.z), p1, p0, PAINT, '#f2f2ee');
+    }
+    for (const k of [-1, 1]) {
+      const g = this.road.sample(job.s0 + k * 7, {});
+      dashes(geo, g, -HALF_WIDTH + 0.2, HALF_WIDTH - 0.2, 0, 0.6, 0.3, 0.3, '#f2f2ee');
+    }
+    this.mesh(geo);
+  },
+
+  zebra(job) {
+    const geo = new Geo();
+    const road = this.road;
+    // Stripes across the road, then zigzags along both kerbs either side.
+    for (let k = -2; k <= 2; k += 1) {
+      const f = road.sample(job.s0 + k, {});
+      stripe(geo, f, -HALF_WIDTH + 0.3, HALF_WIDTH - 0.3, 0.25, '#f4f4f0');
+    }
+    for (const dir of [-1, 1]) {
+      for (const side of [-1, 1]) {
+        let prev = null;
+        for (let i = 0; i <= 8; i++) {
+          const f = road.sample(job.s0 + dir * (3.2 + i * 1.2), {});
+          const d = side * (HALF_WIDTH - 0.35 - (i % 2) * 0.35);
+          const p = new THREE.Vector3(f.x + f.rightX * d, f.y + crownAt(d) + 0.018, f.z + f.rightZ * d);
+          if (prev) line(geo, prev, p, 0.1, '#f4f4f0');
+          prev = p;
+        }
+      }
+    }
+    this.mesh(geo, false);
+    // Belisha beacons blink.
+    const beacons = job.beacons.filter(Boolean);
+    if (beacons.length) {
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffa23a' }));
+      const lamps = beacons.map((b) => {
+        const l = glow.clone();
+        l.position.set(b.x, (b.y ?? this.terrain.heightAt(b.x, b.z)) + 3.1, b.z);
+        this.group.add(l);
+        return l;
+      });
+      this.gondolas.push({ update: (time) => lamps.forEach((l) => (l.visible = time % 1 < 0.5)) });
+    }
+  },
+
+  bump(job) {
+    const geo = new Geo();
+    const road = this.road;
+    // A round-topped hump, 3.7 m long and 7 cm high, the road's colour,
+    // with white triangles painted on its approach slope.
+    const n = 8;
+    const ring = (k) => {
+      const u = k / n;
+      const f = road.sample(job.s0 + (u - 0.5) * BUMP_LEN, {});
+      const y = f.y + BUMP_H * Math.sin(Math.PI * u) - 0.005;
+      return { f, y };
+    };
+    let prev = ring(0);
+    for (let k = 1; k <= n; k++) {
+      const cur = ring(k);
+      for (let i = 0; i < 8; i++) {
+        const d0 = -HALF_WIDTH + ((2 * HALF_WIDTH) * i) / 8, d1 = -HALF_WIDTH + ((2 * HALF_WIDTH) * (i + 1)) / 8;
+        const pt = (r, d) => new THREE.Vector3(r.f.x + r.f.rightX * d, r.y + crownAt(d), r.f.z + r.f.rightZ * d);
+        const white = k <= n / 2 && i % 2 === 0 && (k === 2 || k === 3);
+        geo.quad(pt(prev, d0), pt(prev, d1), pt(cur, d1), pt(cur, d0), PAINT, white ? '#ecebe6' : '#3b3c3f', new THREE.Vector3(prev.f.x, prev.y - 5, prev.f.z));
+      }
+      prev = cur;
+    }
+    this.mesh(geo, false);
+  },
+
+  railbridge(job) {
+    const geo = new Geo();
+    const road = this.road;
+    const { at, top } = job;
+    const BRICK = '#8e4a36';
+    // Abutments either side of the road, a deck across, and parapets.
+    for (const side of [-1, 1]) {
+      const d0 = side * (RAIL_OFFSET - 0.05), d1 = side * (RAIL_OFFSET + 1.6);
+      for (let s = at - 5; s < at + 5; s += 1) {
+        const a = road.sample(s, {}), b = road.sample(s + 1, {});
+        const p = (f, d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
+        const base = Math.min(a.y, b.y) - 1;
+        geo.quad(p(a, d0, base), p(b, d0, base), p(b, d0, top - 1.1), p(a, d0, top - 1.1), MASONRY, BRICK, p(a, d1, base));
+      }
+    }
+    const f = road.sample(at, {});
+    const W = RAIL_OFFSET + 2;
+    const along = new THREE.Vector3(f.dirX, 0, f.dirZ), across = new THREE.Vector3(f.rightX, 0, f.rightZ);
+    geo.box(f.x, f.z, top - 1.25, top - 0.05, along, 4.2, across, W, MASONRY, BRICK);
+    // Arch-ish soffit band, string course and parapets.
+    geo.box(f.x, f.z, top - 1.45, top - 1.2, along, 4.3, across, W + 0.1, PLASTER, '#7b6e62');
+    for (const k of [-1, 1]) {
+      const x = f.x + f.dirX * k * 4.0, z = f.z + f.dirZ * k * 4.0;
+      geo.box(x, z, top - 0.05, top + 1.0, along, 0.22, across, W + 18, MASONRY, BRICK);
+      geo.box(x, z, top + 1.0, top + 1.12, along, 0.3, across, W + 18, PLASTER, COPING);
+    }
+    // Ballast and rails across the top, running on along the embankment.
+    const L = RAIL_LINE;
+    geo.box(f.x, f.z, top - 0.05, top + 0.05, across, L, along, 2.2, PAINT, '#6d665c');
+    for (const k of [-0.75, 0.75]) {
+      const x = f.x + f.dirX * k, z = f.z + f.dirZ * k;
+      geo.box(x, z, top + 0.05, top + 0.2, across, L, along, 0.04, METAL, '#8a8580');
+    }
+    // A sign on the bridge with its clearance.
+    for (const k of [-1, 1]) {
+      const x = f.x + f.dirX * k * 4.25, z = f.z + f.dirZ * k * 4.25;
+      geo.box(x, z, top - 0.95, top - 0.45, along, 0.03, across, 0.7, PAINT, '#f2f0ea');
+      geo.box(x, z, top - 0.9, top - 0.5, along, 0.035, across, 0.6, PAINT, '#c4161c');
+    }
+    this.mesh(geo);
+    // The train: a few carriages crossing every so often.
+    const car = this.props.geos.get('train_car');
+    if (car) {
+      const N = 4;
+      const im = new THREE.InstancedMesh(car, this.mat, N);
+      im.castShadow = true;
+      im.frustumCulled = false;
+      this.group.add(im);
+      const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), P = new THREE.Vector3();
+      const dir = (job.f.train ?? 1) >= 0 ? 1 : -1;
+      q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-f.rightZ * dir, f.rightX * dir));
+      const period = job.f.every ?? 24, speed = 22;
+      this.gondolas.push({
+        update: (time) => {
+          const t = ((time + (job.f.phase ?? 4)) % period) * speed - L;
+          for (let k = 0; k < N; k++) {
+            const u = (t - k * 20.5) * dir;
+            // Out of sight beyond the ends of the line.
+            P.set(f.x + f.rightX * u, Math.abs(u) > L ? -1e4 : top + 0.2, f.z + f.rightZ * u);
+            m4.compose(P, q, one);
+            im.setMatrixAt(k, m4);
+          }
+          im.instanceMatrix.needsUpdate = true;
+        },
+      });
+    }
+  },
 };
 
 // Walls and hedge banks: keep trees and rocks off the strip they stand on.
@@ -1374,3 +1709,129 @@ function river(pts, width, fall = false) {
   this.group.add(m);
 }
 
+// ---------------------------------------------------------------- suburbs
+// Pavement width, a side road's half width, speed hump size, and the
+// railway's height over the road and how far it runs either side.
+const PAVE = 2.1, SIDE_HALF = 3.0, BUMP_LEN = 3.7, BUMP_H = 0.07, RAIL_CLEAR = 5.2, RAIL_LINE = 160;
+
+// The road's crown (as roadmesh.js): its edges sit 4 cm below the middle.
+const crownAt = (d) => -0.04 * (Math.min(Math.abs(d), HALF_WIDTH) / HALF_WIDTH) ** 2;
+
+// Height of a side road t m out from the main road's centre line.
+function junctionY(job, t) {
+  const u = clamp((t - HALF_WIDTH) / job.L, 0, 1);
+  return job.y0 - 0.04 + job.rise * u * u * (3 - 2 * u);
+}
+
+// A side road: tarmac, kerbs and pavements down both sides, give-way lines
+// across its mouth and a dashed line down the middle.
+function junctionMesh(geo, job) {
+  const { ox, oz, ux, uz, vx, vz, L } = job;
+  const P = (t, n, y) => new THREE.Vector3(ox + ux * t + vx * n, y ?? junctionY(job, t), oz + uz * t + vz * n);
+  const T0 = HALF_WIDTH - 0.1, T1 = HALF_WIDTH + L;
+  const step = 3;
+  const TAR = '#3f4043';
+  for (let t = T0; t < T1 - 0.01; t += step) {
+    const t2 = Math.min(T1, t + step);
+    const y = (tt) => junctionY(job, tt) + 0.012;
+    geo.quad(P(t, -SIDE_HALF, y(t)), P(t2, -SIDE_HALF, y(t2)), P(t2, SIDE_HALF, y(t2)), P(t, SIDE_HALF, y(t)), PLASTER, TAR, P(t, 0, y(t) - 5));
+    for (const k of [-1, 1]) {
+      // Kerb, then pavement beyond the main road's own pavement.
+      const ka = Math.max(t, HALF_WIDTH + 0.15);
+      if (t2 > ka) slab(geo, P, ka, t2, k * SIDE_HALF, k * (SIDE_HALF + 0.15), 0.12, '#c4c1b9');
+      const pa = Math.max(t, HALF_WIDTH + PAVE + 0.15);
+      if (t2 > pa) slab(geo, P, pa, t2, k * (SIDE_HALF + 0.15), k * (SIDE_HALF + PAVE), 0.1, '#a3a19b');
+    }
+  }
+  // Give way: two rows of short dashes across the lane coming out. Traffic
+  // keeps to its own side, so that's the coming-out driver's left in
+  // Britain (drive -1) and right elsewhere.
+  const drive = this.road.drive || 1;
+  // Which way across the side road is the coming-out driver's right?
+  const right = Math.sign(-ux * vz + uz * vx) || 1;
+  const lane = drive * right;
+  for (const t of [HALF_WIDTH + 0.4, HALF_WIDTH + 0.8]) {
+    for (let n = 0.15; n < SIDE_HALF - 0.2; n += 0.9) paint(geo, P, t - 0.1, t + 0.1, lane * n, lane * (n + 0.6));
+  }
+  for (let t = HALF_WIDTH + 4; t < T1 - 2; t += 6) paint(geo, P, t, t + 2, -0.05, 0.05);
+}
+
+// A raised strip beside the side road from t0 to t1, across n0..n1, h high.
+function slab(geo, P, t0, t1, n0, n1, h, col) {
+  const a = [P(t0, n0), P(t1, n0), P(t1, n1), P(t0, n1)];
+  const top = a.map((p) => p.clone().setY(p.y + h + 0.012));
+  const bot = a.map((p) => p.clone().setY(p.y - 0.3));
+  const mid = new THREE.Vector3().addVectors(top[0], bot[2]).multiplyScalar(0.5);
+  geo.quad(top[0], top[1], top[2], top[3], PLASTER, col, mid);
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4;
+    geo.quad(bot[i], bot[j], top[j], top[i], PLASTER, col, mid);
+  }
+}
+
+// White paint on the side road: t0..t1 along it, n0..n1 across.
+function paint(geo, P, t0, t1, n0, n1) {
+  const up = (p) => p.setY(p.y + 0.02);
+  const a = up(P(t0, n0)), b = up(P(t1, n0)), c = up(P(t1, n1)), d = up(P(t0, n1));
+  geo.quad(a, b, c, d, PAINT, '#ecebe6', new THREE.Vector3(a.x, a.y - 5, a.z));
+}
+
+// White paint on the main road at f (a road sample): a band across from d0
+// to d1, half as long as `half`, following the crown.
+function stripe(geo, f, d0, d1, half, col) {
+  const n = 6;
+  for (let i = 0; i < n; i++) {
+    const a = d0 + ((d1 - d0) * i) / n, b = d0 + ((d1 - d0) * (i + 1)) / n;
+    const p = (d, k) => new THREE.Vector3(f.x + f.rightX * d + f.dirX * k * half, f.y + crownAt(d) + 0.015, f.z + f.rightZ * d + f.dirZ * k * half);
+    const q = [p(a, -1), p(b, -1), p(b, 1), p(a, 1)];
+    geo.quad(q[0], q[1], q[2], q[3], PAINT, col, new THREE.Vector3(q[0].x, q[0].y - 5, q[0].z));
+  }
+}
+
+// Dashes across the main road at f, from d0 to d1: each `len` long with
+// `gap` between, `width` deep along the road, offset `k` m along it.
+function dashes(geo, f, d0, d1, k, len, gap, width, col) {
+  const g = { ...f, x: f.x + f.dirX * k, z: f.z + f.dirZ * k };
+  for (let d = d0; d < d1 - 0.05; d += len + gap) stripe(geo, g, d, Math.min(d1, d + len), width / 2, col);
+}
+
+// A painted line between two points on the road, `w` wide.
+function line(geo, a, b, w, col) {
+  const dx = b.x - a.x, dz = b.z - a.z;
+  const l = Math.hypot(dx, dz) || 1;
+  const nx = (-dz / l) * w / 2, nz = (dx / l) * w / 2;
+  const q = [new THREE.Vector3(a.x + nx, a.y, a.z + nz), new THREE.Vector3(b.x + nx, b.y, b.z + nz), new THREE.Vector3(b.x - nx, b.y, b.z - nz), new THREE.Vector3(a.x - nx, a.y, a.z - nz)];
+  geo.quad(q[0], q[1], q[2], q[3], PAINT, col, new THREE.Vector3(a.x, a.y - 5, a.z));
+}
+
+// One front garden's edge along the pavement, s0..s1 at d = g.
+function gardenEdge(geo, road, s0, s1, g, side, style, rand) {
+  const o = (x) => g + side * x;
+  const greens = ['#3f5f2e', '#4a6b34', '#3a5a2c'];
+  if (style === 'brick' || style === 'low') {
+    const h = style === 'brick' ? 0.8 : 0.45;
+    const col = ['#9a5a43', '#a8664a', '#8d5040', '#b9a58c'][Math.floor(rand() * 4)];
+    sweep(geo, road, s0, s1, [[o(0), -0.3], [o(0.25), -0.3], [o(0.25), h], [o(0), h]], MASONRY, col, { step: 1 });
+    sweep(geo, road, s0 - 0.03, s1 + 0.03, [[o(-0.03), h], [o(0.28), h], [o(0.28), h + 0.07], [o(-0.03), h + 0.07]], PLASTER, '#cfc8bb', { step: 1 });
+  } else if (style === 'hedge') {
+    const col = greens[Math.floor(rand() * greens.length)];
+    const h = 1.0 + rand() * 0.5;
+    sweep(geo, road, s0, s1, [[o(0), -0.2], [o(0.9), -0.2], [o(0.85), h], [o(0.6), h + 0.25], [o(0.3), h + 0.25], [o(0.05), h]], PAINT, col, { step: 1 });
+  } else if (style === 'picket') {
+    const col = '#efede6';
+    for (const y of [0.25, 0.7]) sweep(geo, road, s0, s1, [[o(0.02), y], [o(0.06), y], [o(0.06), y + 0.07], [o(0.02), y + 0.07]], PAINT, col, { step: 2, caps: false });
+    const f = {};
+    for (let s = s0; s <= s1; s += 0.16) {
+      road.sample(s, f);
+      geo.box(f.x + f.rightX * o(0), f.z + f.rightZ * o(0), f.y - 0.1, f.y + 0.95, new THREE.Vector3(f.dirX, 0, f.dirZ), 0.04, new THREE.Vector3(f.rightX, 0, f.rightZ), 0.012, PAINT, col);
+    }
+  } else if (style === 'railing') {
+    const col = '#e9e7e1';
+    for (const y of [0.5, 1.0]) sweep(geo, road, s0, s1, [[o(0.0), y], [o(0.06), y], [o(0.06), y + 0.06], [o(0.0), y + 0.06]], METAL, col, { step: 2, caps: false });
+    const f = {};
+    for (let s = s0; s <= s1; s += 2) {
+      road.sample(s, f);
+      geo.box(f.x + f.rightX * o(0.03), f.z + f.rightZ * o(0.03), f.y - 0.2, f.y + 1.08, new THREE.Vector3(f.dirX, 0, f.dirZ), 0.04, new THREE.Vector3(f.rightX, 0, f.rightZ), 0.04, METAL, col);
+    }
+  }
+}

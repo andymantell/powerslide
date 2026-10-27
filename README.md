@@ -132,6 +132,15 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   stretch, on both sides or one (`side`), which you crash into like a
   guardrail; `grid` (a cattle grid that rattles the board, with a gate and a
   warning sign) and `ford` (water over a dip in the lane that slows you).
+  Hillside Suburbs adds `street` (kerb, pavement, lampposts and front-garden
+  walls, hedges and fences along a stretch, `side` for one side, `"style":
+  "prom"` for seafront railings; the kerb is what you crash into),
+  `junction` (a side road coming in on `side`, `length` m long, with give-way
+  lines and houses; cars pull out of it), `roundabout` (a painted mini
+  roundabout with side roads both ways), `zebra` (a zebra crossing with
+  flashing beacons), `bump` (a speed hump: a jolt and lost speed, or a crash
+  above about 47 km/h) and `railbridge` (the road under a brick railway
+  bridge on an embankment, with a train crossing every `every` seconds).
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.
@@ -140,8 +149,8 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   Its own props come from `props_<biome>.glb` (`tools/blender/props_<biome>.py`).
 - `props` dress the roadside with buildings, animals, fences and the rest (the
   list is `PROP_TYPES` in `src/props.js`); see the top of `src/dressing.js` for
-  single props, rows, scatters and props at every tight bend. `"side":
-  "valley"` keeps a prop off the mountain side. Every tight bend also gets
+  single props, rows (`"face": "road"` for houses), scatters and props at
+  every tight bend. `"side": "valley"` keeps a prop off the mountain side. Every tight bend also gets
   chevrons and a warning sign on its own (`"chevrons": false` turns them off).
 - `terrain` tweaks the biome's ground for one level: `treeDensity`, `relief`,
   `maxRelief` and `snowLine` (metres above the road).

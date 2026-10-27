@@ -76,7 +76,9 @@ function ground(world, x, z, s, out) {
   out.off = Math.abs(p.d) > GRAVEL_EDGE;
   out.y = out.off ? Math.max(p.y - 3, world.terrain.heightAt(x, z)) : p.y;
   const side = Math.sign(p.d);
-  out.rail = world.road.barrierAt(p.s, side) ? side : 0;
+  // A kerb trips you up but doesn't stop you: you fly on over the pavement.
+  const barrier = world.road.barrierAt(p.s, side);
+  out.rail = barrier && barrier !== 'kerb' ? side : 0;
   return out;
 }
 

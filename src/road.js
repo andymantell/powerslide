@@ -39,10 +39,10 @@ export function railSide(cliff) {
 
 // Feature types that are structures carrying or covering the road; each
 // replaces the guardrail and verge along its stretch (see src/structures.js).
-export const SPAN_TYPES = { bridge: 'parapet', covered: 'wall', gallery: 'wall', stream: 'parapet', walls: 'wall', hedge: 'hedge bank' };
+export const SPAN_TYPES = { bridge: 'parapet', covered: 'wall', gallery: 'wall', stream: 'parapet', walls: 'wall', hedge: 'hedge bank', street: 'kerb', railbridge: 'bridge' };
 // Of those, the ones that stand on the ground beside the road (on one side
 // with "side": "left" or "right") rather than carry it.
-export const GROUND_SPANS = new Set(['walls', 'hedge']);
+export const GROUND_SPANS = new Set(['walls', 'hedge', 'street', 'railbridge']);
 
 export class Road {
   constructor(seed = 1337, level = null) {
