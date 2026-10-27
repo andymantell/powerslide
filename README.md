@@ -31,7 +31,8 @@ Then open the URL Vite prints (usually http://localhost:5173).
 | `M` / `U` / `F` | | | Mute, km/h or mph, FPS counter |
 
 Touch has no buttons: the whole screen is one invisible analogue stick, centred
-wherever your finger lands.
+wherever your finger lands. Lifting your finger centres the steering but keeps
+the current tuck or air brake; the next touch carries on from there.
 
 In menus, use the d-pad, left stick or arrow keys to move between buttons, A or
 Enter to select, B or Esc to go back, and Y to cycle the graphics setting.

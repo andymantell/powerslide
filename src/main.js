@@ -291,6 +291,7 @@ function fmtSpeed(ms) {
 // carry on from where you came off).
 async function startRun(from = game.level ? 'start' : 'here') {
   audio.start();
+  input.resetTouchHold?.(); // touch-only: don't carry a held tuck into the new run
   const level = game.level;
   const cp = from === 'checkpoint' ? game.checkpoint : null;
   if (level) {

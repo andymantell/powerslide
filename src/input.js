@@ -34,6 +34,8 @@ export class Input {
   // progressively and back stands the rider up into an air brake. A quick tap
   // is one push. A sudden flick back throws a powerslide, held until the finger
   // lifts or comes forward again; a second finger held down does the same.
+  // Lifting the finger centres the steering but holds the tuck or air brake;
+  // the next touch carries on from that hold until the finger moves.
   setupTouch() {
     const el = document.getElementById('game');
     if (!el || !('ontouchstart' in window)) return;
@@ -41,8 +43,13 @@ export class Input {
     t.tuck = 0;
     t.air = 0;
     t.pushTime = 0;
-    let main = null; // { id, ox, oy, x, y, start, moved, hist, slide }
+    let main = null; // { id, ox, oy, x, y, sx, sy, start, moved, hist, slide, dy }
     const others = new Set();
+    let held = 0; // forward/back deflection kept after the finger lifts, in range units
+    this.resetTouchHold = () => {
+      held = 0;
+      if (!main) apply();
+    };
     // Full deflection in px, scaled to the screen so an iPad and a phone feel alike.
     const range = () => Math.max(50, Math.min(innerWidth, innerHeight) * 0.11);
     const DEAD = 0.12; // fraction of range ignored around the centre
@@ -56,8 +63,8 @@ export class Input {
     const apply = () => {
       if (!main) {
         t.steer = 0;
-        t.tuck = 0;
-        t.air = 0;
+        t.tuck = Math.max(0, shape(-held));
+        t.air = Math.max(0, shape(held));
         t.slide = others.size > 0;
         return;
       }
@@ -73,13 +80,15 @@ export class Input {
       t.air = Math.max(0, shape(dy));
       if (main.slide && dy < 0) main.slide = false;
       t.slide = main.slide || others.size > 0;
+      main.dy = dy;
     };
     const start = (e) => {
       e.preventDefault();
       for (const c of e.changedTouches) {
         if (!main) {
           const now = performance.now();
-          main = { id: c.identifier, ox: c.clientX, oy: c.clientY, x: c.clientX, y: c.clientY, start: now, moved: false, hist: [[now, c.clientY]], slide: false };
+          // Start the centre offset so the held tuck / air brake carries on.
+          main = { id: c.identifier, ox: c.clientX, oy: c.clientY - held * range(), x: c.clientX, y: c.clientY, sx: c.clientX, sy: c.clientY, start: now, moved: false, hist: [[now, c.clientY]], slide: false };
         } else {
           others.add(c.identifier);
           this.pressed.add('Space');
@@ -94,7 +103,7 @@ export class Input {
         if (c.identifier !== main.id) continue;
         main.x = c.clientX;
         main.y = c.clientY;
-        if (Math.hypot(main.x - main.ox, main.y - main.oy) > range() * DEAD) main.moved = true;
+        if (Math.hypot(main.x - main.sx, main.y - main.sy) > range() * DEAD) main.moved = true;
         // Flick detection: how far back the finger has travelled in the last moment.
         const now = performance.now();
         main.hist.push([now, main.y]);
@@ -113,6 +122,8 @@ export class Input {
           if (!main.moved && performance.now() - main.start < 300) {
             t.pushTime = 0.9; // about one stroke
           }
+          // Letting go of a slide stands the rider back up rather than holding the flick.
+          held = main.slide ? 0 : main.dy;
           main = null;
         } else {
           others.delete(c.identifier);
