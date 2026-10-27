@@ -187,6 +187,12 @@ export class Audio {
     }
   }
 
+  // A hollow plastic knock for a cone.
+  cone() {
+    if (!this.ctx) return;
+    this.burst(700, 3, 0.18, 0.5, 'bandpass', 300);
+  }
+
   ding() {
     if (!this.ctx) return;
     const ctx = this.ctx;

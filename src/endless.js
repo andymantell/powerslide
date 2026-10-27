@@ -40,6 +40,15 @@ export const GROUPS = [
     ],
   },
   {
+    // Only endless has these; the campaign levels never do.
+    title: 'Endless specials',
+    items: [
+      { id: 'works', label: 'Roadworks', note: 'Cones and loose chippings', min: 0, max: 2, step: 0.5, def: 1, show: words([0, 'None'], [0.5, 'Few'], [1, 'Normal'], [1.5, 'Lots']) },
+      { id: 'radar', label: 'Speed signs', note: 'Points for passing fast', options: [[true, 'On'], [false, 'Off']], def: true },
+      { id: 'wilder', label: 'Gets wilder', note: 'Steeper and twistier as you go', options: [[true, 'On'], [false, 'Off']], def: true },
+    ],
+  },
+  {
     title: 'World',
     items: [
       { id: 'biome', label: 'Biome', options: () => builtBiomes().map((b) => [b.id, b.name]), def: () => builtBiomes()[0]?.id ?? 'alpine' },
@@ -63,12 +72,12 @@ export function defaults() {
 
 export const PRESETS = [
   { name: 'Classic', set: {} },
-  { name: 'Cruise', set: { steep: 0.7, corners: 0.75, sharp: 0.5, grit: 0, traffic: 0, wobbles: false, highsides: false } },
+  { name: 'Cruise', set: { steep: 0.7, corners: 0.75, sharp: 0.5, grit: 0, traffic: 0, wobbles: false, highsides: false, wilder: false } },
   { name: 'Twisty', set: { steep: 0.9, corners: 2, sharp: 1.75 } },
   { name: 'Speed run', set: { steep: 1.6, corners: 0.5, sharp: 0.5, boost: 0.5, wind: 0.5, wobbles: false } },
   { name: 'Moon', set: { gravity: 0.4, traffic: 0, grit: 0 } },
   { name: 'Ice', set: { grip: 0.6, sharp: 0.5, steep: 0.8 } },
-  { name: 'Chaos', set: { steep: 1.4, corners: 1.5, sharp: 1.5, grit: 3, traffic: 3, carSpeed: 1.4, weather: 'wet' } },
+  { name: 'Chaos', set: { steep: 1.4, corners: 1.5, sharp: 1.5, grit: 3, traffic: 3, carSpeed: 1.4, weather: 'wet', works: 2 } },
 ];
 
 // A preset is every setting at its default apart from the ones it sets. The
@@ -179,7 +188,8 @@ export function derive(cfg) {
   const grip = cfg.grip * surface.grip * (wet ? WET_GRIP : 1);
   return {
     seed: seedNumber(cfg.seed),
-    shape: { steep: cfg.steep, corners: cfg.corners, sharp: cfg.sharp, grit: cfg.grit },
+    shape: { steep: cfg.steep, corners: cfg.corners, sharp: cfg.sharp, grit: cfg.grit, wilder: cfg.wilder },
+    extras: { works: cfg.works, radar: cfg.radar },
     traffic: { density: ENDLESS_TRAFFIC.density * cfg.traffic, speed: ENDLESS_TRAFFIC.speed * cfg.carSpeed },
     tuning: {
       ...TUNING,

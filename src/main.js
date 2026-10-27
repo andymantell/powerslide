@@ -23,6 +23,7 @@ import { store, loadSettings, QUALITY, QUALITY_ORDER, autoQuality } from './sett
 import { lookOf } from './biomes.js';
 import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, NORMAL } from './endless.js';
 import { setRoadSurface } from './roadmat.js';
+import { Extras } from './extras.js';
 import { BIOMES, levelUnlocked, levelProgress, nextLevel, levelAfter, biomeOf, biomeUnlocked, recordFinish, starCount } from './levels.js';
 
 const $ = (id) => document.getElementById(id);
@@ -76,6 +77,7 @@ const grass = new Grass(scene, renderer, terrain, Q);
 const roadMesh = new RoadMesh(scene, road, renderer, pick(MARKINGS, look.markings));
 const player = new Player(scene, road, terrain);
 const traffic = new Traffic(scene, road);
+const extras = new Extras(scene, road);
 const input = new Input();
 const audio = new Audio();
 const marks = new SlideMarks(scene);
@@ -168,6 +170,9 @@ async function loadWorld(level) {
   marks.clear();
   sparks.clear();
   traffic.configure(level ? level.traffic : mix.traffic, game.seed);
+  if (level) extras.clear();
+  else extras.reset(game.seed, mix.extras);
+  game.trafficBase = traffic.density;
   player.diff = mix.tuning;
   Object.assign(player.mods, mix.mods);
   setRoadSurface(roadMesh.roadMat, mix.surface);
@@ -504,6 +509,7 @@ async function rideEndless(reroll) {
     player.reset(road.start);
     cam.init = false;
     traffic.configure(derive(endless).traffic, game.seed);
+    extras.reset(game.seed, derive(endless).extras);
     await buildTiles();
   } else {
     await loadWorld(null);
@@ -579,6 +585,7 @@ async function startRun(from = game.level ? 'start' : 'here') {
   game.wasSliding = false;
   game.nearMisses = 0;
   game.runStartDist = player.distance;
+  game.wildStep = Math.floor(Math.max(0, player.s - road.start) / 2000);
   player.topSpeed = 0;
   if (level?.hint && !cp) hint(level.hint, 6);
 }
@@ -795,6 +802,7 @@ async function restart() {
   if (!game.level) {
     player.reset(road.start);
     cam.init = false;
+    extras.reset(game.seed, derive(endless).extras);
     await buildTiles();
   }
   startRun('start');
@@ -970,6 +978,7 @@ function runOut() {
 const wheelPos = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 const glovePos = new THREE.Vector3();
 const trafficEvents = [];
+const extraEvents = [];
 let last = performance.now();
 let time = 0;
 
@@ -1060,6 +1069,33 @@ function frame(now) {
     game.comboTimer -= dt;
     if (game.comboTimer <= 0 && game.combo > 0 && !player.crashed) game.combo = 0;
 
+    // Endless specials: boost pads, bonus stars and a road that gets wilder.
+    extraEvents.length = 0;
+    extras.update(dt, player, traffic.cars, extraEvents, game.mode === 'play', game.mph);
+    for (const e of extraEvents) {
+      if (e.type === 'cone') {
+        audio.cone();
+        popup('CONE!');
+      } else if (e.type === 'cleanWorks') {
+        game.bonus += e.points;
+        audio.ding();
+        popup('CLEAN THROUGH THE ROADWORKS', `+${e.points}`);
+      } else if (e.type === 'radar') {
+        game.bonus += e.points;
+        audio.ding();
+        popup(`${fmtSpeed(e.speed)} ${game.mph ? 'MPH' : 'KM/H'} PAST THE SIGN`, `+${e.points}`);
+      }
+    }
+    if (!game.level && game.mode === 'play' && road.shape.wilder) {
+      const w = road.wildness(player.s);
+      traffic.density = game.trafficBase * (1 + w);
+      const step = Math.floor((player.s - road.start) / 2000);
+      if (step > game.wildStep && w < 1) {
+        game.wildStep = step;
+        popup(`${step * 2} KM`, 'The mountain gets wilder…');
+      }
+    }
+
     // Slide scoring: banked when the wheels hook back up.
     const slidingNow = !player.crashed && (player.slideMode || player.sliding) && player.speed > 3;
     if (slidingNow) {
@@ -1092,6 +1128,7 @@ function frame(now) {
     // Menus: let the rider idle on the road.
     player.animate(dt);
     traffic.update(dt, player, trafficEvents);
+    extras.update(dt, player, traffic.cars, [], false, game.mph);
   }
 
   // Marks & dust.
@@ -1166,4 +1203,4 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, sparks, renderFrame: () => post.render() });

@@ -58,7 +58,11 @@ the road's steepness, corners and grit, rider physics (speed boost, grip,
 gravity, wind, wobbles, highsides), biome, road surface, weather and traffic.
 A road code (the seed) and a SHARE link let someone else ride the same road
 with the same settings. The setup is remembered, and each mix of settings
-keeps its own best score.
+keeps its own best score. Endless also has things the campaign never does
+(`src/extras.js`): roadworks, where cones close the edge of the road over loose
+chippings (a clean run through scores a bonus), "YOUR SPEED" radar signs that
+score how fast you pass, and a road that gets steeper, twistier and busier the
+further you go.
 
 Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,
 Pine Forest, Desert Canyon, City at Night, Coastal Cliffs and High Alpine Pass)

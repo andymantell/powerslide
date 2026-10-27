@@ -26,9 +26,10 @@ export class Road {
   // shape (endless mode, see src/endless.js) scales the random rolls: steep
   // multiplies the grade, corners how often bends come (0 = all straights,
   // 2 = no straights), sharp how tight they are (0 = sweepers only, 2 = tight
-  // bends and hairpins) and grit how often grit washes onto the road.
+  // bends and hairpins) and grit how often grit washes onto the road. With
+  // wilder set, the road gets steeper and twistier the further it goes.
   reset(seed = 1337, level = null, shape = {}) {
-    this.shape = { steep: 1, corners: 1, sharp: 1, grit: 1, ...shape };
+    this.shape = { steep: 1, corners: 1, sharp: 1, grit: 1, wilder: false, ...shape };
     this.rand = mulberry32(seed);
     this.noise = createNoise2D(seed + 7);
     if (!this.x) {
@@ -105,7 +106,7 @@ export class Road {
       return;
     }
     if (s.gradeLeft === Infinity) s.gradeLeft = 0;
-    const { corners, sharp } = this.shape;
+    const { corners, sharp } = this.shapeHere();
     // Chances of a straight, big sweeper and tight bend (the rest are
     // near-hairpins): 0.14, 0.44, 0.28, 0.14 with the default shape.
     const pStraight = corners <= 1 ? 1 - 0.86 * corners : 0.14 * (2 - corners);
@@ -149,7 +150,7 @@ export class Road {
     if (s.segLeft <= 0) this.pickSegment();
     s.gradeLeft -= DS;
     if (s.gradeLeft <= 0) {
-      s.gradeTarget = Math.min(0.3, (0.05 + this.rand() * 0.09) * this.shape.steep);
+      s.gradeTarget = Math.min(0.3, (0.05 + this.rand() * 0.09) * this.shapeHere().steep);
       s.gradeLeft = 150 + this.rand() * 300;
     }
     // Clothoid-style transition: curvature changes linearly with distance.
@@ -179,6 +180,23 @@ export class Road {
         width: 0.8 + this.rand() * 1.6,
       });
     }
+  }
+
+  // 0..1: how far the wilder ramp has got here, full after 12 km.
+  wildness(s = this.count * DS) {
+    return this.shape.wilder ? Math.min(1, Math.max(0, (s - START_S) / 12000)) : 0;
+  }
+
+  // The shape at the end of the road so far, with the wilder ramp applied.
+  shapeHere() {
+    const w = this.wildness();
+    const { steep, corners, sharp } = this.shape;
+    if (!w) return this.shape;
+    return {
+      steep: steep * (1 + 0.45 * w),
+      corners: Math.min(2, corners + 0.7 * w),
+      sharp: Math.min(2, sharp + 0.8 * w),
+    };
   }
 
   // 0..1 amount of grit under the wheels at (s, d).
