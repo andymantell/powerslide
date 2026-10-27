@@ -211,6 +211,12 @@ preset.
   `node tools/sky/shoot.mjs out.png [query]` saves it. In the game,
   `?time=` (dawn, day, dusk, night) and `?weather=` (clear, cloudy, mist,
   rain, snow) override the level's own sky for testing.
+- `node tools/props/sheet.mjs [outDir] [name,name]` renders the numbered prop
+  sheet for reviews: one image per prop (every prop pack, endless roadside
+  signs and cones, traffic, trees, rocks, rider and board) on a 1 m grid with
+  the rider beside it for scale, plus `index.json`. Numbers live in
+  `tools/props/sheet-ids.json`, so feedback like "#42" keeps meaning the same
+  prop; new props get the next free numbers.
 - `node tools/levelshots.mjs <levelId> [outDir] [quality] [at:view,...]`
   screenshots a level at points along the road (views: chase, high, side,
   back) for before/after comparisons of level dressing.
