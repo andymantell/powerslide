@@ -4,8 +4,11 @@
 // texture (tools/textures/props.py), projected from the prop's own axes so it
 // sticks to the model, and bumps the normal from it:
 //   0 paint   1 planks   2 shingles   3 masonry   4 plaster   5 glass   6 metal   7 emissive
-//   8 leaves (hedges built in src/structures.js; uv.x runs past 1 for it)
+//   8 leaves, 9 paving flags, 10 tarmac (street geometry built in src/structures.js;
+//   uv.x runs past 1 for these; paving and tarmac use the ground textures)
 import * as THREE from 'three';
+import { groundTexture } from './ground.js';
+import { addLampLights, lampsOn } from './lamps.js';
 
 const DETAIL = new URL('./assets/textures/props_detail.png', import.meta.url).href;
 let detailTex = null;
@@ -18,7 +21,12 @@ export function createPropMaterial(renderer) {
     detailTex.colorSpace = THREE.NoColorSpace;
   }
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 });
-  const uniforms = { tDetail: { value: detailTex }, uNight: { value: 0 } };
+  const uniforms = {
+    tDetail: { value: detailTex },
+    uNight: { value: 0 },
+    tPave: { value: groundTexture('paving', 'albedo', renderer) },
+    tTar: { value: groundTexture('asphalt', 'albedo', renderer) },
+  };
   mat.userData.uniforms = uniforms;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -35,7 +43,7 @@ export function createPropMaterial(renderer) {
       .replace(
         '#include <common>',
         `#include <common>
-        uniform sampler2D tDetail;
+        uniform sampler2D tDetail, tPave, tTar;
         uniform float uNight;
         varying vec3 vPLocal;
         varying vec3 vPNormal;
@@ -68,7 +76,13 @@ export function createPropMaterial(renderer) {
           float amt = pk < 3.5 ? 0.95 : 0.22;
           diffuseColor.rgb *= 1.0 + (ph - 0.5) * amt;
         }
-        if (pk > 7.5) {
+        if (pk > 8.5) {
+          // Paving flags (2.4 m per tile) or tarmac (as the road's, 1.33 m):
+          // the vertex colour sets the overall shade.
+          vec4 gT = pk < 9.5 ? texture2D(tPave, puv / 2.4) : texture2D(tTar, puv * 0.75);
+          diffuseColor.rgb *= gT.rgb * (pk < 9.5 ? 1.55 : 2.6);
+          ph = gT.a;
+        } else if (pk > 7.5) {
           // Leaves: clumps from two scales of the detail texture, with dark
           // gaps between them and lighter tips catching the sky.
           vec2 luv = puv * 1.6;
@@ -80,7 +94,7 @@ export function createPropMaterial(renderer) {
         }
         // Ground contact: a little darker near the base of each prop.
         diffuseColor.rgb *= 0.72 + 0.28 * smoothstep(-0.2, 1.6, vPLocal.y);
-        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : pk < 7.5 ? 0.5 : 0.95;
+        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : pk < 7.5 ? 0.5 : pk < 8.5 ? 0.95 : pk < 9.5 ? 0.85 : 0.9;
         float pMetal = (pk > 5.5 && pk < 6.5) ? 0.75 : 0.0;
         `,
       )
@@ -90,7 +104,7 @@ export function createPropMaterial(renderer) {
         '#include <normal_fragment_maps>',
         `if ((pk > 0.5 && pk < 4.5) || pk > 7.5) {
           // Bump from the detail height (as three's bumpmap), fading with distance.
-          float bump = (pk > 7.5 ? 2.5 : pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
+          float bump = (pk > 8.5 ? 0.8 : pk > 7.5 ? 2.5 : pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
           vec3 sx = normalize(dFdx(-vViewPosition)), sy = normalize(dFdy(-vViewPosition));
           vec2 dh = vec2(dFdx(ph), dFdy(ph)) * bump;
           vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
@@ -104,7 +118,8 @@ export function createPropMaterial(renderer) {
         if (pk > 6.5 && pk < 7.5) totalEmissiveRadiance += diffuseColor.rgb * (0.6 + uNight * 2.4);
         else if (pk > 4.5 && pk < 5.5) totalEmissiveRadiance += vec3(1.0, 0.78, 0.45) * uNight * 0.9;`,
       );
+    addLampLights(shader);
   };
-  mat.customProgramCacheKey = () => 'prop';
+  mat.customProgramCacheKey = () => `prop-${lampsOn()}`;
   return mat;
 }

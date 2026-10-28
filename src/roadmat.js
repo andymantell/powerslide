@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { groundTexture } from './ground.js';
 import { HALF_WIDTH } from './road.js';
+import { addLampLights, lampsOn } from './lamps.js';
 
 // Marking styles. Biomes can pick another, e.g. UK roads use white centre dashes.
 export const MARKINGS = {
@@ -112,8 +113,9 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
           normal = normalize(T * (tn.x * scale) + B * (tn.y * scale) + N * tn.z);
         }`,
       );
+    addLampLights(shader);
   };
-  mat.customProgramCacheKey = () => 'road';
+  mat.customProgramCacheKey = () => `road-${lampsOn()}`;
   return mat;
 }
 

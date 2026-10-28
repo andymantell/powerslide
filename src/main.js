@@ -11,6 +11,7 @@ import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
 import { createSky, SUN_DIR, atmosphereFor, ENV } from './sky.js';
 import { Precipitation } from './weather.js';
+import { updateLamps } from './lamps.js';
 import { Post } from './post.js';
 import { texturesReady, GROUND_SETS } from './ground.js';
 import { MARKINGS } from './roadmat.js';
@@ -1433,6 +1434,7 @@ function frame(now) {
   traffic.draw(camera);
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') updateHud(dt);
   input.endFrame();
+  updateLamps(props, camera, player.pos.x, player.pos.z);
   post.render();
 }
 
@@ -1476,4 +1478,8 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, bakeClouds, sparks, props, structures, renderFrame: () => post.render() });
+window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, bakeClouds, sparks, props, structures, renderFrame: () => {
+  camera.updateMatrixWorld();
+  updateLamps(props, camera, camera.position.x, camera.position.z);
+  post.render();
+} });

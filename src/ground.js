@@ -4,6 +4,7 @@
 // and stones sit proud of the dirt instead of cross-fading. Rock is
 // triplanar so cliffs don't smear.
 import * as THREE from 'three';
+import { addLampLights, lampsOn } from './lamps.js';
 
 const url = (n) => new URL(`./assets/textures/${n}.webp`, import.meta.url).href;
 const loader = new THREE.TextureLoader();
@@ -226,8 +227,9 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
           : '',
       );
     patch?.(shader);
+    if (!far) addLampLights(shader);
   };
-  mat.customProgramCacheKey = () => `ground-${far}-${simple}`;
+  mat.customProgramCacheKey = () => `ground-${far}-${simple}-${lampsOn()}`;
   return mat;
 }
 

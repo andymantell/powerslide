@@ -12,7 +12,7 @@ import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
 import { mulberry32, clamp } from './noise.js';
 
-const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8;
+const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
 // Structure half width: the parapet's inner face sits at the guardrail line
 // (set per level, as narrow-lane biomes move the guardrail in).
 let W = 5.45;
@@ -1245,11 +1245,11 @@ const BUILDS = {
       // Runs of kerb and pavement, broken where a side road comes in.
       for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + 0.15)) {
         const o = side * HALF_WIDTH;
-        sweep(geo, this.road, a, b, [[o, -0.25], [o + side * 0.15, -0.25], [o + side * 0.15, 0.12], [o, 0.12]], PLASTER, '#c4c1b9', { step: 1 });
+        sweep(geo, this.road, a, b, [[o, -0.25], [o + side * 0.15, -0.25], [o + side * 0.15, 0.12], [o, 0.12]], PAVING, '#c4c1b9', { step: 1 });
       }
       for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + 0.15)) {
         const o = side * (HALF_WIDTH + 0.15);
-        sweep(geo, this.road, a, b, [[o, -0.3], [o + side * (PAVE - 0.15), -0.3], [o + side * (PAVE - 0.15), 0.1], [o, 0.1]], PLASTER, '#a3a19b', { step: 1 });
+        sweep(geo, this.road, a, b, [[o, -0.3], [o + side * (PAVE - 0.15), -0.3], [o + side * (PAVE - 0.15), 0.1], [o, 0.1]], PAVING, '#a3a19b', { step: 1 });
       }
       // Front gardens: a wall, hedge or fence each, with a gap for the drive.
       const g = side * (HALF_WIDTH + PAVE + 0.25);
@@ -1749,7 +1749,7 @@ function junctionMesh(geo, job) {
   for (let t = T0; t < T1 - 0.01; t += step) {
     const t2 = Math.min(T1, t + step);
     const y = (tt) => junctionY(job, tt) + 0.012;
-    geo.quad(P(t, -SIDE_HALF, y(t)), P(t2, -SIDE_HALF, y(t2)), P(t2, SIDE_HALF, y(t2)), P(t, SIDE_HALF, y(t)), PLASTER, TAR, P(t, 0, y(t) - 5));
+    geo.quad(P(t, -SIDE_HALF, y(t)), P(t2, -SIDE_HALF, y(t2)), P(t2, SIDE_HALF, y(t2)), P(t, SIDE_HALF, y(t)), TARMAC, TAR, P(t, 0, y(t) - 5));
     for (const k of [-1, 1]) {
       // Kerb, then pavement beyond the main road's own pavement.
       const ka = Math.max(t, HALF_WIDTH + 0.15);
@@ -1777,10 +1777,10 @@ function slab(geo, P, t0, t1, n0, n1, h, col) {
   const top = a.map((p) => p.clone().setY(p.y + h + 0.012));
   const bot = a.map((p) => p.clone().setY(p.y - 0.3));
   const mid = new THREE.Vector3().addVectors(top[0], bot[2]).multiplyScalar(0.5);
-  geo.quad(top[0], top[1], top[2], top[3], PLASTER, col, mid);
+  geo.quad(top[0], top[1], top[2], top[3], PAVING, col, mid);
   for (let i = 0; i < 4; i++) {
     const j = (i + 1) % 4;
-    geo.quad(bot[i], bot[j], top[j], top[i], PLASTER, col, mid);
+    geo.quad(bot[i], bot[j], top[j], top[i], PAVING, col, mid);
   }
 }
 
