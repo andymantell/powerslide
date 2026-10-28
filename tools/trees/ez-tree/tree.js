@@ -414,16 +414,30 @@ export class Tree extends THREE.Group {
     const W = leafSize * (this.options.leaves.aspect ?? 1);
     const L = leafSize;
 
-    const createLeaf = (rotation) => {
+    // Powerslide: leaves.flat turns the main card to lie as flat as it can
+    // (sprays face the sky, like spruce shoots), and leaves.cross scales the
+    // width of the second, crossed card.
+    const axis = new THREE.Vector3(0, 1, 0).applyEuler(orientation);
+    let flatRoll = 0;
+    if (this.options.leaves.flat) {
+      // The roll about the leaf's own axis that brings its face up.
+      const up = new THREE.Vector3(0, 1, 0);
+      const n0 = new THREE.Vector3(0, 0, 1).applyEuler(orientation);
+      const x0 = new THREE.Vector3(1, 0, 0).applyEuler(orientation);
+      const want = up.clone().addScaledVector(axis, -up.dot(axis));
+      if (want.lengthSq() > 1e-6) flatRoll = Math.atan2(-want.dot(x0), want.dot(n0));
+    }
+
+    const createLeaf = (rotation, wScale = 1) => {
       // Create quad vertices
       const v = [
-        new THREE.Vector3(-W / 2, L, 0),
-        new THREE.Vector3(-W / 2, 0, 0),
-        new THREE.Vector3(W / 2, 0, 0),
-        new THREE.Vector3(W / 2, L, 0),
+        new THREE.Vector3((-W / 2) * wScale, L, 0),
+        new THREE.Vector3((-W / 2) * wScale, 0, 0),
+        new THREE.Vector3((W / 2) * wScale, 0, 0),
+        new THREE.Vector3((W / 2) * wScale, L, 0),
       ].map((v) =>
         v
-          .applyEuler(new THREE.Euler(0, rotation, 0))
+          .applyEuler(new THREE.Euler(0, rotation + flatRoll, 0))
           .applyEuler(orientation)
           .add(origin),
       );
@@ -465,7 +479,7 @@ export class Tree extends THREE.Group {
 
     createLeaf(0);
     if (this.options.leaves.billboard === Billboard.Double) {
-      createLeaf(Math.PI / 2);
+      createLeaf(Math.PI / 2, this.options.leaves.cross ?? 1);
     }
   }
 

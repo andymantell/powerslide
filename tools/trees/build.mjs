@@ -41,41 +41,42 @@ export const SPECIES = {
     options: {
       branch: {
         levels: 1,
-        children: { 0: 66 },
-        angle: { 1: 100 },
-        length: { 0: 50, 1: 14 },
+        children: { 0: 80 },
+        angle: { 1: 108 },
+        length: { 0: 50, 1: 13 },
         radius: { 0: 1.0, 1: 0.22 },
         start: { 1: 0.04 },
-        sections: { 0: 10, 1: 2 },
+        sections: { 0: 10, 1: 3 },
         segments: { 0: 7, 1: 3 },
-        gnarliness: { 0: 0, 1: 0.05 },
-        force: { strength: 0 },
+        gnarliness: { 0: 0, 1: 0.03 },
+        // Thin branch tips turn up towards the light; the trunk barely feels it.
+        force: { strength: 0.0035 },
       },
-      leaves: { billboard: 'double', angle: 22, count: 7, start: 0.0, size: 5.5, sizeVariance: 0.25, aspect: 0.75 },
+      // Flat sprays along each branch with a narrow crossed card for body.
+      leaves: { billboard: 'double', angle: 12, count: 5, start: 0.0, size: 5.2, sizeVariance: 0.2, aspect: 0.9, flat: true, cross: 0.5 },
     },
   },
-  // Scots pine (Pine Forest): a tall bare trunk and a high, rounded crown of
-  // fewer branches that fork and sweep upward, needles in tufts at the ends.
+  // Scots pine (Pine Forest): a tall bare trunk and a high crown of
+  // branches that sweep up at the tips, the needles in tufts along them.
   pine: {
     height: [17, 23],
     variants: 3,
     preset: 'pine_large',
     options: {
-      type: 'deciduous',
+      type: 'evergreen',
       branch: {
-        levels: 2,
-        children: { 0: 12, 1: 4 },
-        angle: { 1: 58, 2: 40 },
-        length: { 0: 62, 1: 13, 2: 7 },
-        radius: { 0: 1.6, 1: 0.45, 2: 0.6 },
-        start: { 1: 0.62, 2: 0.25 },
-        sections: { 0: 10, 1: 4, 2: 3 },
-        segments: { 0: 8, 1: 4, 2: 3 },
-        taper: { 0: 0.75, 1: 0.7, 2: 0.7 },
-        gnarliness: { 0: 0.04, 1: 0.18, 2: 0.2 },
-        force: { strength: 0.006 },
+        levels: 1,
+        children: { 0: 46 },
+        angle: { 1: 80 },
+        length: { 0: 60, 1: 22 },
+        radius: { 0: 1.6, 1: 0.3 },
+        start: { 1: 0.55 },
+        sections: { 0: 10, 1: 3 },
+        segments: { 0: 8, 1: 3 },
+        gnarliness: { 0: 0.02, 1: 0.12 },
+        force: { strength: 0.004 },
       },
-      leaves: { billboard: 'double', angle: 50, count: 4, start: 0.35, size: 6.5, sizeVariance: 0.25, aspect: 0.9 },
+      leaves: { billboard: 'double', angle: 30, count: 7, start: 0.25, size: 5.5, sizeVariance: 0.25, aspect: 0.85, cross: 0.8 },
     },
   },
   // Pedunculate oak (suburbs, city): a stout trunk and a broad, domed crown
