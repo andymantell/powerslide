@@ -2,7 +2,7 @@
   "name": "Powerslide",
   "short_name": "Powerslide",
   "description": "Downhill longboarding on an endless mountain pass",
-  "id": "./",
+  "id": "/powerslide/",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
