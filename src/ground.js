@@ -19,12 +19,19 @@ const url = (n) => {
 const loader = new THREE.TextureLoader();
 const cache = new Map();
 const pending = [];
+// How many of `pending` have finished, and who wants to hear when one does.
+let settled = 0;
+const listeners = new Set();
+const track = (promise) => pending.push(promise.then(() => {
+  settled++;
+  for (const f of listeners) f();
+}));
 
 export function groundTexture(name, kind, renderer) {
   const key = `${name}_${kind}`;
   if (cache.has(key)) return cache.get(key);
   let tex;
-  pending.push(new Promise((res) => (tex = loader.load(url(key), res, undefined, res))));
+  track(new Promise((res) => (tex = loader.load(url(key), res, undefined, res))));
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   tex.colorSpace = kind === 'albedo' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
@@ -34,12 +41,20 @@ export function groundTexture(name, kind, renderer) {
 
 // Lets other asset loaders join the start-up wait.
 export function trackLoad(promise) {
-  pending.push(promise.catch((e) => console.error(e)));
+  track(promise.catch((e) => console.error(e)));
 }
 
-// Resolves once every asset requested so far has loaded (or failed).
-export function texturesReady() {
-  return Promise.all(pending);
+// Resolves once every asset requested so far has loaded (or failed), calling
+// onProgress(done, total) as each one finishes.
+export async function texturesReady(onProgress) {
+  const report = () => onProgress?.(settled, pending.length);
+  listeners.add(report);
+  report();
+  try {
+    await Promise.all(pending);
+  } finally {
+    listeners.delete(report);
+  }
 }
 
 // Surface sets per biome, keyed by the name in its biomes.js `look.ground`.

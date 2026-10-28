@@ -165,6 +165,8 @@ async function buildTiles() {
   const prevMode = game.mode;
   game.mode = 'loading';
   show('loading');
+  $('load-what').textContent = 'Building the mountain…';
+  $('load-slow').classList.add('hidden');
   let built = 0;
   const total = terrain.tileCount;
   for (let done = false; !done; ) {
@@ -1471,7 +1473,16 @@ function frame(now) {
 
 // ---------------------------------------------------------------- boot
 async function boot() {
-  await texturesReady();
+  // Models and textures come down first (several MB after an update, more on a
+  // first visit), so the loading screen counts them before building the mountain.
+  // If nothing arrives for a while, say it's the connection rather than look stuck.
+  let slow = 0;
+  await texturesReady((done, total) => {
+    $('load-pct').textContent = `${Math.round((done / Math.max(1, total)) * 100)}%`;
+    clearTimeout(slow);
+    slow = setTimeout(() => $('load-slow').classList.remove('hidden'), 15_000);
+  });
+  clearTimeout(slow);
   await loadWorld(bootLevel);
   // Warm up: settle the rider pose and a few cars.
   if (traffic.density > 0) for (let i = 0; i < 3; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
