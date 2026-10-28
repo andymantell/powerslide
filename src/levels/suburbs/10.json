@@ -38,7 +38,7 @@
     {"type": "zebra", "at": 1800},
     {"type": "roundabout", "at": 2440},
     {"type": "bump", "at": 2600},
-    {"type": "lake", "from": 3000, "to": 3388, "side": "left", "near": 16, "far": 1400, "below": 3.5},
+    {"type": "lake", "from": 3000, "to": 3388, "side": "left", "near": 16, "far": 1400, "below": 3.5, "beach": true},
     {"type": "street", "from": 2950, "to": 3388, "side": "left", "style": "prom"},
     {"type": "street", "from": 2950, "to": 3388, "side": "right"}
   ],
@@ -677,7 +677,7 @@
     {"type": "church_hall", "at": 2470, "d": -18},
     {"type": "bollard", "at": 835, "d": -4.6},
     {"type": "bollard", "at": 2425, "d": 4.6},
-    {"type": "pier", "at": 3260, "d": -22, "yaw": "across"},
+    {"type": "pier", "at": 3260, "d": -22, "yaw": 180},
     {"row": ["hut_blue", "hut_yellow", "hut_pink", "hut_green"], "from": 3040, "to": 3220, "d": -11, "every": 3.4, "face": "road"},
     {"row": ["hut_green", "hut_pink", "hut_blue", "hut_yellow"], "from": 3320, "to": 3385, "d": -11, "every": 3.4, "face": "road"},
     {"row": ["terrace", "terrace_b"], "from": 2960, "to": 3385, "d": 13, "every": 10.2, "face": "road"},

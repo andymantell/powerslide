@@ -634,6 +634,11 @@ export const PLANS = {
       const region = smooth(s0 - 70, s0 - 20, s) * (1 - smooth(s1 + 20, s1 + 70, s)) * smooth(near - 12, near - 4, fd.dist) * (1 - smooth(far + 30, far + 80, fd.dist));
       if (region <= 0) return h;
       const inner = smooth(s0, s0 + 50, s) * (1 - smooth(s1 - 50, s1, s)) * smooth(near, near + 25, fd.dist) * (1 - smooth(far - 50, far, fd.dist));
+      // "beach": a gentle shelf from just past the road down into the water.
+      if (f.beach) {
+        const b = Math.max(level - 3 - 6 * inner, fd.roadY - 0.35 - Math.max(0, fd.dist - near + 8) * 0.07);
+        return h + (b - h) * region;
+      }
       let t = Math.max(h, level + 0.6);
       t += (level - 2.5 - 9 * inner - t) * inner;
       return h + (t - h) * region;
@@ -785,7 +790,9 @@ export const PLANS = {
     this.terrain.mods.push((x, z, f, h) => {
       const s = f.index;
       if (s < s0 - 12 || s > s1 + 12 || f.dist > P + 34 || !sides.includes(f.side)) return h;
-      const w = smooth(s0 - 12, s0, s) * (1 - smooth(s1, s1 + 12, s)) * (1 - smooth(P + 16, P + 34, f.dist));
+      // A promenade has no gardens: past its railing the ground is the beach's.
+      const back = job.f.style === 'prom' ? [P + 0.5, P + 3] : [P + 16, P + 34];
+      const w = smooth(s0 - 12, s0, s) * (1 - smooth(s1, s1 + 12, s)) * (1 - smooth(back[0], back[1], f.dist));
       // Under the pavement the ground sits just below it; gardens a touch up.
       return h + (f.roadY + (f.dist < HALF_WIDTH + PAVE + 0.2 ? -0.15 : 0.05) - h) * w;
     });
