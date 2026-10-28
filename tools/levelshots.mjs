@@ -3,7 +3,9 @@
 //   node tools/levelshots.mjs <levelId> [outDir] [quality] [at,at,...]
 // `at` is metres from the start line; each may carry a view after a colon:
 // chase (default, behind and above the rider), high (a raised view down the
-// road), side (from the left verge, looking across), or back (looking uphill).
+// road), side (from the left verge, looking across), or back (looking uphill),
+// or v_back_up_side_ahead_lookUp_lookSide for any other camera (metres from
+// the rider along, up and across the road, + right).
 // Without `at`, it shoots five points spread along the level.
 //   SHOT_URL (default http://localhost:5173/) and SHOT_DPR (2 = iPad) apply.
 import { createRequire } from 'node:module';
@@ -70,7 +72,7 @@ for (const { at, view } of points) {
       grid: [-2, 2.2, -1, 4, -2.2, 0],
       side: [6, 2.5, -9, 20, 2, 6],
       back: [12, 3, 0, -30, 1, 0],
-    }[view] || [-6, 2.6, 0, 30, 0.5, 0];
+    }[view] || (view?.startsWith('v_') && view.slice(2).split('_').map(Number)) || [-6, 2.6, 0, 30, 0.5, 0];
     const [back, up, side, ahead, lookUp, lookSide] = V;
     camera.position.set(p.x + fx * back + rx * side, p.y + up, p.z + fz * back + rz * side);
     const ground = terrain.heightAt(camera.position.x, camera.position.z);

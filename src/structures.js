@@ -1022,7 +1022,9 @@ export const PLANS = {
     this.terrain.mods.push((x, z, f, h) => {
       const s = f.index;
       if (s < s0 - 40 || s > s1 + 40 || f.dist > 90) return h;
-      const along = smooth(s0 - 40, s0 + 10, s) * (1 - smooth(s1 - 10, s1 + 40, s));
+      // Only behind the built walls, which taper off over the last few
+      // metres: past them a lone ridge of ground would stand like a fin.
+      const along = smooth(s0 - 6, s0 + 14, s) * (1 - smooth(s1 - 14, s1 + 6, s));
       // Up from the verge to the top in a few metres, then the canyon rim
       // eases back into the hills.
       const wall = f.roadY + H * smooth(inner + 5, inner + 9, f.dist) * (0.85 + 0.15 * Math.sin(s * 0.11 + f.side * 2));
@@ -1048,9 +1050,19 @@ export const PLANS = {
       const s = f.index;
       if (s < s0 - 60 || s > s1 + 60 || f.side === wet || f.dist > 400) return h;
       const along = smooth(s0 - 50, s0 + 5, s) * (1 - smooth(s1 - 5, s1 + 50, s));
-      const want = Math.min(h, f.roadY - depth * smooth(W + 1, W + 25, f.dist));
+      // Just under the dam's downstream face (see BUILDS.dam), then the
+      // canyon floor beyond its foot.
+      const t = Math.min(1, Math.max(0, (f.dist - W - 0.2) / (depth * 0.7)) ** (1 / 1.6));
+      // The face is steepest at the top, so the ground drops well clear there.
+      const want = Math.min(h, f.roadY - 2.8 - (depth + 1) * t - 8 * smooth(W - 1.5, W + 1, f.dist) * (1 - t));
       return h + (want - h) * along;
     });
+    // No rocks or scrub on the concrete.
+    const fr = {};
+    for (let s = s0; s <= s1; s += 8) {
+      this.road.sample(s, fr);
+      for (let d = W + 4; d < W + depth * 0.7 + 4; d += 8) this.terrain.block(fr.x - fr.rightX * wet * d, fr.z - fr.rightZ * wet * d, 7);
+    }
   },
 
   // { type: 'railway', from, to, d, every } A railway alongside the road `d` m
@@ -1302,7 +1314,7 @@ const BUILDS = {
       const t = i / 8;
       face.push([dry * (W + 0.2 + depth * 0.7 * t ** 1.6), -1.3 - depth * t]);
     }
-    sweep(geo, road, s0, s1, [[dry * W, -1.3], ...face, [dry * W, -depth - 1.3]], MASONRY, CONCRETE, { step: 4 });
+    sweep(geo, road, s0, s1, [[dry * W, -1.3], ...face, [dry * W, -depth - 1.3]], PLASTER, CONCRETE, { step: 4 });
     sweep(geo, road, s0, s1, [[wet * W, -1.3], [wet * (W + 0.5), -1.3], [wet * (W + 9), -24], [wet * W, -24]], MASONRY, '#a8a090', { step: 4 });
     // Expansion joints down the face.
     for (let s = s0 + 12; s < s1 - 6; s += 15) {

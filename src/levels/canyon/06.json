@@ -131,10 +131,25 @@
         "joshua"
       ],
       "from": 20,
+      "to": 560,
+      "near": 9,
+      "far": 90,
+      "count": 18
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 960,
       "to": 1490,
       "near": 9,
       "far": 90,
-      "count": 49
+      "count": 17
     },
     {
       "scatter": [
@@ -145,10 +160,24 @@
         "boulder_red"
       ],
       "from": 20,
+      "to": 560,
+      "near": 8,
+      "far": 60,
+      "count": 39
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 960,
       "to": 1490,
       "near": 8,
       "far": 60,
-      "count": 107
+      "count": 38
     }
   ],
   "sky": {

@@ -52,13 +52,15 @@ def formation(name, seed, R, H, talus=0.25, flare=0.7, ledges=5, outline=0.18, s
     zt = H * talus
     ledge_z = sorted(rng.uniform(zt, H * 0.95) for _ in range(ledges))
     verts, faces, cols = [], [], []
-    zs = [-H * 0.08] + [zt * (i / 6) for i in range(1, 7)] + [zt + (H - zt) * (i / (rings - 7)) for i in range(1, rings - 6)]
+    # The apron carries on well below ground, so a formation standing where
+    # the ground falls away still meets it instead of showing a floating skirt.
+    zs = [-H * 0.45, -H * 0.08] + [zt * (i / 6) for i in range(1, 7)] + [zt + (H - zt) * (i / (rings - 7)) for i in range(1, rings - 6)]
     for z in zs:
         for k in range(sides):
             a = k / sides * math.tau
             r = R * (1 + out(a))
             if z < zt:
-                r *= 1 + flare * ((zt - z) / zt) ** 1.4
+                r *= 1 + flare * ((zt - min(z, 0) * 0.5 - max(z, 0)) / zt) ** 1.4
             else:
                 t = (z - zt) / (H - zt)
                 # Gullies cut deeper low down; each ledge steps the cliff in.
@@ -73,7 +75,7 @@ def formation(name, seed, R, H, talus=0.25, flare=0.7, ledges=5, outline=0.18, s
             a, b = i * sides + k, i * sides + (k + 1) % sides
             faces.append((a, b, b + sides, a + sides))
             zc = (zs[i] + zs[i + 1]) / 2
-            cols.append('#a8683f' if zc < zt * 0.9 else band(zc))
+            cols.append('#b8804e' if zc < zt * 0.9 else band(zc))
     top = len(verts)
     verts.append((0, 0, zs[-1] + R * 0.02))
     for k in range(sides):
@@ -112,7 +114,10 @@ def hoodoo(name='hoodoo', seed=3, H=9):
 
 
 def boulder_red(name='boulder_red', seed=4, s=3.0):
-    rock(s * 1.3, s, s * 0.8, 0, 0, -s * 0.15, REDS[seed % len(REDS)], seed=seed, rough=0.2, detail=1, warp=0.25)
+    """A wind-rounded sandstone boulder, smooth shaded."""
+    o = rock(s * 1.3, s, s * 0.8, 0, 0, -s * 0.15, REDS[seed % len(REDS)], seed=seed, rough=0.12, detail=2, warp=0.25)
+    for p in o.data.polygons:
+        p.use_smooth = True
     return build(name)
 
 
