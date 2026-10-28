@@ -1111,6 +1111,21 @@ def spec_tipper():
     return s
 
 
+def spec_logger():
+    """Logging truck: the lorry cab on a long flatbed with stanchions and a
+    stack of logs, tandem rear axles."""
+    s = spec_box_lorry()
+    L = 9.0
+    s.update(name='logger', L=L, H=3.3)
+    r = 0.48
+    s['wheels'] = car_wheels(L, 1.05, 2.5, r, 1.96, w=0.26) + car_wheels(L, 1.05, 1.45, r, 1.96, w=0.26)[1:]
+    for w in s['wheels']:
+        w['style'] = 'truck'
+    s['box'] = None
+    s['logs'] = (2.3, L - 0.05, 1.12)
+    return s
+
+
 def spec_bus():
     L, W = 10.6, 2.5
     r = 0.5
@@ -1373,7 +1388,7 @@ SPECS = {
     'city': spec_city, 'hatch': spec_hatch, 'saloon': spec_saloon, 'estate': spec_estate, 'coupe': spec_coupe,
     'suv': spec_suv, 'utility': spec_utility, 'pickup': spec_pickup, 'taxi': spec_taxi,
     'van': spec_van, 'minibus': spec_minibus, 'camper': spec_camper,
-    'lorry': spec_box_lorry, 'tipper': spec_tipper, 'bus': spec_bus,
+    'lorry': spec_box_lorry, 'tipper': spec_tipper, 'logger': spec_logger, 'bus': spec_bus,
     'police': spec_police, 'ambulance': spec_ambulance, 'fire': spec_fire, 'icecream': spec_icecream,
     'horsebox': spec_horsebox, 'decker': spec_decker, 'supercar': spec_supercar, 'roadster': spec_roadster, 'gt': spec_gt,
 }
@@ -1477,6 +1492,39 @@ def build_lofted(s, lod):
         box(B, 'detail', PLATE_Y, (0.52, 0.015, 0.11), (0, yf(u1) - 0.01, zf - 0.15))
         box(B, 'detail', BLACK, (W - 0.1, 0.1, 0.1), (0, yf(u1) + 0.05, zf - 0.3))
         # Fuel tank and wheel mudguards over the rear axle.
+        box(B, 'detail', GREY, (0.5, 0.9, 0.45), (W / 2 - 0.45, yf(3.2), 0.8), 0.06 if lod == 0 else 0, 2)
+    if s.get('logs'):
+        u0, u1, zf = s['logs']
+        hw = W / 2
+        yc = yf((u0 + u1) / 2)
+        Lb = u1 - u0
+        box(B, 'detail', BLACK, (0.9, Lb + 0.6, 0.25), (0, yc + 0.3, 0.75))  # chassis
+        box(B, 'detail', GREY, (W - 0.1, Lb, 0.12), (0, yc, zf), 0.02 if lod == 0 else 0)  # bed
+        # Headboard, then pairs of stanchions holding the stack.
+        box(B, 'trim', None, (W - 0.1, 0.1, 1.5), (0, yf(u0) - 0.05, zf + 0.75), 0.02 if lod == 0 else 0)
+        for k in range(4):
+            u = u0 + 0.6 + k * (Lb - 1.0) / 3
+            for sx in (-1, 1):
+                box(B, 'trim', None, (0.09, 0.09, 1.3), (sx * (hw - 0.08), yf(u), zf + 0.7))
+        # The logs: three layers, bark sides and pale cut ends.
+        rng = random.Random(5)
+        bark, cut = (0.22, 0.15, 0.1), (0.72, 0.58, 0.4)
+        z = zf + 0.06
+        for row, n in enumerate((4, 4, 3)):
+            rr = (W - 0.3) / n / 2
+            for i in range(n):
+                x = -hw + 0.15 + rr * (2 * i + 1)
+                lr = rr * (0.85 + 0.15 * rng.random())
+                ln = Lb - 0.2 - rng.random() * 0.4
+                yl = yc - 0.1 + rng.random() * 0.2
+                cz = z + rr
+                sv = 10 if lod == 0 else 6
+                cyl(B, 'detail', bark, lr, ln, (x, yl, cz), (math.pi / 2, 0, 0), sv)
+                cyl(B, 'detail', cut, lr * 0.88, ln + 0.02, (x, yl, cz), (math.pi / 2, 0, 0), sv)
+            z += rr * 1.75
+        for sx in (-1, 1):
+            box(B, 'lamp', TAIL, (0.26, 0.04, 0.14), (sx * (hw - 0.25), yf(u1) - 0.05, zf - 0.15))
+        box(B, 'detail', PLATE_Y, (0.52, 0.015, 0.11), (0, yf(u1) - 0.04, zf - 0.25))
         box(B, 'detail', GREY, (0.5, 0.9, 0.45), (W / 2 - 0.45, yf(3.2), 0.8), 0.06 if lod == 0 else 0, 2)
     if s.get('tipper'):
         u0, u1, zt, zf = s['tipper']
