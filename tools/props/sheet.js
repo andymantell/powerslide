@@ -150,10 +150,13 @@ const shadowed = (g) => (g.traverse((o) => o.isMesh && (o.castShadow = o.receive
 const fleet = new VehicleFleet(scene, { ...QUALITY.high, vehicleLod: 1000 });
 await fleet.ready;
 const traffic = Object.keys(fleet.types).filter((t) => fleet.meta(t));
+// ?paint=c0392b gives every car the same paint, to compare bodies.
+const paintQ = new URLSearchParams(location.search).get('paint');
+const paintHex = paintQ ? `#${paintQ}` : undefined;
 for (const type of traffic) {
   makers.set(`traffic_${type}`, () => {
     const m = fleet.meta(type);
-    const car = { type, x: 0, y: 0, z: 0, yaw: Math.PI, pitch: 0, roll: 0, spin: 0, ...sampleLook(type, mulberry32(7 + traffic.indexOf(type))), lamps: { head: 0.25, tail: 0.35, amber: 0.3 } };
+    const car = { type, x: 0, y: 0, z: 0, yaw: Math.PI, pitch: 0, roll: 0, spin: 0, ...sampleLook(type, mulberry32(7 + traffic.indexOf(type)), paintHex), lamps: { head: 0.25, tail: 0.35, amber: 0.3 } };
     fleet.update([car], camera);
     const box = new THREE.Mesh(new THREE.BoxGeometry(m.W ?? 1.8, m.H, m.L), new THREE.MeshBasicMaterial({ visible: false }));
     box.position.y = m.H / 2;
