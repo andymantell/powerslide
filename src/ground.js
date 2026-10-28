@@ -34,6 +34,9 @@ export function texturesReady() {
 }
 
 // Surface sets per biome, keyed by the name in its biomes.js `look.ground`.
+// Seconds of water animation (set by Structures.update), for surf.
+export const waterTime = { value: 0 };
+
 export const GROUND_SETS = {
   alpine: { base: 'grass', rock: 'rock', gravel: 'gravel', snow: 'snow' },
   // Rolling moorland: gentler hills, granite, heather and bracken, no snow.
@@ -80,6 +83,8 @@ export const GROUND_SETS = {
     // The granite only shows in the cliffs (and steep banks): top-down on
     // gentler ground it reads as paving.
     relief: 0.6, maxRelief: 80, snowLine: 1e5, treeDensity: 0.03, outcrops: 0, cuts: 0,
+    // Dark, weathered cliffs with patches of yellow lichen.
+    lichen: [1.6, 1.3, 0.5, 1.0],
   },
 };
 
@@ -168,6 +173,8 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     uPatchLo: { value: new THREE.Vector3(...(set.patchLo ?? [0.74, 0.84, 0.68])) },
     uPatchHi: { value: new THREE.Vector3(...(set.patchHi ?? [1.15, 1.08, 0.86])) },
     uPatchC: { value: new THREE.Vector4(...(set.patchC ?? [1, 1, 1, 0])) },
+    // Lichen tint on rock (rgb) and its strength (w).
+    uLichen: { value: new THREE.Vector4(...(set.lichen ?? [1, 1, 1, 0])) },
   };
   // Shore cover (sand round the sea and lakes), from the terrain's shore
   // attribute: x sand, y wet sand at the water's edge.
@@ -176,6 +183,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     uniforms.tShoreA = { value: T(set.shore, 'albedo') };
     uniforms.tShoreN = { value: T(set.shore, 'normal') };
   }
+  uniforms.uWaterTime = waterTime;
   const detail = !far && !simple;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -187,8 +195,8 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         varying vec3 vGWorld;
         varying vec3 vGNormal;
         varying vec4 vSplat;
-        attribute vec3 cover;
-        varying vec3 vCover;`,
+        attribute vec4 cover;
+        varying vec4 vCover;`,
       )
       .replace(
         '#include <worldpos_vertex>',
@@ -199,7 +207,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vCover = cover;`,
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${SHARED}\nvarying vec3 vCover;\n${shore ? 'uniform sampler2D tShoreA, tShoreN;' : ''}`)
+      .replace('#include <common>', `#include <common>\n${SHARED}\nvarying vec4 vCover;\nuniform float uWaterTime;\nuniform vec4 uLichen;\n${shore ? 'uniform sampler2D tShoreA, tShoreN;' : ''}`)
       .replace(
         '#include <map_fragment>',
         `
@@ -230,6 +238,11 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
           vec4 aRockM = triA(tRockA, gp + 17.0, rw, 0.037);
           aRock.rgb *= 0.55 + dot(aRockM.rgb, vec3(0.9));
           aRock.a = mix(aRock.a, aRockM.a, 0.35);
+          // Lichen and weathering stains in big patches (uLichen.w sets how much).
+          float lN = texture2D(tSnowA, vec2(gp.x + gp.z, gp.y) * 0.013 + 0.41).a;
+          float lN2 = texture2D(tSnowA, vec2(gp.x - gp.z, gp.y) * 0.05 + 0.17).a;
+          aRock.rgb *= mix(1.0, 0.4 + 0.6 * lN, uLichen.w);
+          aRock.rgb = mix(aRock.rgb, aRock.rgb * uLichen.rgb, smoothstep(0.55, 0.75, lN2) * uLichen.w);
         }
         vec4 aGrav = vSplat.y > 0.01 ? texture2D(tGravA, gp.xz * 0.45) : vec4(0.5);
         vec4 aSnow = vSplat.z > 0.01 ? texture2D(tSnowA, gp.xz * 0.12) : vec4(0.5);
@@ -276,6 +289,16 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
           gcol = mix(gcol, gcol * vec3(0.55, 0.42, 0.3), smoothstep(0.0, 0.35, bEdge) * (1.0 - burnW) * (1.0 - bw.w));
           gcol = mix(gcol, burnt, burnW);
           gRough = mix(gRough, 0.97, burnW);
+        }
+        // Surf at the foot of sea cliffs: broken white water that surges
+        // up and falls back.
+        if (vCover.w > 0.01) {
+          float fN = texture2D(tSnowA, gp.xz * 0.09 + vec2(uWaterTime * 0.03, uWaterTime * 0.02)).a;
+          float fN2 = texture2D(tSnowA, gp.zx * 0.31 - vec2(uWaterTime * 0.05, 0.0)).a;
+          float surge = 0.55 + 0.45 * sin(uWaterTime * 0.9 + dot(gp.xz, vec2(0.045, 0.02)) + fN * 3.0);
+          float foam = smoothstep(0.35, 0.6, vCover.w * surge + (fN2 - 0.5) * 0.5 + (fN - 0.5) * 0.3);
+          gcol = mix(gcol, vec3(0.86, 0.9, 0.92), foam * 0.9);
+          gRough = mix(gRough, 0.6, foam);
         }
         diffuseColor.rgb *= gcol;
         `,

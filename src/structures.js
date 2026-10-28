@@ -13,6 +13,7 @@ import { createPropMaterial } from './propmat.js';
 import { mulberry32, clamp } from './noise.js';
 import { Props } from './props.js';
 import { ENV } from './sky.js';
+import { waterTime } from './ground.js';
 import { lampSpots } from './lamps.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
@@ -407,6 +408,7 @@ export class Structures {
     this.time += dt;
     if (this.flowUniform) this.flowUniform.value = (this.time * 0.35) % 100;
     this.waterNormal.offset.set(this.time * 0.01, this.time * 0.013);
+    waterTime.value = this.time;
     for (const g of this.gondolas) g.update(this.time);
   }
 
@@ -784,6 +786,8 @@ export const PLANS = {
       if (h > level + 3) return;
       if (shore) out.sand = Math.max(out.sand, 1 - smooth(level + 1.2, level + 2.6, h));
       out.wet = Math.max(out.wet, 1 - smooth(level + 0.1, level + 0.8, h));
+      // Surf: a band from just under the water up the foot of the cliff.
+      out.foam = Math.max(out.foam, smooth(level - 1.5, level - 0.3, h) * (1 - smooth(level + 1.5, level + 3.5, h)));
     };
     // Keep trees off the cliff face and out of the water.
     const fr = {};
@@ -1929,12 +1933,7 @@ const BUILDS = {
     const pos = g.attributes.position;
     const uv = g.attributes.uv;
     for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / 22, pos.getZ(i) / 22);
-    // Choppier and less glassy than a lake, so it doesn't mirror the clouds.
-    this.seaMat ||= this.lakeMat.clone();
-    this.seaMat.color.set(job.f.color || '#1d4a5e');
-    this.seaMat.roughness = 0.24;
-    this.seaMat.envMapIntensity = 0.55;
-    this.seaMat.normalScale.set(0.9, 0.9);
+    this.seaMat ||= seaMaterial(this.waterNormal, job.f.color);
     const sea = new THREE.Mesh(g, this.seaMat);
     sea.receiveShadow = true;
     this.group.add(sea);
@@ -3069,6 +3068,44 @@ function strut(geo, a, b, r, kind, col) {
 // An eight-sided log's cross-section (for sweep), centred d across and h up.
 function logSection(d, h, r) {
   return Array.from({ length: 8 }, (_, i) => [d + Math.cos((i / 8) * 6.2832) * r, h + Math.sin((i / 8) * 6.2832) * r]);
+}
+
+// The open sea: deep blue-green water whose waves are two layers of the
+// water normal map drifting different ways plus a long swell, all in world
+// space and fading to a calmer sheen far off, so the sun glitters on it and
+// the sky reflects in streaks rather than as one pale sheet.
+function seaMaterial(normal, color) {
+  const mat = new THREE.MeshStandardMaterial({ color: color || '#0e3d4f', roughness: 0.14, metalness: 0, envMapIntensity: 0.8 });
+  const tex = normal.clone();
+  tex.needsUpdate = true;
+  tex.repeat.set(1, 1);
+  tex.offset.set(0, 0);
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.tWave = { value: tex };
+    shader.uniforms.uTime = waterTime;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vSeaW;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvSeaW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform sampler2D tWave;\nuniform float uTime;\nvarying vec3 vSeaW;')
+      .replace(
+        '#include <normal_fragment_maps>',
+        `{
+          vec2 p = vSeaW.xz;
+          vec3 n1 = texture2D(tWave, p / 23.0 + vec2(uTime * 0.011, uTime * 0.007)).xyz * 2.0 - 1.0;
+          vec3 n2 = texture2D(tWave, mat2(0.8, -0.6, 0.6, 0.8) * p / 9.0 - vec2(uTime * 0.017, -uTime * 0.012)).xyz * 2.0 - 1.0;
+          vec2 slope = (n1.xy * 0.6 + n2.xy * 0.4);
+          // A long swell rolling in.
+          slope += vec2(0.07, 0.03) * cos(dot(p, vec2(0.045, 0.02)) - uTime * 0.9) + vec2(0.03, 0.05) * cos(dot(p, vec2(-0.013, 0.051)) - uTime * 0.7);
+          float far = smoothstep(60.0, 900.0, length(vViewPosition));
+          slope *= mix(0.9, 0.25, far);
+          vec3 wn = normalize(vec3(-slope.x, 1.0, -slope.y));
+          normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz);
+        }`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'sea';
+  return mat;
 }
 
 // A soft round puff for chimney smoke.

@@ -120,6 +120,7 @@ export class Terrain {
     out.sand = 0;
     out.wet = 0;
     out.burn = 0;
+    out.foam = 0;
     for (const m of this.mods) m.cover?.(x, z, f, h, out);
     return out;
   }
@@ -150,7 +151,7 @@ export class Terrain {
     const pos = geo.attributes.position;
     const rel = new Float32Array(n * n);
     const dist = new Float32Array(n * n);
-    const cover = new Float32Array(n * n * 3);
+    const cover = new Float32Array(n * n * 4);
     const so = {};
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + cx;
@@ -161,9 +162,10 @@ export class Terrain {
       rel[i] = h - f.roadY;
       dist[i] = f.dist;
       this.coverAt(x, z, f, h, so);
-      cover[i * 3] = so.sand;
-      cover[i * 3 + 1] = so.wet;
-      cover[i * 3 + 2] = so.burn;
+      cover[i * 4] = so.sand;
+      cover[i * 4 + 1] = so.wet;
+      cover[i * 4 + 2] = so.burn;
+      cover[i * 4 + 3] = so.foam;
     }
     // Skirts are unnecessary: near/far are split by the shader cut.
     geo.computeVertexNormals();
@@ -188,7 +190,7 @@ export class Terrain {
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('splat', new THREE.BufferAttribute(splat, 4));
-    geo.setAttribute('cover', new THREE.BufferAttribute(cover, 3));
+    geo.setAttribute('cover', new THREE.BufferAttribute(cover, 4));
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
     const mesh = new THREE.Mesh(geo, coarse ? this.farMat : this.nearMat);
