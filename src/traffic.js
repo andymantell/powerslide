@@ -21,64 +21,30 @@ const CAR_PAINT = [
   ['#8d1b1b', 4], ['#c22a1f', 3], ['#41484f', 4], ['#24402f', 2], ['#5a6b3c', 1], ['#e2b33a', 1], ['#d95d1a', 1],
   ['#6a2a4f', 1], ['#7ab6d8', 1], ['#a8a08a', 2], ['#4b2e20', 1],
 ];
-const VAN_PAINT = [['#f4f4f2', 14], ['#c9ccd0', 3], ['#1d3557', 2], ['#2b2e33', 2], ['#8d1b1b', 1], ['#e2b33a', 1], ['#2d6a3e', 1]];
-const LORRY_PAINT = [['#f4f4f2', 6], ['#1d3557', 2], ['#8d1b1b', 2], ['#2d6a3e', 1], ['#e08a1c', 1], ['#c9ccd0', 2]];
-const TRACTOR_PAINT = [['#2f6b2a', 4], ['#b8241c', 4], ['#1f4f8f', 2], ['#d9822b', 1], ['#c9b531', 1]];
-const UTILITY_PAINT = [['#2f4a35', 4], ['#c9ccd0', 2], ['#3f5a6e', 2], ['#e8e4d4', 2], ['#1a1a1a', 2], ['#7c6d4e', 1]];
-const BIKE_PAINT = [['#c22a1f', 3], ['#0c0c0e', 4], ['#f1f1ee', 2], ['#1f4f8f', 2], ['#3a8f2f', 1], ['#e2b33a', 1], ['#d95d1a', 1], ['#7d8288', 2]];
-const BUS_PAINT = [['#b8241c', 1], ['#1f4f8f', 1], ['#e2b33a', 1], ['#2d6a3e', 1]];
-const TAXI_PAINT = [['#f1c21b', 1]];
-const CAMPER_PAINT = [['#f1f1ee', 3], ['#e2b33a', 1], ['#7ab6d8', 1], ['#d95d1a', 1], ['#5f8f6a', 1]];
+const CLASSIC_PAINT = [['#d95d1a', 2], ['#e2b33a', 2], ['#7ab6d8', 2], ['#8fb59a', 2], ['#f1f1ee', 2], ['#8d1b1b', 2], ['#1d3557', 1], ['#0c0c0e', 1], ['#a8a08a', 1]];
 
 // Trim (bumper inserts, grilles, rails): black, dark grey or bright.
 const TRIM_CAR = [['#141516', 6], ['#2a2c2f', 2], ['#b9bcc0', 2], ['body', 1]];
-const TRIM_BOX = [['#f4f4f2', 6], ['#c9ccd0', 2], ['#1d3557', 1], ['#8d1b1b', 1], ['#2d6a3e', 1]];
-const TRIM_LEATHERS = [['#141516', 6], ['#2a2c2f', 2], ['#3a4250', 2], ['#5a1d1d', 1], ['#e8e6e0', 1]];
 const RIMS = [['#c9ccd0', 5], ['#3a3c40', 3], ['#16171a', 2], ['#8f9398', 2]];
 
 // type: kind, paint, trim, speed range (m/s), rims (style -> alternatives).
 const TYPES = {
-  city: { kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [12, 18], wheels: { alloy: ['alloy', 'steel', 'alloy2'] } },
-  hatch: { kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [13, 20], wheels: { alloy: ['alloy', 'alloy2', 'steel'] } },
-  saloon: { kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [14, 21], wheels: { alloy: ['alloy', 'alloy2'] } },
-  estate: { kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [13, 20], wheels: { alloy: ['alloy', 'alloy2'] } },
-  coupe: { kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [16, 24], wheels: { alloy: ['alloy2', 'alloy'] } },
-  suv: { sound: 'suv', kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [13, 20], wheels: { alloy: ['alloy', 'alloy2'] } },
-  utility: { sound: 'suv', kind: 'car', paint: UTILITY_PAINT, trim: [['#141516', 1]], speed: [11, 17], wheels: { alloy: ['steel'] }, name: 'a 4x4' },
+  classic: { kind: 'car', paint: CLASSIC_PAINT, trim: [['#b9bcc0', 3], ['#141516', 1]], speed: [12, 18], name: 'a classic car' },
+  suv: { sound: 'suv', kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [12, 19], name: 'a 4x4' },
   pickup: { sound: 'pickup', kind: 'car', paint: CAR_PAINT, trim: TRIM_CAR, speed: [12, 19], wheels: { alloy: ['alloy', 'steel'] }, name: 'a pickup' },
-  taxi: { sound: 'taxi', kind: 'car', paint: TAXI_PAINT, trim: [['#141516', 1]], speed: [13, 19], wheels: { alloy: ['alloy'] }, name: 'a taxi' },
-  van: { kind: 'van', paint: VAN_PAINT, trim: TRIM_CAR, speed: [12, 18], name: 'a van' },
-  minibus: { kind: 'van', paint: VAN_PAINT, trim: TRIM_CAR, speed: [11, 16], name: 'a minibus' },
-  camper: { sound: 'camper', kind: 'van', paint: CAMPER_PAINT, trim: [['#f1f1ee', 2], ['#c9ccd0', 1]], speed: [10, 15], name: 'a camper van' },
-  lorry: { kind: 'lorry', paint: LORRY_PAINT, trim: TRIM_BOX, speed: [10, 15], name: 'a lorry' },
-  tipper: { kind: 'lorry', paint: LORRY_PAINT, trim: [['#e08a1c', 2], ['#c9b531', 1], ['#7d8288', 2], ['#8d1b1b', 1]], speed: [9, 14], name: 'a tipper lorry' },
-  logger: { sound: 'lorry', kind: 'lorry', paint: LORRY_PAINT, trim: [['#2a2c2f', 3], ['#5a5d61', 1], ['#8d1b1b', 1]], speed: [8, 13], name: 'a logging truck' },
-  postbus: { sound: 'bus', kind: 'bus', paint: [['#f2c200', 1]], trim: [['#c4161c', 1]], speed: [9, 14], name: 'a post bus' },
-  bus: { kind: 'bus', paint: BUS_PAINT, trim: [['#f1f1ee', 1]], speed: [9, 14], name: 'a bus' },
-  tractor: { kind: 'tractor', paint: TRACTOR_PAINT, trim: [['#3a3c40', 1]], rims: [['#c9b531', 3], ['#b8241c', 2], ['#5a5d61', 1]], speed: [6, 9], name: 'a tractor' },
-  police: { sound: 'police', kind: 'car', paint: [['#f1f1ee', 3], ['#c9ccd0', 1]], trim: [['#141516', 1]], speed: [16, 23], wheels: { alloy: ['alloy'] }, name: 'a police car', emergency: true },
-  ambulance: { sound: 'ambulance', kind: 'van', paint: [['#e6e23a', 1]], trim: [['#141516', 1]], speed: [15, 21], name: 'an ambulance', emergency: true },
-  fire: { sound: 'fire', kind: 'lorry', paint: [['#c4161c', 1]], trim: [['#c4161c', 1]], rims: [['#c9ccd0', 1]], speed: [13, 18], name: 'a fire engine', emergency: true },
-  icecream: { sound: 'icecream', kind: 'van', paint: [['#f6f3ea', 3], ['#f4c6d6', 1], ['#bfe3f2', 1]], trim: [['#e86fa0', 2], ['#4fa3d9', 2], ['#7cc576', 1]], speed: [9, 13], name: 'an ice cream van' },
-  horsebox: { sound: 'horsebox', kind: 'lorry', paint: [['#f4f4f2', 3], ['#1d3557', 1], ['#24402f', 1]], trim: [['#f4f4f2', 2], ['#7c6d4e', 1], ['#24402f', 1], ['#1d3557', 1]], speed: [9, 13], name: 'a horsebox' },
-  decker: { kind: 'bus', paint: [['#c4161c', 3], ['#1f4f8f', 1], ['#2d6a3e', 1]], trim: [['#f1f1ee', 1]], speed: [9, 13], name: 'a double-decker bus' },
   supercar: { kind: 'car', paint: [['#e2b33a', 2], ['#c22a1f', 3], ['#2fa84f', 1], ['#f1f1ee', 1], ['#0c0c0e', 2], ['#d95d1a', 2], ['#7ab6d8', 1]], trim: [['#141516', 1]], rims: [['#16171a', 2], ['#3a3c40', 1], ['#c9ccd0', 1]], speed: [19, 28], wheels: { alloy: ['alloy2'] }, name: 'a supercar' },
-  roadster: { kind: 'car', paint: [['#c22a1f', 3], ['#1d3557', 2], ['#24402f', 2], ['#f1f1ee', 1], ['#c9ccd0', 1]], trim: [['#b9bcc0', 2], ['#141516', 1]], speed: [16, 23], wheels: { alloy: ['alloy', 'steel'] }, name: 'a sports car' },
-  gt: { kind: 'car', paint: [['#1d3557', 2], ['#7d8288', 2], ['#0c0c0e', 2], ['#8d1b1b', 2], ['#2a5f3a', 1], ['#f1f1ee', 1], ['#d95d1a', 1]], trim: [['#141516', 2], ['#b9bcc0', 1]], speed: [17, 25], wheels: { alloy: ['alloy2', 'alloy'] }, name: 'a sports car' },
-  bike_sport: { kind: 'bike', paint: BIKE_PAINT, trim: TRIM_LEATHERS, speed: [16, 25], name: 'a motorbike' },
-  bike_tourer: { kind: 'bike', paint: BIKE_PAINT, trim: TRIM_LEATHERS, speed: [14, 21], name: 'a motorbike' },
 };
 
 // Each biome's traffic, as relative weights.
 const MIXES = {
-  alpine: { hatch: 4, saloon: 3, estate: 4, suv: 4, city: 2, coupe: 1, van: 2, camper: 2, pickup: 1, minibus: 1, lorry: 1, tipper: 1, bike_sport: 1.5, bike_tourer: 2, police: 0.3, ambulance: 0.25, fire: 0.15, icecream: 0.3, supercar: 0.5, roadster: 1, gt: 0.6 },
-  dartmoor: { hatch: 3, estate: 3, suv: 2, utility: 4, pickup: 3, tractor: 3, van: 2, camper: 2, city: 2, saloon: 1, minibus: 1, bike_tourer: 1.5, bike_sport: 0.5, tipper: 0.5, horsebox: 1.2, police: 0.25, ambulance: 0.25, fire: 0.1, icecream: 0.4, roadster: 0.6, gt: 0.3 },
-  suburbs: { city: 4, hatch: 5, saloon: 3, estate: 3, suv: 3, van: 3, minibus: 1, coupe: 1, pickup: 0.5, lorry: 1, bike_tourer: 1, bike_sport: 0.5, taxi: 0.5, icecream: 1, decker: 0.6, police: 0.5, ambulance: 0.4, fire: 0.25, roadster: 0.4, gt: 0.4, supercar: 0.2 },
-  forest: { hatch: 3, estate: 4, suv: 4, pickup: 3, utility: 2, van: 2, lorry: 1, logger: 3.5, tipper: 1, camper: 1, bike_tourer: 1, saloon: 2, horsebox: 0.3, police: 0.25, ambulance: 0.2, fire: 0.2, gt: 0.4 },
-  canyon: { pickup: 5, suv: 4, coupe: 2, saloon: 2, camper: 3, lorry: 2, tipper: 1, bike_tourer: 2, bike_sport: 2, hatch: 1, gt: 1.5, supercar: 1, roadster: 0.6, police: 0.4, ambulance: 0.2, fire: 0.15 },
-  city: { taxi: 5, saloon: 3, hatch: 3, city: 3, bus: 2, van: 2, suv: 2, coupe: 1, lorry: 1, bike_sport: 2, bike_tourer: 1.5, minibus: 1, decker: 2, police: 1, ambulance: 0.7, fire: 0.4, supercar: 1, gt: 0.8, roadster: 0.4 },
-  coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, tractor: 0.6, lorry: 0.5, bike_tourer: 2, bike_sport: 1, saloon: 2, icecream: 1, roadster: 1.5, gt: 0.8, supercar: 0.8, police: 0.3, ambulance: 0.25, fire: 0.1 },
-  pass: { bike_sport: 4, bike_tourer: 4, camper: 4, hatch: 3, estate: 3, suv: 3, saloon: 1, coupe: 1.5, postbus: 1.2, bus: 0.4, minibus: 0.6, supercar: 1.2, gt: 1, roadster: 1.2, police: 0.2, ambulance: 0.2, fire: 0.05 },
+  alpine: { classic: 5.7, suv: 9, pickup: 4.6, supercar: 2.1 },
+  dartmoor: { classic: 3.7, suv: 9.2, pickup: 5.3, supercar: 0.9 },
+  suburbs: { classic: 6.8, suv: 8.9, pickup: 4.8, supercar: 1 },
+  forest: { classic: 3.7, suv: 9.2, pickup: 5.3, supercar: 0.4 },
+  canyon: { classic: 2.2, suv: 5.9, pickup: 6.3, supercar: 3.1 },
+  city: { classic: 6.4, suv: 7.6, pickup: 4, supercar: 2.2 },
+  coast: { classic: 4.9, suv: 6.3, pickup: 3.1, supercar: 3.1 },
+  pass: { classic: 3.5, suv: 6, pickup: 2.2, supercar: 3.4 },
 };
 
 const TRAFFIC_SCALE = 2 / 3;
@@ -136,7 +102,7 @@ export class Traffic {
   park(type, x, z, yaw, y = null) {
     const r = this.parkRand || (this.parkRand = mulberry32(911));
     if (!TYPES[type]) {
-      const any = ['hatch', 'hatch', 'saloon', 'estate', 'suv', 'city', 'city', 'coupe', 'van'];
+      const any = ['classic', 'classic', 'suv', 'suv', 'pickup'];
       type = any[Math.floor(r() * any.length)];
     }
     const T = TYPES[type];
@@ -241,7 +207,7 @@ export class Traffic {
     const r = this.rand;
     let type = this.pickType(dir);
     // Nothing big squeezes out of a side street.
-    if (join && !['car', 'van', 'bike'].includes(TYPES[type].kind)) type = 'hatch';
+    if (join && !['car', 'van', 'bike'].includes(TYPES[type].kind)) type = 'classic';
     const T = TYPES[type];
     const meta = this.fleet.meta(type) || { L: 4.4, W: 1.8, kind: T.kind };
     // Emergency vehicles mostly have their blue lights on. They keep to
@@ -284,7 +250,7 @@ export class Traffic {
       spin: r() * 10,
       roll: 0,
       pitch: 0,
-      lamps: { head: 0, tail: 0, amber: 0 },
+      lamps: {  },
       braking: false,
       beacon: type === 'tractor' ? r() * 6 : -1,
       x: 0,

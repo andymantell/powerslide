@@ -1,6 +1,6 @@
 // Vehicle sheet for reviewing the traffic models (tools/blender/vehicles.py):
 // every type from several sides, in the game's own materials.
-//   /tools/garage/?types=hatch,van&views=fq,side,rq,front&lod=0&night=0&seed=1
+//   /tools/garage/?types=classic,suv&views=fq,side,rq,front&lod=0&night=0&seed=1
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { VehicleFleet } from '../../src/vehicles.js';

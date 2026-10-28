@@ -28,7 +28,7 @@
       "files": [
         "src/assets/models/vehicles.glb"
       ],
-      "madeBy": "tools/blender/vehicles.py"
+      "madeBy": "tools/blender/vehicles.py (wheels, the build; the car bodies are from Designersoup, see assets)"
     },
     {
       "files": [
@@ -1392,6 +1392,18 @@
       "licenceUrl": "https://github.com/dgreenheck/ez-tree/blob/main/LICENSE",
       "downloaded": "2026-10-28",
       "changes": "Generator code from the npm package @dgreenheck/ez-tree 1.1.0, vendored in tools/trees/ez-tree with its licence; its textures, materials, wind shader and trellis were taken out and leaf cards can be oblong. tools/trees/build.mjs grows our own species from its presets and writes the geometry only; the leaf, twig and bark textures are ours (tools/textures/gen.py)."
+    },
+    {
+      "title": "Low Poly Car Pack Volume 1 by Designersoup (Beatall, Landyroamer, Toyoyo Highlight, Tristar Racer)",
+      "files": [
+        "src/assets/models/vehicles.glb"
+      ],
+      "source": "https://designersoup.itch.io/low-poly-car-pack-1",
+      "author": "Designersoup",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "the four car bodies, scaled to real sizes, palette texture baked to vertex colours, the body swatch made tintable paint, lamps sorted into head/tail/indicator, the maker's name on the pickup's tailgate removed, wheels replaced by ours, a decimated distance copy, smooth shading and baked ambient occlusion (tools/blender/vehicles.py). Sources are not in the repo (tools/blender/sources/README.md); the page also asks that the models aren't redistributed as standalone assets."
     }
   ],
   "code": [

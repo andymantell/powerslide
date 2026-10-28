@@ -1,245 +1,103 @@
 [
- {
-  "id": "ds_beatall",
-  "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Beatall.fbx",
-  "lib": "Designersoup",
-  "title": "Beatall (Car Pack 1)",
-  "url": "https://designersoup.itch.io/low-poly-car-pack-1",
-  "author": "designersoup",
-  "licence": "CC0-1.0",
-  "budget": 6000,
-  "length": 4.1,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
+  {
+    "id": "ds_beatall",
+    "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Beatall.fbx",
+    "lib": "Designersoup",
+    "title": "Beatall (Car Pack 1)",
+    "url": "https://designersoup.itch.io/low-poly-car-pack-1",
+    "author": "designersoup",
+    "licence": "CC0-1.0",
+    "budget": 6000,
+    "length": 4.1,
+    "yaw": 90,
+    "kinds": {
+      "glass": 5,
+      "chrome": 6,
+      "plastic": 6,
+      "flatBlack": 6,
+      "head|rear|indicator|Emmis": 7,
+      "*": 0
+    },
+    "group": "Vehicles",
+    "for": [
+      "traffic_hatch",
+      "traffic_city"
+    ],
+    "smooth": 35
   },
-  "group": "Vehicles",
-  "for": [
-   "traffic_hatch",
-   "traffic_city"
-  ]
- },
- {
-  "id": "ds_landy",
-  "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Landyroamer.fbx",
-  "lib": "Designersoup",
-  "title": "Landyroamer (Car Pack 1)",
-  "url": "https://designersoup.itch.io/low-poly-car-pack-1",
-  "author": "designersoup",
-  "licence": "CC0-1.0",
-  "budget": 6000,
-  "length": 4.4,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
+  {
+    "id": "ds_landy",
+    "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Landyroamer.fbx",
+    "lib": "Designersoup",
+    "title": "Landyroamer (Car Pack 1)",
+    "url": "https://designersoup.itch.io/low-poly-car-pack-1",
+    "author": "designersoup",
+    "licence": "CC0-1.0",
+    "budget": 6000,
+    "length": 4.4,
+    "yaw": 90,
+    "kinds": {
+      "glass": 5,
+      "chrome": 6,
+      "plastic": 6,
+      "flatBlack": 6,
+      "head|rear|indicator|Emmis": 7,
+      "*": 0
+    },
+    "group": "Vehicles",
+    "for": [
+      "traffic_suv"
+    ],
+    "smooth": 35
   },
-  "group": "Vehicles",
-  "for": [
-   "traffic_suv"
-  ]
- },
- {
-  "id": "ds_toyoyo",
-  "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Toyoyo Highlight.fbx",
-  "lib": "Designersoup",
-  "title": "Toyoyo Highlight (Car Pack 1)",
-  "url": "https://designersoup.itch.io/low-poly-car-pack-1",
-  "author": "designersoup",
-  "licence": "CC0-1.0",
-  "budget": 6000,
-  "length": 5.2,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
+  {
+    "id": "ds_toyoyo",
+    "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Toyoyo Highlight.fbx",
+    "lib": "Designersoup",
+    "title": "Toyoyo Highlight (Car Pack 1)",
+    "url": "https://designersoup.itch.io/low-poly-car-pack-1",
+    "author": "designersoup",
+    "licence": "CC0-1.0",
+    "budget": 6000,
+    "length": 5.2,
+    "yaw": 90,
+    "kinds": {
+      "glass": 5,
+      "chrome": 6,
+      "plastic": 6,
+      "flatBlack": 6,
+      "head|rear|indicator|Emmis": 7,
+      "*": 0
+    },
+    "group": "Vehicles",
+    "for": [
+      "traffic_pickup"
+    ],
+    "smooth": 35
   },
-  "group": "Vehicles",
-  "for": [
-   "traffic_pickup"
-  ]
- },
- {
-  "id": "ds_doclorean",
-  "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/docLorean.fbx",
-  "lib": "Designersoup",
-  "title": "docLorean (Car Pack 1)",
-  "url": "https://designersoup.itch.io/low-poly-car-pack-1",
-  "author": "designersoup",
-  "licence": "CC0-1.0",
-  "budget": 6000,
-  "length": 4.3,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_coupe"
-  ]
- },
- {
-  "id": "ds_tristar",
-  "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Tristar Racer.fbx",
-  "lib": "Designersoup",
-  "title": "Tristar Racer (Car Pack 1)",
-  "url": "https://designersoup.itch.io/low-poly-car-pack-1",
-  "author": "designersoup",
-  "licence": "CC0-1.0",
-  "budget": 6000,
-  "length": 4.5,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_supercar"
-  ]
- },
- {
-  "id": "ds_tois08",
-  "file": "x/ds_designersoups-low-poly-car-pack-vol-2_Designersoup_Low_Poly_Car_Pack_2/Exports/Tois08_GT.fbx",
-  "lib": "Designersoup",
-  "title": "Tois08 GTI (Car Pack 2)",
-  "url": "https://designersoup.itch.io/designersoups-low-poly-car-pack-vol-2",
-  "author": "designersoup",
-  "licence": "Designersoup royalty-free (no public repos)",
-  "budget": 6000,
-  "length": 4.0,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_hatch",
-   "traffic_city"
-  ]
- },
- {
-  "id": "ds_smarty",
-  "file": "x/ds_designersoups-low-poly-car-pack-vol-2_Designersoup_Low_Poly_Car_Pack_2/Exports/Smarty.fbx",
-  "lib": "Designersoup",
-  "title": "Smarty (Car Pack 2)",
-  "url": "https://designersoup.itch.io/designersoups-low-poly-car-pack-vol-2",
-  "author": "designersoup",
-  "licence": "Designersoup royalty-free (no public repos)",
-  "budget": 6000,
-  "length": 2.7,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_hatch",
-   "traffic_city"
-  ]
- },
- {
-  "id": "ds_toro86",
-  "file": "x/ds_designersoups-low-poly-car-pack-vol-2_Designersoup_Low_Poly_Car_Pack_2/Exports/Toro86.fbx",
-  "lib": "Designersoup",
-  "title": "Toro86 (Car Pack 2)",
-  "url": "https://designersoup.itch.io/designersoups-low-poly-car-pack-vol-2",
-  "author": "designersoup",
-  "licence": "Designersoup royalty-free (no public repos)",
-  "budget": 6000,
-  "length": 4.2,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_coupe"
-  ]
- },
- {
-  "id": "ds_stuttgart",
-  "file": "x/ds_designersoups-low-poly-car-pack-vol-2_Designersoup_Low_Poly_Car_Pack_2/Exports/Stuttgart996.fbx",
-  "lib": "Designersoup",
-  "title": "Stuttgart996 (Car Pack 2)",
-  "url": "https://designersoup.itch.io/designersoups-low-poly-car-pack-vol-2",
-  "author": "designersoup",
-  "licence": "Designersoup royalty-free (no public repos)",
-  "budget": 6000,
-  "length": 4.4,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_gt"
-  ]
- },
- {
-  "id": "ds_multiplx",
-  "file": "x/ds_designersoups-low-poly-car-pack-vol-2_Designersoup_Low_Poly_Car_Pack_2/Exports/Multiplx.fbx",
-  "lib": "Designersoup",
-  "title": "Multiplx (Car Pack 2)",
-  "url": "https://designersoup.itch.io/designersoups-low-poly-car-pack-vol-2",
-  "author": "designersoup",
-  "licence": "Designersoup royalty-free (no public repos)",
-  "budget": 6000,
-  "length": 4.0,
-  "yaw": 90,
-  "kinds": {
-   "glass": 5,
-   "chrome": 6,
-   "plastic": 6,
-   "flatBlack": 6,
-   "head|rear|indicator|Emmis": 7,
-   "*": 0
-  },
-  "group": "Vehicles",
-  "for": [
-   "traffic_estate"
-  ]
- }
+  {
+    "id": "ds_tristar",
+    "file": "x/ds_low-poly-car-pack-1_Designersoup_Low_Poly_Car_Pack_Volume_1_updated/Tristar Racer.fbx",
+    "lib": "Designersoup",
+    "title": "Tristar Racer (Car Pack 1)",
+    "url": "https://designersoup.itch.io/low-poly-car-pack-1",
+    "author": "designersoup",
+    "licence": "CC0-1.0",
+    "budget": 6000,
+    "length": 4.5,
+    "yaw": 90,
+    "kinds": {
+      "glass": 5,
+      "chrome": 6,
+      "plastic": 6,
+      "flatBlack": 6,
+      "head|rear|indicator|Emmis": 7,
+      "*": 0
+    },
+    "group": "Vehicles",
+    "for": [
+      "traffic_supercar"
+    ],
+    "smooth": 35
+  }
 ]

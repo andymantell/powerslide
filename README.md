@@ -277,13 +277,16 @@ preset.
   (`?only=chalet,barn`), and `node tools/props/shoot.mjs out.png [query]`
   saves it.
 - `tools/blender/vehicles.py` builds the traffic into `vehicles.glb` (then
-  meshopt-compresses it with gltf-transform). Car bodies are lofted from a
-  side profile and plan width, with arches cut in and lamps, grilles and
-  windows as material zones; lorries, the tractor and the motorbikes (with
-  riders) are built from parts. Every type has a detailed and a far LoD, baked
-  ambient occlusion in the vertex colours and a `meta` extra (size, wheels,
-  lamps). `/tools/garage/` shows them all in the game's materials
-  (`?types=hatch,van&views=fq,side,rq,front&night=1`), and
+  meshopt-compresses it with gltf-transform). The traffic is four cars from
+  Designersoup's CC0 Low Poly Car Pack 1 (sources not in the repo, see
+  `tools/blender/sources/README.md`): their palette texture is baked to vertex
+  colours, the body swatch becomes tintable paint, lamps are sorted into
+  head, tail and indicator, and the wheels are swapped for ours. The older
+  lofted vans, lorries, buses, tractor and motorbikes are off the road for now
+  but still build by name for a preview. Every type has a detailed and a far
+  LoD, baked ambient occlusion in the vertex colours and a `meta` extra (size,
+  wheels, lamps). `/tools/garage/` shows them all in the game's materials
+  (`?types=classic,suv&views=fq,side,rq,front&night=1`), and
   `node tools/garage/shoot.mjs out.png [query]` saves it.
 - `/tools/sky/?biome=alpine&time=dusk&weather=rain&quality=medium` draws just
   the sky (volumetric clouds included) in four directions, in a few seconds;

@@ -22,7 +22,8 @@ candidates.json is a list of entries (see tools/props/audition/candidates.json):
   budget  triangle budget
   kind    surface kind for every face (props.py numbering), or
   kinds   {material-name regex: kind}, first match wins, '*' for the rest
-  smooth  smooth shading (scans) instead of flat (low-poly kits)
+  smooth  true: smooth shading (scans); a number: smooth, but keep edges
+          sharper than that many degrees hard (low-poly cars); else flat
   tint    optional '#rrggbb' multiplied into the colour
 """
 import json
@@ -268,8 +269,12 @@ def convert(e):
         lk[p.loop_start:p.loop_start + p.loop_total] = fk[p.index]
     uvs = np.stack([(lk + 0.5) / 8, np.full_like(lk, 0.5)], axis=1)
     uv.data.foreach_set('uv', uvs.ravel())
-    for p in me.polygons:
-        p.use_smooth = bool(e.get('smooth'))
+    sm = e.get('smooth')
+    if isinstance(sm, (int, float)) and not isinstance(sm, bool):
+        bpy.ops.object.shade_smooth_by_angle(angle=math.radians(sm))
+    else:
+        for p in me.polygons:
+            p.use_smooth = bool(sm)
     me.materials.clear()
     o.name = me.name = e['id']
     me.update()
