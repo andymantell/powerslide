@@ -110,8 +110,10 @@ for (const [file, url] of Object.entries(PACK_FILES)) {
 
 // Audition candidates (tools/props/audition.mjs): converted library models,
 // drawn with the prop material like our own props. Not part of the sheet.
+// ?audition=<name> loads audition/out/<name>.glb (default 'audition').
 if (new URLSearchParams(location.search).has('audition')) {
-  const gltf = await loader.loadAsync(new URL('./audition/out/audition.glb', import.meta.url).href);
+  const set = new URLSearchParams(location.search).get('audition') || 'audition';
+  const gltf = await loader.loadAsync(new URL(`./audition/out/${set}.glb`, import.meta.url).href);
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
     makers.set(o.name, () => {

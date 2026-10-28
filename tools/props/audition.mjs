@@ -4,7 +4,8 @@
 // for Poly Haven, fetch_itch.cjs for the Quaternius and Kenney packs (unzip
 // them under dl/x/), as each candidate's `file` path expects.
 //   python tools/blender/import_asset.py tools/props/audition/candidates.json tools/props/audition/out/audition.glb <downloads>
-//   npm run dev, then node tools/props/audition.mjs outDir
+//   npm run dev, then node tools/props/audition.mjs outDir [list.json]
+// Another list (default candidates.json) reads out/<list name>.glb and .json.
 // Writes one jpg per tile and outDir/audition.json (rows, candidates, licences, triangles).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
@@ -19,8 +20,10 @@ try {
 }
 const out = process.argv[2] || 'audition';
 const here = new URL('./audition/', import.meta.url);
-const cands = JSON.parse(fs.readFileSync(new URL('candidates.json', here)));
-const stats = Object.fromEntries(JSON.parse(fs.readFileSync(new URL('out/audition.json', here))).map((s) => [s.id, s]));
+const list = process.argv[3] || 'candidates.json';
+const set = list === 'candidates.json' ? 'audition' : list.replace(/\.json$/, '');
+const cands = JSON.parse(fs.readFileSync(new URL(list, here)));
+const stats = Object.fromEntries(JSON.parse(fs.readFileSync(new URL(`out/${set}.json`, here))).map((s) => [s.id, s]));
 const ids = JSON.parse(fs.readFileSync(new URL('../sheet-ids.json', here)));
 fs.mkdirSync(out, { recursive: true });
 
@@ -38,7 +41,7 @@ for (const c of cands) {
 const browser = await pw.chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 900, height: 700 }, deviceScaleFactor: +(process.env.SHOT_DPR || 1) });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-await page.goto(`${process.env.SHOT_URL || 'http://localhost:5173/'}tools/props/sheet.html?audition&${process.env.SHEET_Q || ''}`);
+await page.goto(`${process.env.SHOT_URL || 'http://localhost:5173/'}tools/props/sheet.html?audition=${set}&${process.env.SHEET_Q || ''}`);
 await page.waitForFunction(() => window.__sheetReady, null, { timeout: 300000 });
 
 const shoot = async (name, label, file) => {
