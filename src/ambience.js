@@ -41,6 +41,7 @@ export const AMBIENCE = {
       sheep: { every: [5, 14], gain: 0.45 },
       pony: { every: [25, 60], gain: 0.4 },
       crow: { every: [15, 35], gain: 0.28, bird: true },
+      curlew: { every: [30, 70], gain: 0.28, bird: true },
       owl: { every: [30, 70], gain: 0.25, when: 'night', bird: true },
     },
   },

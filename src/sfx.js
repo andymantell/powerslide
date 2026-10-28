@@ -9,6 +9,7 @@ export const CALLS = {
   songbird: { sample: 'songbird', rate: [0.95, 1.08] },
   skylark: { sample: 'skylark', rate: [0.97, 1.03] },
   cuckoo: { sample: 'cuckoo', rate: [0.97, 1.03] },
+  curlew: { sample: 'curlew', rate: [0.97, 1.03] },
   crow: { sample: 'crow', rate: [0.93, 1.05] },
   raven: { sample: 'raven', rate: [0.9, 1.0] },
   // Alpine choughs: a higher, squeakier corvid.
