@@ -76,7 +76,7 @@ const MIXES = {
   forest: { hatch: 3, estate: 4, suv: 4, pickup: 3, utility: 2, van: 2, lorry: 1, logger: 3.5, tipper: 1, camper: 1, bike_tourer: 1, saloon: 2, horsebox: 0.3, police: 0.25, ambulance: 0.2, fire: 0.2, gt: 0.4 },
   canyon: { pickup: 5, suv: 4, coupe: 2, saloon: 2, camper: 3, lorry: 2, tipper: 1, bike_tourer: 2, bike_sport: 2, hatch: 1, gt: 1.5, supercar: 1, roadster: 0.6, police: 0.4, ambulance: 0.2, fire: 0.15 },
   city: { taxi: 5, saloon: 3, hatch: 3, city: 3, bus: 2, van: 2, suv: 2, coupe: 1, lorry: 1, bike_sport: 2, bike_tourer: 1.5, minibus: 1, decker: 2, police: 1, ambulance: 0.7, fire: 0.4, supercar: 1, gt: 0.8, roadster: 0.4 },
-  coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, bike_tourer: 2, bike_sport: 1, saloon: 2, icecream: 1, roadster: 1.5, gt: 0.8, supercar: 0.8, police: 0.3, ambulance: 0.25, fire: 0.1 },
+  coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, tractor: 0.6, lorry: 0.5, bike_tourer: 2, bike_sport: 1, saloon: 2, icecream: 1, roadster: 1.5, gt: 0.8, supercar: 0.8, police: 0.3, ambulance: 0.25, fire: 0.1 },
   pass: { suv: 3, estate: 3, hatch: 2, camper: 3, coupe: 2, bike_sport: 3, bike_tourer: 3, lorry: 1, minibus: 1, saloon: 1, supercar: 1.5, gt: 1, roadster: 1, police: 0.3, ambulance: 0.25, fire: 0.1 },
 };
 
