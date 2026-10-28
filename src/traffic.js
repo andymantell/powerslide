@@ -240,10 +240,10 @@ export class Traffic {
     if (join && !['car', 'van', 'bike'].includes(TYPES[type].kind)) type = 'hatch';
     const T = TYPES[type];
     const meta = this.fleet.meta(type) || { L: 4.4, W: 1.8, kind: T.kind };
-    // Emergency vehicles mostly have their blue lights on. Going your way,
-    // they come from behind and overtake you.
+    // Emergency vehicles mostly have their blue lights on. They keep to
+    // their lane, so the rider always has a way through.
     const siren = !!T.emergency && r() < 0.75 && !join;
-    const s = at ?? (siren && dir > 0 ? playerS - 130 - r() * 60 : dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380);
+    const s = at ?? (dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380);
     // Keep a sensible gap to vehicles already in that lane.
     for (const c of this.cars) if (c.dir === dir && Math.abs(c.s - s) < 30 + (c.L + meta.L) * 1.5) return;
     const paintHex = this.pickPaint(type, T.paint);
@@ -265,7 +265,6 @@ export class Traffic {
       lane: dir * this.side * (LANE_WIDTH / 2 - (bike ? 0.35 : 0)),
       home: dir * this.side * (LANE_WIDTH / 2 - (bike ? 0.35 : 0)),
       laneRate: 0,
-      overtaking: false,
       siren,
       flash: r(),
       vmax: (v0 + r() * (v1 - v0)) * (dir > 0 ? 0.9 : 1) * this.speedScale * (siren ? 1.3 : 1),
@@ -355,7 +354,7 @@ export class Traffic {
     c.y = tw > HALF_WIDTH ? j.y(tw) : fr.y;
     c.yaw = Math.atan2(p.dx, -p.dz);
     c.pitch = 0;
-    // Where it is in main-road terms, so following, overtaking and the
+    // Where it is in main-road terms, so following and the
     // rider's collision checks all see it.
     const rx = p.x - j.ox, rz = p.z - j.oz;
     c.s = j.s + rx * j.vx + rz * j.vz;
@@ -486,11 +485,10 @@ export class Traffic {
       const gapP = (ps - c.s) * c.dir - c.L / 2;
       const riderAhead = gapP > 0 && gapP < 33 && Math.abs(player.d - c.lane) < 2.2 && !player.crashed;
       if (riderAhead && c.dir > 0 && (!blocker || gapP < blocker.gap)) blocker = { gap: gapP, v: player.speed, rider: true };
-      if (riderAhead && !(c.siren && c.overtaking)) {
+      if (riderAhead) {
         vt = Math.min(vt, Math.max(0, player.speed * (c.dir > 0 ? 1 : 0) + (gapP - 6) * 0.3));
       }
-      if (c.siren) vt = this.overtake(c, blocker, player, vt);
-      else if (pullOver) {
+      if (pullOver) {
         // Let the blue lights through: tuck in towards the verge and ease off.
         vt *= 0.6;
         this.steerTo(c, c.home * 1.3, dt);
@@ -533,30 +531,6 @@ export class Traffic {
     const want = clamp((target - c.lane) * 1.6, -1.8, 1.8);
     c.laneRate += clamp(want - c.laneRate, -3 * dt, 3 * dt);
     c.lane += c.laneRate * dt;
-  }
-
-  // An emergency vehicle stuck behind something swings out into the other
-  // lane (which may be yours) to get past, then tucks back in. It holds back
-  // if oncoming traffic, or a rider close ahead, is in the way.
-  overtake(c, blocker, player, vt) {
-    const dt = this.dt;
-    const other = -c.home;
-    if (c.overtaking) {
-      // Back in once clear of whatever it was passing (rel: how far ahead it still is).
-      const inWay = (rel, len) => rel > -(len + c.L) / 2 - 8 && rel < 55;
-      const passing = this.cars.some((o) => o !== c && o.dir === c.dir && Math.abs(o.lane - c.home) < 1.6 && inWay((o.s - c.s) * c.dir, o.L));
-      const rider = c.dir > 0 && Math.abs(player.d - c.home) < 1.8 && inWay((player.s - c.s) * c.dir, 1);
-      if (!passing && !rider) c.overtaking = false;
-    } else if (blocker && blocker.gap < 30 && blocker.v < c.v + 1) {
-      // Is the other lane clear far enough ahead?
-      const clear = !this.cars.some((o) => o !== c && o.dir !== c.dir && ((o.s - c.s) * c.dir) > -10 && ((o.s - c.s) * c.dir) < 90);
-      const riderGap = (player.s - c.s) * c.dir;
-      const riderInWay = c.dir < 0 && riderGap > 0 && riderGap < 45 && Math.abs(player.d - other) < 1.8;
-      if (clear && !riderInWay) c.overtaking = true;
-    }
-    this.steerTo(c, c.overtaking ? other * 0.95 : c.home, dt);
-    // Out in the other lane it can use its full speed.
-    return c.overtaking && Math.abs(c.lane - other) < 1 ? c.vmax : vt;
   }
 
   // Draws the traffic; call once a frame after update.

@@ -386,9 +386,8 @@ listen to, and `npm run clips` records every sound on its own into
   spawns are remembered so the same type or colour doesn't come straight
   back. Vehicles are placed from the road under both axles, so long ones
   follow bends; motorbikes lean. Emergency vehicles (`emergency` in `TYPES`)
-  usually run with blue lights and `car.siren`: going your way they come from
-  behind and pass you, and either way they pull out into the other lane to
-  overtake when it's clear (never with a rider close ahead in it), while
+  usually run with blue lights and `car.siren` and keep to their own lane
+  (they used to overtake, but that could block the whole road), while
   other traffic tucks in for them. They're drawn with instancing (a few draw
   calls per type and LoD, one per wheel style), with soft contact shadows,
   and at night, in rain or in mist their lamps light up, with light pools on
