@@ -460,6 +460,7 @@ export class Props {
       if (def.r) t.block(p.x, p.z, def.r * p.scale);
       if (def.pad && p.y === null) {
         p.y = t.heightAt(p.x, p.z);
+        p.padded = true;
         pads.push(terrace(p.x, p.z, def.pad * p.scale, p.y));
       }
     }
@@ -502,16 +503,13 @@ export class Props {
     return out;
   }
 
-  // Endless: forgets props more than `dist` m from (px, pz), so the lists
+  // Endless: forgets the props where keep(x, z) is false, so the lists
   // don't grow without end on a long ride.
-  prune(px, pz, dist) {
-    const d2 = dist * dist;
+  prune(keep) {
     for (const [type, arr] of this.items) {
-      const keep = [];
-      for (let i = 0; i < arr.length; i += 5) {
-        if ((arr[i] - px) ** 2 + (arr[i + 2] - pz) ** 2 <= d2) keep.push(arr[i], arr[i + 1], arr[i + 2], arr[i + 3], arr[i + 4]);
-      }
-      if (keep.length < arr.length) this.items.set(type, new Float32Array(keep));
+      const out = [];
+      for (let i = 0; i < arr.length; i += 5) if (keep(arr[i], arr[i + 2])) out.push(arr[i], arr[i + 1], arr[i + 2], arr[i + 3], arr[i + 4]);
+      if (out.length < arr.length) this.items.set(type, new Float32Array(out));
     }
   }
 
@@ -573,7 +571,7 @@ export class Props {
 // 8 m. It never reaches the road or its verge.
 export function terrace(cx, cz, r, h) {
   const R = r + 8;
-  return (x, z, f, y) => {
+  const mod = (x, z, f, y) => {
     const dx = x - cx, dz = z - cz;
     if (Math.abs(dx) > R || Math.abs(dz) > R) return y;
     const d = Math.hypot(dx, dz);
@@ -581,6 +579,8 @@ export function terrace(cx, cz, r, h) {
     const w = (1 - smooth(r, R, d)) * smooth(6, 9, f.dist);
     return y + (h - 0.05 - y) * w;
   };
+  mod.pad = [cx, cz];
+  return mod;
 }
 
 function smooth(a, b, x) {

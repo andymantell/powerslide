@@ -71,7 +71,14 @@ score how fast you pass, and a road that gets steeper, twistier and busier the
 further you go. It shares the campaign's set pieces and roadside furniture:
 `src/scenery.js` dresses the endless road a stretch at a time, 2.3 km ahead of
 the rider (before the terrain there builds), using `Structures.add`/`buildJob`,
-`dressRange` and `Props.finish(true)`, and drops them again behind.
+`dressRange` and `Props.finish(true)`, and drops them again behind. Each
+biome has its own palette there (set pieces, verge props, animals, houses):
+streets in the suburbs and the city, redwood tunnels and trestles in the
+forest, arches, slot canyons and railways in the canyon, turbines and fishing
+harbours on the coast, rock galleries, snow walls and meltwater on the pass.
+The sea, dams and the suspension bridge stay campaign-only, since they need
+the whole road (or a level stretch) shaped for them. Building terraces are
+kept last in `terrain.mods`, so a later stretch's ground can't tilt a house.
 
 Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,
 Pine Forest, Desert Canyon, City at Night, Coastal Cliffs and High Alpine Pass)

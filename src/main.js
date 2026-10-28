@@ -1492,7 +1492,7 @@ watchForUpdates({
 registerOffline();
 keepSaves();
 
-window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, bakeClouds, sparks, props, structures, renderFrame: () => {
+window.__powerslide = Object.assign(debug, { game, player, audio, extras, road, roadMesh, sun, SUN_DIR, terrain, traffic, camera, renderer, scene, settings, post, forest, boulders, grass, precip, ENV, bakeClouds, sparks, props, structures, scenery, renderFrame: () => {
   camera.updateMatrixWorld();
   updateLamps(props, camera, camera.position.x, camera.position.z);
   post.render();
