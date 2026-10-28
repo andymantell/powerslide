@@ -62,7 +62,8 @@ export const GROUND_SETS = {
   canyon: {
     base: 'desert', rock: 'sandstone', gravel: 'gravel', snow: 'snow', tuft: 'desert_tuft', tuftDensity: 0.25, shore: 'sand',
     patchLo: [0.9, 0.86, 0.82], patchHi: [1.08, 1.02, 0.94],
-    relief: 0.9, maxRelief: 160, snowLine: 1e5, treeDensity: 0,
+    // No rock patches on the flats: top-down sandstone read as dark stains.
+    relief: 0.9, maxRelief: 160, snowLine: 1e5, treeDensity: 0, outcrops: 0,
   },
 };
 

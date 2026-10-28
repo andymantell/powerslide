@@ -130,7 +130,7 @@ export class Terrain {
   surface(x, z, rel, dist, ny, out = {}) {
     const v = this.noise3(x / 40, z / 40) * 0.5 + 0.5;
     const v2 = this.noise3(x / 300 + 50, z / 300) * 0.5 + 0.5;
-    const outcrop = smoothstep(0.62, 0.8, this.noise2(x / 90 + 7, z / 90)) * smoothstep(8, 30, dist);
+    const outcrop = smoothstep(0.62, 0.8, this.noise2(x / 90 + 7, z / 90)) * smoothstep(8, 30, dist) * this.outcrops;
     // Road cuts: the uphill bank right beside the road is blasted rock.
     const cut = smoothstep(1.5, 4, rel) * (1 - smoothstep(14, 30, dist)) * (1 - smoothstep(0.8, 0.95, ny)) * smoothstep(0.3, 0.6, v + v2 * 0.5);
     const rock = Math.min(1, 1 - smoothstep(0.62, 0.84, ny) + outcrop * 0.8 + cut);
@@ -319,6 +319,7 @@ export class Terrain {
     if (this.snowCover) this.snowLine = Math.min(this.snowLine, -260);
     this.treeDensity = g.treeDensity ?? 1;
     this.treeClear = g.treeClear ?? 9; // no trees closer to the road centre (m)
+    this.outcrops = g.outcrops ?? 1; // rock showing through flat ground (0 for none)
   }
 
   reset(seed, shape) {

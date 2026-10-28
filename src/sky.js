@@ -59,7 +59,7 @@ export const ATMOSPHERE = {
     sunAzimuth: -2.3,
     sunElevation: 0.72,
     zenith: '#1d4fa8',
-    horizon: '#d8cdb8',
+    horizon: '#bfd2e6',
     haze: '#d4bfa0',
     sunHaze: '#f4dcb0',
     sunColor: '#fff2dc',
