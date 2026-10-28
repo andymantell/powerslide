@@ -390,8 +390,9 @@ def bleed(rgb, alpha, passes=24):
     return rgb
 
 
-def twig(name='spruce_twig', pal=None, seed=51, size=512, needle=1.0, spread=(0.5, 1.3), branches=2):
-    """Alpha-tested branch card: a spruce shoot seen from above, stem at the bottom centre."""
+def twig(name='spruce_twig', pal=None, seed=51, size=512, needle=1.0, spread=(0.5, 1.3), branches=2, flowers=None):
+    """Alpha-tested branch card: a spruce shoot seen from above, stem at the bottom centre.
+    flowers: colours of small pea flowers dotted along the outer shoots (gorse)."""
     pal = pal or dict(dark='#16281a', light='#3d5a30', tip='#6c8a40', stem='#4a3426')
     dark, light, tip, stem = (hexcol(pal[k]) for k in ('dark', 'light', 'tip', 'stem'))
     S = size * 4
@@ -428,8 +429,21 @@ def twig(name='spruce_twig', pal=None, seed=51, size=512, needle=1.0, spread=(0.
                 x, y, t, a = pts[i]
                 side = 1 if (i // 2) % 2 else -1
                 shoot(x, y, a + side * rng.uniform(0.8, 1.15), length * (1 - t * 0.8) * rng.uniform(0.3, 0.45), width * 0.75, depth - 1)
+        tips.extend(p for p in pts if p[2] > 0.25)
 
+    tips = []
     shoot(S * 0.5, S * 0.98, -np.pi / 2, S * 0.9, 1.0, branches)
+    if flowers:
+        fc = [hexcol(c) for c in flowers]
+        for _ in range(len(tips) // 8):
+            x, y, t, a = tips[rng.integers(len(tips))]
+            x, y = x + rng.normal(0, S * 0.012), y + rng.normal(0, S * 0.012)
+            col = fc[rng.integers(len(fc))] * rng.uniform(0.8, 1.05)
+            # A pea flower: a round standard petal over two small wings.
+            r = S * rng.uniform(0.006, 0.009)
+            for dx, dy, k in ((-0.7, 0.5, 0.6), (0.7, 0.5, 0.6), (0, -0.2, 1.0)):
+                cx, cy, rr = x + dx * r, y + dy * r, r * k
+                d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], fill=c8(col * (0.85 if k < 1 else 1.0)))
     img = img.resize((size, size), Image.LANCZOS)
     arr = np.asarray(img) / 255.0
     rgb, alpha = arr[..., :3], arr[..., 3]
@@ -439,6 +453,12 @@ def twig(name='spruce_twig', pal=None, seed=51, size=512, needle=1.0, spread=(0.
     rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
     Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(os.path.join(OUT, f'{name}.png'), optimize=True)
     print('wrote', name)
+
+
+def gorse():
+    """Gorse: dark, spiny shoots thick with yellow pea flowers."""
+    twig('gorse_twig', dict(dark='#1e2e16', light='#3c5226', tip='#56702e', stem='#4a3e26'), seed=57, needle=0.8,
+         spread=(0.3, 0.9), branches=2, flowers=['#f2c420', '#e8b417', '#f7d238'])
 
 
 def pine_twig(name='pine_twig', seed=53, size=512):
@@ -830,7 +850,7 @@ def desert():
     tuft('desert_tuft', dict(dark='#6a5a32', mid='#93804a', light='#c4ae72', dry='#b08a58', flowers=['#e8c22a', '#d86a2a']), seed=89)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert, leaves=leaves, birch_bark=birch_bark)
+ALL = dict(gorse=gorse, grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert, leaves=leaves, birch_bark=birch_bark)
 
 if __name__ == '__main__':
     # These now ship as library textures (tools/textures/library.py), so they

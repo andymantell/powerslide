@@ -8,6 +8,14 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { trackLoad } from './ground.js';
 import { createPropMaterial } from './propmat.js';
+import { cardMaterial, gorseGeometry } from './foliage.js';
+
+// Props made of foliage cards in code (src/foliage.js) rather than models,
+// with the card texture they use. They replace any model of the same name.
+const CARD_PROPS = {
+  gorse: ['gorse_twig', () => gorseGeometry(1, 1)],
+  gorse_big: ['gorse_twig', () => gorseGeometry(1.6, 2)],
+};
 
 const MODEL = new URL('./assets/models/props.glb', import.meta.url).href;
 // Each biome's own props (tools/blender/props_<biome>.py), loaded on top.
@@ -394,12 +402,14 @@ export class Props {
     this.list = []; // { type, x, y, z, yaw, scale } while building a level
     this.lastX = Infinity;
     this.lastZ = Infinity;
+    this.antialias = renderer.getContextAttributes?.()?.antialias;
+    for (const [type, [, make]] of Object.entries(CARD_PROPS)) this.geos.set(type, make());
     const loader = new GLTFLoader();
     for (const url of [MODEL, PACKS[pack]].flat().filter(Boolean)) {
       trackLoad(
         loader.loadAsync(url).then((gltf) => {
           gltf.scene.traverse((o) => {
-            if (o.isMesh) this.geos.set(o.name, o.geometry);
+            if (o.isMesh && !CARD_PROPS[o.name]) this.geos.set(o.name, o.geometry);
           });
         }),
       );
@@ -528,7 +538,8 @@ export class Props {
       this.scene.remove(m);
       m.dispose();
     }
-    m = new THREE.InstancedMesh(geo, this.mat, Math.max(16, Math.ceil(n * 1.25)));
+    const mat = CARD_PROPS[type] ? cardMaterial(CARD_PROPS[type][0], this.antialias) : this.mat;
+    m = new THREE.InstancedMesh(geo, mat, Math.max(16, Math.ceil(n * 1.25)));
     m.castShadow = true;
     m.receiveShadow = true;
     m.frustumCulled = false;
@@ -541,7 +552,7 @@ export class Props {
   // Refills the instance lists with what's within each type's draw distance.
   update(px, pz, force = false) {
     if (!force && Math.hypot(px - this.lastX, pz - this.lastZ) < 30) return;
-    if (!this.geos.size) return;
+    if (this.geos.size <= Object.keys(CARD_PROPS).length) return;
     this.lastX = px;
     this.lastZ = pz;
     const m = new THREE.Matrix4();

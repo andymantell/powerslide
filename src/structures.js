@@ -14,6 +14,7 @@ import { mulberry32, clamp } from './noise.js';
 import { Props } from './props.js';
 import { ENV } from './sky.js';
 import { waterTime } from './ground.js';
+import { Cards, cardMaterial } from './foliage.js';
 import { lampSpots } from './lamps.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10, ROCK = 12, SNOW = 13;
@@ -222,6 +223,7 @@ export class Structures {
     this.props = props;
     this.boulders = boulders;
     this.mat = createPropMaterial(renderer);
+    this.antialias = renderer.getContextAttributes?.()?.antialias;
     this.group = new THREE.Group();
     scene.add(this.group);
     const tex = waterTextures();
@@ -2273,14 +2275,23 @@ const BUILDS = {
 
   walls(job) {
     const geo = new Geo();
-    for (const side of edgeSides(job)) edgeRun.call(this, geo, job, side, 'wall');
+    for (const side of edgeSides(job)) wallRun.call(this, geo, job, side);
     this.mesh(geo);
   },
 
   hedge(job) {
     const geo = new Geo();
-    for (const side of edgeSides(job)) edgeRun.call(this, geo, job, side, 'hedge');
+    const cards = { hawthorn_leaves: new Cards(), fern_tuft: new Cards(), grass_tuft: new Cards() };
+    for (const side of edgeSides(job)) hedgeRun.call(this, geo, cards, job, side);
     this.mesh(geo);
+    for (const [name, c] of Object.entries(cards)) {
+      const g = c.build();
+      if (!g) continue;
+      const m = new THREE.Mesh(g, cardMaterial(name, this.antialias));
+      m.castShadow = name === 'hawthorn_leaves';
+      m.receiveShadow = true;
+      this.group.add(m);
+    }
   },
 
   grid(job) {
@@ -3197,47 +3208,164 @@ function edgeSides(job) {
   return job.f.side === 'left' ? [-1] : job.f.side === 'right' ? [1] : [-1, 1];
 }
 
-// One side of a run of wall or hedge bank, following the ground: it stands
-// on whichever is lower, the road or the field, and rises above the higher.
-function edgeRun(geo, job, side, kind) {
-  if (kind === 'wall') return wallRun.call(this, geo, job, side);
+// Hawthorn, hazel, blackthorn and holly greens, a few yellowing.
+const HEDGE_GREENS = ['#4d6a33', '#567438', '#46602f', '#5d7a3c', '#3f5a2a', '#62803f', '#4a5f2c', '#5f6a33', '#3a4f27', '#6b7a3a'];
+// Turf, grass and dead bracken on the bank's faces.
+const BANK_TURF = ['#4f5a2e', '#535e30', '#4a552b', '#58602f', '#5a5a32', '#4e5a33', '#5c5630'];
+// Granite showing through the turf, weathered darker than a built wall's.
+const BANK_STONES = ['#5f5c55', '#67635a', '#58574f', '#6b675d', '#5a5c4f', '#625f52'];
+
+// A Devon hedge bank: an earth bank with sloping, stone-faced sides that
+// turf, grass and ferns have grown over, and a ragged hedge of separate
+// bushes on top, some taller than others, with the odd thorn tree standing
+// out. Like the walls it stands on whichever is lower, the road or the
+// field, and rises above the higher.
+function hedgeRun(geo, cards, job, side) {
   const road = this.road;
   const t = this.terrain;
+  const rand = this.rand;
   const d0 = side * (RAIL_OFFSET - 0.05);
-  const w = 1.9;
-  const d1 = d0 + side * w;
+  const w = 2.0;
+  const mid = d0 + side * w / 2;
   const f = {};
-  // Hawthorn, hazel and holly greens, with a few dead brown and gorse sprigs.
-  const greens = ['#4d6a33', '#567438', '#46602f', '#5d7a3c', '#3f5a2a', '#62803f', '#4a5f2c', '#5f6a33'];
-  const LUMPS = 6;
+  const p1 = rand() * 6.28, p2 = rand() * 6.28;
+  // Each ring is the bank's section: up the road face in courses, across
+  // the turf top, down the field face, every point nudged a little.
+  const ROWS = 4;
   const ring = (s) => {
     road.sample(s, f);
-    const g = t.heightAt(f.x + f.rightX * (d0 + d1) / 2, f.z + f.rightZ * (d0 + d1) / 2);
+    const g = t.heightAt(f.x + f.rightX * mid, f.z + f.rightZ * mid);
     const base = Math.min(f.y, g) - 0.8;
-    const top = Math.max(f.y + 1.3, g + 1.0);
-    const n = this.rand();
+    const top = Math.max(f.y + 1.25, g + 0.9) + 0.1 * Math.sin(s * 0.13 + p1) + 0.07 * Math.sin(s * 0.41 + p2);
     const at = (d, y) => new THREE.Vector3(f.x + f.rightX * d, y, f.z + f.rightZ * d);
-    return {
-      a: at(d0, base), b: at(d0 + side * 0.08, top), c: at(d1 - side * 0.08, top), e: at(d1, base),
-      // The hedge on top: a rounded, lumpy crown, bulging out over the road.
-      h: Array.from({ length: LUMPS + 1 }, (_, i) => {
-        const u = i / LUMPS;
-        const lump = Math.sin(u * Math.PI) * (1.0 + n * 0.5) + (this.rand() - 0.5) * 0.35 * Math.sin(u * Math.PI);
-        return at(d0 + side * (-0.15 + u * (w + 0.3)), top + lump);
-      }),
+    const face = (d, low, inward) => {
+      const pts = [at(d, base)];
+      for (let r = 0; r <= ROWS; r++) {
+        const u = r / ROWS;
+        // Battered: the face leans back, more steeply near the top.
+        const lean = 0.5 * u * u + 0.1 * u;
+        const j = (rand() - 0.5) * 0.12;
+        pts.push(at(d + inward * (lean + j), low + (top - low) * u + (r && r < ROWS ? (rand() - 0.5) * 0.08 : 0)));
+      }
+      return pts;
     };
+    const road1 = face(d0, f.y - 0.05, side);
+    const field = face(d0 + side * w, g - 0.05, -side).reverse();
+    return { pts: [...road1, ...field], top, c: at(mid, (base + top) / 2), f: { x: f.x, z: f.z, rx: f.rightX, rz: f.rightZ, dx: f.dirX, dz: f.dirZ } };
   };
-  const step = 1;
+  // Which colour a band of the section gets: stone low down on the faces,
+  // turf and bracken higher up and over the top.
+  const bandCol = (i, n) => {
+    const k = Math.min(i, n - 2 - i); // 0 at the foot of either face
+    if (k <= 1 && rand() < 0.45) return BANK_STONES[Math.floor(rand() * BANK_STONES.length)];
+    if (k === 2 && rand() < 0.15) return BANK_STONES[Math.floor(rand() * BANK_STONES.length)];
+    return BANK_TURF[Math.floor(rand() * BANK_TURF.length)];
+  };
+  const step = 0.8;
   let prev = ring(job.s0);
+  const n = prev.pts.length;
+  let cols = prev.pts.map((_, i) => bandCol(i, n));
+  const capEnd = (r) => {
+    for (let i = 0; i < r.pts.length - 1; i++) {
+      geo.tri(r.c, r.pts[i], r.pts[i + 1], PLASTER, BANK_TURF[0]);
+      geo.tri(r.c, r.pts[i + 1], r.pts[i], PLASTER, BANK_TURF[0]);
+    }
+  };
+  capEnd(prev);
   for (let s = job.s0 + step; s <= job.s1 + 0.01; s += step) {
     const cur = ring(s);
-    const faces = [[prev.a, prev.b, cur.b, cur.a], [prev.b, prev.c, cur.c, cur.b], [prev.c, prev.e, cur.e, cur.c]];
-    for (const [p, q, r, u] of faces) quadOut(geo, p, q, r, u, side, MASONRY, '#6e7362');
-    for (let i = 0; i < LUMPS; i++) {
-      const col = greens[Math.floor(this.rand() * greens.length)];
-      quadOut(geo, prev.h[i], prev.h[i + 1], cur.h[i + 1], cur.h[i], side, LEAVES, col);
+    cols = cols.map((c, i) => (rand() < 0.5 ? c : bandCol(i, n)));
+    const inside = new THREE.Vector3().lerpVectors(prev.c, cur.c, 0.5);
+    for (let i = 0; i < n - 1; i++) geo.quad(prev.pts[i], prev.pts[i + 1], cur.pts[i + 1], cur.pts[i], PLASTER, cols[i], inside);
+    // Ferns and grass growing out of the road face, more of them higher up.
+    const along = new THREE.Vector3(cur.f.dx, 0, cur.f.dz);
+    const outward = new THREE.Vector3(-side * cur.f.rx, 0, -side * cur.f.rz);
+    for (let k = 0; k < 2; k++) {
+      const r = 2 + Math.floor(rand() * 3.5);
+      if (r > ROWS + 1) continue;
+      const p = new THREE.Vector3().lerpVectors(prev.pts[r], cur.pts[r], rand());
+      const fern = rand() < 0.6;
+      const tint = new THREE.Color(fern ? '#c8d0b0' : '#d8d4b8').multiplyScalar(0.7 + rand() * 0.25);
+      (fern ? cards.fern_tuft : cards.grass_tuft).tuft(p, along, outward, 0.6 + rand() * 0.4, 0.45 + rand() * 0.35, rand() < 0.5 ? 0 : 1, tint, rand);
     }
     prev = cur;
+  }
+  capEnd(prev);
+  // The hedge: overlapping bushes along the top, each a lumpy dome, leaning
+  // out a little over the road where nobody trims it.
+  let s = job.s0 + 0.3 + rand() * 0.4;
+  let thorn = s + 10 + rand() * 25;
+  while (s < job.s1 - 0.3) {
+    road.sample(s, f);
+    const top = Math.max(f.y + 1.25, t.heightAt(f.x + f.rightX * mid, f.z + f.rightZ * mid) + 0.9) + 0.1 * Math.sin(s * 0.13 + p1) + 0.07 * Math.sin(s * 0.41 + p2);
+    const tree = s >= thorn;
+    if (tree) thorn = s + 15 + rand() * 40;
+    const h = tree ? 2.4 + rand() * 1.4 : 0.7 + rand() * 0.9 + (rand() < 0.15 ? 0.6 : 0);
+    const r = tree ? 1.3 + rand() * 0.5 : 0.75 + rand() * 0.5;
+    const out = (rand() - 0.3) * 0.5;
+    const d = mid - side * out;
+    const c = new THREE.Vector3(f.x + f.rightX * d, top - 0.15, f.z + f.rightZ * d);
+    const col = HEDGE_GREENS[Math.floor(rand() * HEDGE_GREENS.length)];
+    if (tree) {
+      // A thorn tree grown out of the hedge: a short dark trunk, its crown
+      // held up above the rest.
+      const a1 = { x: f.dirX, z: f.dirZ }, a2 = { x: f.rightX, z: f.rightZ };
+      lump(geo, c, a1, a2, 0.12, 0.12, h * 0.6, '#4a3f33', rand);
+      bush(null, cards, c.clone().setY(c.y + h * 0.45), { x: f.dirX, z: f.dirZ }, r * 1.1, r, h * 0.55, col, rand);
+      bush(geo, cards, c, { x: f.dirX, z: f.dirZ }, 1.0, 1.0, 1.1 + rand() * 0.4, col, rand);
+    } else {
+      bush(geo, cards, c, { x: f.dirX, z: f.dirZ }, r, 0.75 + rand() * 0.35, h, col, rand);
+    }
+    s += 0.6 + rand() * 0.6;
+  }
+}
+
+// A bush: a dark, lumpy dome for its shaded inside, covered in twig cards
+// (see Cards). c is the middle of its base, ax a unit horizontal axis for
+// its length; rx, rz its half-length and half-width, h its height.
+function bush(geo, cards, c, ax, rx, rz, h, col, rand) {
+  const SEG = 6;
+  const rings = [[0, 0.5], [0.3, 0.5], [0.5, 0.3]];
+  const az = { x: -ax.z, z: ax.x };
+  const pts = rings.map(([y, k]) => Array.from({ length: SEG }, (_, i) => {
+    const a = ((i + rand() * 0.5) / SEG) * Math.PI * 2;
+    const j = k * (0.8 + rand() * 0.3);
+    const u = Math.cos(a) * rx * j, v = Math.sin(a) * rz * j;
+    return new THREE.Vector3(c.x + ax.x * u + az.x * v, c.y + h * (y + (rand() - 0.5) * 0.08), c.z + ax.z * u + az.z * v);
+  }));
+  const apex = new THREE.Vector3(c.x, c.y + h * 0.58, c.z);
+  const centre = new THREE.Vector3(c.x, c.y + h * 0.4, c.z);
+  const dark = new THREE.Color(col).multiplyScalar(0.3);
+  // A tree's crown, up against the sky, has no core: light shows through it.
+  if (geo) {
+    const tri = (a, b, d) => {
+      const n = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(d, a));
+      const m = new THREE.Vector3().add(a).add(b).add(d).divideScalar(3).sub(centre);
+      if (n.dot(m) < 0) [b, d] = [d, b];
+      geo.tri(a, b, d, PLASTER, dark);
+    };
+    for (let r = 0; r < rings.length - 1; r++) {
+      for (let i = 0; i < SEG; i++) {
+        const i2 = (i + 1) % SEG;
+        tri(pts[r][i], pts[r][i2], pts[r + 1][i2]);
+        tri(pts[r][i], pts[r + 1][i2], pts[r + 1][i]);
+      }
+    }
+    const last = pts[rings.length - 1];
+    for (let i = 0; i < SEG; i++) tri(last[i], last[(i + 1) % SEG], apex);
+  }
+  // Twigs all over the dome, growing outwards, more on bigger bushes.
+  const tint = new THREE.Color(col).lerp(new THREE.Color('#ffffff'), 0.65).multiplyScalar(0.95);
+  const count = Math.round(10 + 9 * rx * rz * h);
+  for (let i = 0; i < count; i++) {
+    const a = rand() * Math.PI * 2;
+    const el = Math.asin(rand() * 1.25 - 0.25); // mostly the top and sides
+    const u = Math.cos(a) * Math.cos(el) * rx, v = Math.sin(a) * Math.cos(el) * rz;
+    const p = new THREE.Vector3(c.x + ax.x * u + az.x * v, c.y + h * 0.85 * Math.sin(el) + 0.1, c.z + ax.z * u + az.z * v);
+    const out = new THREE.Vector3(ax.x * u / rx + az.x * v / rz, Math.sin(el) * 1.2, ax.z * u / rx + az.z * v / rz).normalize();
+    // Lower twigs sit in the shade of the ones above.
+    const lit = 0.5 + 0.4 * (Math.sin(el) * 0.5 + 0.5) + (rand() - 0.5) * 0.15;
+    cards.hawthorn_leaves.twig(p, out, 0.7 + rand() * 0.45, tint.clone().multiplyScalar(lit), rand);
   }
 }
 
