@@ -4,3 +4,6 @@
   top entry's `items` in `changelog.json`, in the same commit, starting with
   `New:`, `Better:` or `Fixed:`. Don't reword old lines (see README, "Release notes").
 - Physics changes: run `npm run sim` before and after.
+- Third-party assets: record each in `credits.json` in the same commit and run
+  `npm run credits` (see README, "Third-party assets"). CC0 or MIT only unless
+  Andy agrees; never NC, ND or SA.

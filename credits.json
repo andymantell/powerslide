@@ -1,0 +1,28 @@
+{
+  "about": "Where every file the game ships came from. Made-here files are listed by the tool that builds them. Third-party files need one entry each with source, author, licence and the date they were downloaded. Run `npm run credits` to check. See README, \"Third-party assets\".",
+  "allowedLicences": ["CC0-1.0", "MIT"],
+  "needsAskingFirst": ["CC-BY-4.0", "CC-BY-3.0"],
+  "neverUse": ["CC-BY-NC", "CC-BY-NC-SA", "CC-BY-ND", "CC-BY-SA", "Editorial", "Personal use only", "Unknown"],
+  "original": [
+    { "files": ["src/assets/models/props*.glb"], "madeBy": "tools/blender/props.py and props_<biome>.py" },
+    { "files": ["src/assets/models/vehicles.glb"], "madeBy": "tools/blender/vehicles.py" },
+    { "files": ["src/assets/models/conifers.glb"], "madeBy": "tools/blender/tree.py" },
+    { "files": ["src/assets/models/rocks.glb"], "madeBy": "tools/blender/rocks.py" },
+    { "files": ["src/assets/models/board.glb"], "madeBy": "tools/blender/board.py" },
+    { "files": ["src/assets/models/rider.glb"], "madeBy": "tools/blender/rider.py" },
+    { "files": ["src/assets/textures/props_detail.png"], "madeBy": "tools/textures/props.py" },
+    { "files": ["src/assets/textures/*"], "madeBy": "tools/textures/gen.py" },
+    { "files": ["public/icons/*"], "madeBy": "tools/icons.mjs" },
+    { "files": ["public/manifest.webmanifest", "public/sw.js"], "madeBy": "hand-written" }
+  ],
+  "assets": [],
+  "code": [
+    {
+      "name": "three.js (including the GLTFLoader, meshopt decoder and post-processing addons)",
+      "source": "https://github.com/mrdoob/three.js",
+      "author": "three.js authors",
+      "licence": "MIT",
+      "licenceUrl": "https://github.com/mrdoob/three.js/blob/dev/LICENSE"
+    }
+  ]
+}

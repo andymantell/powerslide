@@ -300,6 +300,28 @@ preset.
   vista, trees, forest, verge, cutting, distant, boulder, traffic, tail; `SHOT_PR=0.6` mimics a lowered render scale, `SHOT_NIGHT=1` darkens the scene to check headlamps and `SHOT_LEFT=1` switches to keep-left traffic) for before/after comparisons.
   vista, trees, forest, verge, cutting, distant, boulder, and sun and sky looking up; `SHOT_PR=0.6` mimics a lowered render scale) for before/after comparisons.
 
+### Third-party assets
+
+Everything the game ships is made here by the tools above, except what is
+listed in `credits.json`. Before adding any model, texture, sound or font from
+somewhere else:
+
+- **Licence.** CC0 (Poly Haven, ambientCG, Kenney, Quaternius, KayKit) or MIT
+  is fine. CC-BY needs Andy's OK first and an `attribution` line for a credits
+  screen. Never use non-commercial (NC), no-derivatives (ND), share-alike (SA),
+  "editorial" or unknown licences. Check the licence on the asset's own page,
+  not on a mirror, and keep the pack's licence file next to the source.
+- **Record it** in `credits.json` under `assets`, in the same commit: `title`,
+  `files` (paths in the repo, `*` allowed), `source` (the asset's page),
+  `author`, `licence` (SPDX id, e.g. `CC0-1.0`), `licenceUrl`, `downloaded`
+  (YYYY-MM-DD) and `changes` (what we did to it, e.g. "decimated to 2k tris,
+  texture baked to vertex colour"). Third-party code (three.js) goes under
+  `code`.
+- **Check it** with `npm run credits`. It fails if a shipped file in
+  `src/assets` or `public` isn't covered by a made-here `original` entry or an
+  `assets` entry, if an entry is missing a field, or if a licence isn't
+  allowed.
+
 ## Sound
 
 Everything is synthesised with WebAudio at run time (nothing to download, so
