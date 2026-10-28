@@ -113,6 +113,15 @@ export class Terrain {
     return h;
   }
 
+  // Shore cover at a point from the lake mods (see structures.js): sand and
+  // wet sand weights, 0..1. f is the road field at (x, z), h the height.
+  shoreAt(x, z, f, h, out = {}) {
+    out.sand = 0;
+    out.wet = 0;
+    for (const m of this.mods) m.shore?.(x, z, f, h, out);
+    return out;
+  }
+
   // Ground cover at a point: rock, gravel and snow weights (0..1) plus the
   // noise values the tint uses. rel is height above the road, dist distance
   // from its centre line, ny the up component of the ground normal.
@@ -139,6 +148,8 @@ export class Terrain {
     const pos = geo.attributes.position;
     const rel = new Float32Array(n * n);
     const dist = new Float32Array(n * n);
+    const shore = new Float32Array(n * n * 2);
+    const so = {};
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + cx;
       const z = pos.getZ(i) + cz;
@@ -147,6 +158,9 @@ export class Terrain {
       pos.setXYZ(i, x, h, z);
       rel[i] = h - f.roadY;
       dist[i] = f.dist;
+      this.shoreAt(x, z, f, h, so);
+      shore[i * 2] = so.sand;
+      shore[i * 2 + 1] = so.wet;
     }
     // Skirts are unnecessary: near/far are split by the shader cut.
     geo.computeVertexNormals();
@@ -171,6 +185,7 @@ export class Terrain {
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('splat', new THREE.BufferAttribute(splat, 4));
+    geo.setAttribute('shore', new THREE.BufferAttribute(shore, 2));
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
     const mesh = new THREE.Mesh(geo, coarse ? this.farMat : this.nearMat);

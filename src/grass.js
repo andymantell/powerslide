@@ -141,8 +141,8 @@ export class Grass {
     const t = this.terrain;
     const x0 = ix * CELL, z0 = iz * CELL;
     const n = GRID + 1, step = CELL / GRID;
-    const H = new Float32Array(n * n), R = new Float32Array(n * n), D = new Float32Array(n * n);
-    const f = {};
+    const H = new Float32Array(n * n), R = new Float32Array(n * n), D = new Float32Array(n * n), S = new Float32Array(n * n);
+    const f = {}, so = {};
     for (let j = 0; j < n; j++) {
       for (let i = 0; i < n; i++) {
         const x = x0 + i * step, z = z0 + j * step;
@@ -150,6 +150,7 @@ export class Grass {
         const h = t.heightFromField(x, z, f, false);
         H[j * n + i] = h;
         R[j * n + i] = h - f.roadY;
+        S[j * n + i] = t.shoreAt(x, z, f, h, so).sand;
         D[j * n + i] = f.dist;
       }
     }
@@ -174,7 +175,7 @@ export class Grass {
       const gz = (lerp2(H, u, Math.min(GRID, v + 0.25)) - lerp2(H, u, Math.max(0, v - 0.25))) / (step * 0.5);
       const ny = 1 / Math.hypot(gx, 1, gz);
       const s = t.surface(x, z, lerp2(R, u, v), dist, ny, sf);
-      const bare = Math.max(s.rock, s.gravel, s.snow);
+      const bare = Math.max(s.rock, s.gravel, s.snow, lerp2(S, u, v));
       // Clumps: denser where the large-scale noise says so.
       const clump = t.noise3(x / 9 + 31, z / 9) * 0.5 + 0.5;
       if (rand() < bare * 1.6 + (1 - clump) * 0.55) continue;

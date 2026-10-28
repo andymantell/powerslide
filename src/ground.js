@@ -46,7 +46,7 @@ export const GROUND_SETS = {
   // Hillside Suburbs: mown lawns and verges, gentle hills, few wild trees,
   // and only the odd clump of long grass.
   suburbs: {
-    base: 'lawn', rock: 'rock', gravel: 'gravel', snow: 'snow', tuft: 'lawn_tuft', tuftDensity: 0.3,
+    base: 'lawn', rock: 'rock', gravel: 'gravel', snow: 'snow', tuft: 'lawn_tuft', tuftDensity: 0.3, shore: 'sand',
     patchLo: [0.86, 0.92, 0.8], patchHi: [1.06, 1.04, 0.9],
     relief: 0.55, maxRelief: 90, snowLine: 1e5, treeDensity: 0.2,
   },
@@ -138,6 +138,13 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     uPatchHi: { value: new THREE.Vector3(...(set.patchHi ?? [1.15, 1.08, 0.86])) },
     uPatchC: { value: new THREE.Vector4(...(set.patchC ?? [1, 1, 1, 0])) },
   };
+  // Shore cover (sand round the sea and lakes), from the terrain's shore
+  // attribute: x sand, y wet sand at the water's edge.
+  const shore = !!set.shore;
+  if (shore) {
+    uniforms.tShoreA = { value: T(set.shore, 'albedo') };
+    uniforms.tShoreN = { value: T(set.shore, 'normal') };
+  }
   const detail = !far && !simple;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -148,17 +155,19 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         attribute vec4 splat;
         varying vec3 vGWorld;
         varying vec3 vGNormal;
-        varying vec4 vSplat;`,
+        varying vec4 vSplat;
+        ${shore ? 'attribute vec2 shore;\nvarying vec2 vShore;' : ''}`,
       )
       .replace(
         '#include <worldpos_vertex>',
         `#include <worldpos_vertex>
         vGWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
         vGNormal = normalize(mat3(modelMatrix) * objectNormal);
-        vSplat = splat;`,
+        vSplat = splat;
+        ${shore ? 'vShore = shore;' : ''}`,
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${SHARED}`)
+      .replace('#include <common>', `#include <common>\n${SHARED}\n${shore ? 'uniform sampler2D tShoreA, tShoreN;\nvarying vec2 vShore;' : ''}`)
       .replace(
         '#include <map_fragment>',
         `
@@ -208,8 +217,21 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vec3 gcol = aBase.rgb * bw.x + aRock.rgb * bw.y + aGrav.rgb * bw.z + aSnow.rgb * bw.w;
         // Dry, sun-bleached grass on exposed spots.
         gcol = mix(gcol, gcol * vec3(1.25, 1.12, 0.8), sw.w * bw.x);
-        diffuseColor.rgb *= gcol;
         float gRough = dot(bw, vec4(0.97, 0.88, 0.93, 0.55));
+        ${shore ? `
+        // Sand: lifted by its ripples so it creeps into the grass edge, and
+        // darker and smoother where the water has wetted it.
+        float sandW = 0.0;
+        vec4 aShore = vec4(0.5);
+        if (vShore.x > 0.01) {
+          aShore = texture2D(tShoreA, gp.xz * ${far ? '0.05' : '0.2'});
+          sandW = smoothstep(0.3, 0.6, vShore.x + (aShore.a - aBase.a) * 0.35) * (1.0 - bw.w);
+          aShore.rgb *= mix(1.0, 0.62, vShore.y);
+          gcol = mix(gcol, aShore.rgb, sandW);
+          gRough = mix(gRough, mix(0.95, 0.55, vShore.y), sandW);
+        }
+        ` : ''}
+        diffuseColor.rgb *= gcol;
         `,
       )
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = gRough;')
@@ -222,6 +244,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vec3 nGrav = bw.z > 0.01 ? topN(tGravN, gp.xz * 0.45, gn) : gn;
         vec3 nSnow = bw.w > 0.01 ? topN(tSnowN, gp.xz * 0.12, gn) : gn;
         vec3 gN = normalize(nBase * bw.x + nRock * bw.y + nGrav * bw.z + nSnow * bw.w);
+        ${shore ? 'if (sandW > 0.01) gN = normalize(mix(gN, topN(tShoreN, gp.xz * 0.2, gn), sandW));' : ''}
         normal = normalize((viewMatrix * vec4(gN, 0.0)).xyz);
         `
           : '',
@@ -229,7 +252,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
     patch?.(shader);
     if (!far) addLampLights(shader);
   };
-  mat.customProgramCacheKey = () => `ground-${far}-${simple}-${lampsOn()}`;
+  mat.customProgramCacheKey = () => `ground-${far}-${simple}-${shore}-${lampsOn()}`;
   return mat;
 }
 

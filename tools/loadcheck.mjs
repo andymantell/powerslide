@@ -28,6 +28,13 @@ for (const q of presets.split(',')) {
     // Time every draw call to completion (finish), so one slow GPU draw
     // shows up even though the GPU runs in another process.
     const P = WebGL2RenderingContext.prototype;
+    // The software renderer resolves MSAA (High and Ultra's post target)
+    // painfully slowly, and that lands on the next draw's timing, though a
+    // real GPU does it in hardware. Check those presets without it.
+    const rsm = P.renderbufferStorageMultisample;
+    P.renderbufferStorageMultisample = function (target, samples, ...rest) {
+      return rsm.call(this, target, 0, ...rest);
+    };
     for (const name of ['drawArrays', 'drawElements', 'drawArraysInstanced', 'drawElementsInstanced']) {
       const orig = P[name];
       P[name] = function (...a) {

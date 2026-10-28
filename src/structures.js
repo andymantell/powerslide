@@ -638,6 +638,19 @@ export const PLANS = {
       t += (level - 2.5 - 9 * inner - t) * inner;
       return h + (t - h) * region;
     });
+    // Sets with a shore texture (sand in the suburbs) lay it on the low
+    // ground round the water: 1 on the beach, fading out up the bank.
+    if (this.terrain.groundSet?.shore) {
+      this.terrain.mods.at(-1).shore = (x, z, fd, h, out) => {
+        const s = fd.index;
+        if (s < s0 - 80 || s > s1 + 80 || fd.side !== side || fd.dist < near - 14 || fd.dist > far + 80) return;
+        // From just past the prom railing down to the water, but not up the
+        // banks above the road.
+        const region = smooth(s0 - 70, s0 - 20, s) * (1 - smooth(s1 + 20, s1 + 70, s)) * smooth(near - 9, near - 7, fd.dist);
+        out.sand = Math.max(out.sand, region * (1 - smooth(fd.roadY + 0.4, fd.roadY + 1.4, h)));
+        out.wet = Math.max(out.wet, region * (1 - smooth(level + 0.2, level + 0.9, h)));
+      };
+    }
     // Keep trees out of the water.
     const fr = {};
     for (let s = s0; s <= s1; s += 15) {

@@ -498,7 +498,26 @@ def tuft(name='grass_tuft', pal=None, seed=81, size=512):
     print('wrote', name)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving)
+def sand(name='sand', seed=101):
+    # About 5 m of beach per tile: wind ripples over fine grain, a few
+    # darker damp hollows and the odd shell fleck.
+    t = np.arange(N) / N
+    x, y = np.meshgrid(t, t)
+    w = fbm(N, 4, 3, seed)
+    rip = 0.5 + 0.5 * np.sin(2 * np.pi * (x * 38 + y * 6 + w * 3.0))
+    rip = rip ** 1.6 * smoothstep(-0.3, 0.4, fbm(N, 6, 3, seed + 1))
+    grain = fbm(N, 256, 2, seed + 2)
+    broad = norm01(fbm(N, 3, 4, seed + 3))
+    h = norm01(rip * 0.55 + broad * 0.35 + grain * 0.1)
+    col = lerp(hexcol('#b39a74'), hexcol('#dcc9a3'), smoothstep(0.15, 0.85, broad)[..., None])
+    col = col * (0.9 + rip[..., None] * 0.12) * (0.97 + grain[..., None] * 0.22)
+    f1, _, cid = worley(N, 90, seed + 4)
+    fleck = (f1 < 0.09) * (cid > 0.93)
+    col = lerp(col, hexcol('#efe8dc'), fleck[..., None] * 0.8)
+    save(name, col, h, normal_from_height(blur(h, 1), 3.0), quality=75)
+
+
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:
