@@ -81,6 +81,8 @@ const MIXES = {
   pass: { bike_sport: 4, bike_tourer: 4, camper: 4, hatch: 3, estate: 3, suv: 3, saloon: 1, coupe: 1.5, postbus: 1.2, bus: 0.4, minibus: 0.6, supercar: 1.2, gt: 1, roadster: 1.2, police: 0.2, ambulance: 0.2, fire: 0.05 },
 };
 
+const TRAFFIC_SCALE = 2 / 3;
+
 const VERB = { car: 'a car', van: 'a van', lorry: 'a lorry', bus: 'a bus', tractor: 'a tractor', bike: 'a motorbike' };
 
 function pick(rand, list) {
@@ -194,7 +196,9 @@ export class Traffic {
     this.rand = mulberry32(seed);
     this.spawnTimer = 0;
     this.joinTimer = 4;
-    this.density = opts.density ?? 1;
+    // Two thirds of the level's (or endless setting's) density: Andy found a
+    // third less traffic plays better.
+    this.density = (opts.density ?? 1) * TRAFFIC_SCALE;
     this.speedScale = opts.speed ?? 1;
     this.recent = []; // last spawns: { type, paint }
   }

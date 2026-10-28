@@ -1457,7 +1457,7 @@ async function boot() {
   await texturesReady();
   await loadWorld(bootLevel);
   // Warm up: settle the rider pose and a few cars.
-  if (traffic.density > 0) for (let i = 0; i < 4; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
+  if (traffic.density > 0) for (let i = 0; i < 3; i++) traffic.spawn(player.s, i % 2 ? 1 : -1);
   player.animate(0.016);
   // Tidy a share link or a biome reload out of the address bar, so reloading
   // the page later doesn't bring them back.
