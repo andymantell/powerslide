@@ -8,7 +8,10 @@
 //   uv.x runs past 1 for these; paving and tarmac use the ground textures),
 //   11 windows: city glass, panes 3 m apart along each wall and floors 3.2 m
 //   apart; at night about half of them are lit (a hash of the pane and the
-//   instance's position)
+//   instance's position),
+//   12 rock and 13 snow/ice: the ground's rock and snow textures, projected
+//   three ways in model space (structures are built in world space), with
+//   the vertex colour tinting them
 import * as THREE from 'three';
 import { groundTexture } from './ground.js';
 import { addLampLights, lampsOn } from './lamps.js';
@@ -29,6 +32,8 @@ export function createPropMaterial(renderer) {
     uNight: { value: 0 },
     tPave: { value: groundTexture('paving', 'albedo', renderer) },
     tTar: { value: groundTexture('asphalt', 'albedo', renderer) },
+    tRockT: { value: groundTexture('rock', 'albedo', renderer) },
+    tSnowT: { value: groundTexture('snow', 'albedo', renderer) },
   };
   mat.userData.uniforms = uniforms;
   mat.onBeforeCompile = (shader) => {
@@ -50,7 +55,7 @@ export function createPropMaterial(renderer) {
       .replace(
         '#include <common>',
         `#include <common>
-        uniform sampler2D tDetail, tPave, tTar;
+        uniform sampler2D tDetail, tPave, tTar, tRockT, tSnowT;
         uniform float uNight;
         varying vec3 vPLocal;
         varying vec3 vPNormal;
@@ -132,7 +137,57 @@ export function createPropMaterial(renderer) {
           diffuseColor.rgb *= 1.0 + (ph - 0.5) * amt;
         }
         float paneHash = 0.0;
-        if (pk > 10.5) {
+        float pIce = 0.0;
+        if (pk > 11.5) {
+          vec3 tn = normalize(vPNormal);
+          vec3 tw = pow(abs(tn), vec3(4.0));
+          tw /= tw.x + tw.y + tw.z;
+          if (pk < 12.5) {
+            // Rock: the ground's rock at two scales so big faces don't tile.
+            vec4 r1 = texture2D(tRockT, vPLocal.zy * 0.16) * tw.x + texture2D(tRockT, vPLocal.xz * 0.16) * tw.y + texture2D(tRockT, vPLocal.xy * 0.16) * tw.z;
+            vec4 r2 = texture2D(tRockT, vPLocal.zy * 0.037 + 0.3) * tw.x + texture2D(tRockT, vPLocal.xz * 0.037 + 0.3) * tw.y + texture2D(tRockT, vPLocal.xy * 0.037 + 0.3) * tw.z;
+            // The vertex colour tints the rock and only shades it a little,
+            // so neighbouring facets don't read as flat patches.
+            // (Vertex colours are multiplied in after this, so divide out
+            // most of their brightness here.)
+            float vl = 1.0;
+            #ifdef USE_COLOR
+            vl = max(dot(vColor.rgb, vec3(0.333)), 0.02);
+            #endif
+            diffuseColor.rgb *= r1.rgb * (0.6 + dot(r2.rgb, vec3(0.5))) * mix(1.0, vl / 0.16, 0.3) / vl;
+            ph = mix(r1.a, r2.a, 0.35);
+          } else {
+            // Snow and ice: soft drifts of brightness, and on steep faces the
+            // faint horizontal layers of each winter's snowfall.
+            vec4 s1 = texture2D(tSnowT, vPLocal.zy * 0.25) * tw.x + texture2D(tSnowT, vPLocal.xz * 0.25) * tw.y + texture2D(tSnowT, vPLocal.xy * 0.25) * tw.z;
+            float steep = 1.0 - tw.y;
+            float layers = sin(vPLocal.y * 3.1 + s1.a * 3.0 + sin(vPLocal.y * 0.7) * 2.0) * 0.5 + 0.5;
+            // Where a blower cut the wall: curved scoops a metre or so across.
+            vec3 tM = normalize(cross(vec3(0.0, 1.0, 0.0), tn + vec3(0.0, 0.0, 1e-4)));
+            vec2 sc = vec2(dot(vPLocal, tM), vPLocal.y) / vec2(1.3, 1.1);
+            vec2 sf = fract(sc + vec2(0.5 * floor(sc.y), 0.0)) - 0.5;
+            float scoop = smoothstep(0.1, 0.5, length(sf * vec2(1.0, 1.4)));
+            diffuseColor.rgb *= (0.74 + s1.a * 0.42) * (1.0 - steep * (0.16 * layers * layers + 0.12 * scoop));
+            ph = s1.a * 0.5 + steep * (layers * 0.25 + scoop * 0.5);
+            // Bare glacier ice (greyer than snow): a web of blue-grey cracks
+            // and meltwater runnels across its upper surface.
+            // (Vertex colours are applied after this, so look at them directly.)
+            float ice = 0.0;
+            #ifdef USE_COLOR
+            ice = smoothstep(0.8, 0.6, dot(vColor.rgb, vec3(0.333))) * smoothstep(0.5, 0.8, tw.y);
+            #endif
+            pIce = ice;
+            if (ice > 0.01) {
+              float c2 = texture2D(tSnowT, vPLocal.xz * 0.043 + 0.2).a;
+              float c3 = texture2D(tSnowT, vPLocal.zx * 0.11 + 0.7).a;
+              float crack = (1.0 - smoothstep(0.0, 0.08, abs(c2 - 0.5))) * 0.8 + (1.0 - smoothstep(0.0, 0.06, abs(c3 - 0.5))) * 0.5;
+              diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.5, 0.66, 0.8), min(crack, 1.0) * ice);
+              // Ice soaks up more light than snow does.
+              diffuseColor.rgb *= 1.0 - 0.3 * ice;
+              ph -= crack * ice * 0.4;
+            }
+          }
+        } else if (pk > 10.5) {
           // Windows: each pane gets its own blind or curtain shade by day.
           // Panes are 3 m apart along each wall face, floors 3.2 m apart.
           vec3 pn = normalize(vPNormal);
@@ -159,7 +214,7 @@ export function createPropMaterial(renderer) {
         }
         // Ground contact: a little darker near the base of each prop.
         diffuseColor.rgb *= 0.72 + 0.28 * smoothstep(-0.2, 1.6, vPLocal.y);
-        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : pk < 7.5 ? 0.5 : pk < 8.5 ? 0.95 : pk < 9.5 ? 0.85 : pk < 10.5 ? 0.9 : 0.1;
+        float pRough = pk < 0.5 ? 0.6 : pk < 1.5 ? 0.85 : pk < 2.5 ? 0.8 : pk < 3.5 ? 0.92 : pk < 4.5 ? 0.9 : pk < 5.5 ? 0.08 : pk < 6.5 ? 0.38 : pk < 7.5 ? 0.5 : pk < 8.5 ? 0.95 : pk < 9.5 ? 0.85 : pk < 10.5 ? 0.9 : pk < 11.5 ? 0.1 : pk < 12.5 ? 0.9 : mix(0.85, 0.95, pIce);
         float pMetal = (pk > 5.5 && pk < 6.5) ? 0.75 : 0.0;
         `,
       )
@@ -169,7 +224,7 @@ export function createPropMaterial(renderer) {
         '#include <normal_fragment_maps>',
         `if ((pk > 0.5 && pk < 4.5) || pk > 7.5) {
           // Bump from the detail height (as three's bumpmap), fading with distance.
-          float bump = (pk > 8.5 ? 0.8 : pk > 7.5 ? 2.5 : pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
+          float bump = (pk > 12.5 ? 2.6 : pk > 11.5 ? 1.4 : pk > 8.5 ? 0.8 : pk > 7.5 ? 2.5 : pk < 3.5 ? 1.2 : 0.3) * smoothstep(80.0, 8.0, length(vViewPosition));
           vec3 sx = normalize(dFdx(-vViewPosition)), sy = normalize(dFdy(-vViewPosition));
           vec2 dh = vec2(dFdx(ph), dFdy(ph)) * bump;
           vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
@@ -181,7 +236,7 @@ export function createPropMaterial(renderer) {
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
         if (pk > 6.5 && pk < 7.5) totalEmissiveRadiance += diffuseColor.rgb * (0.6 + uNight * 2.4);
-        else if (uNight > 0.01 && ((pk > 4.5 && pk < 5.5) || (pk > 10.5 && paneHash < 0.45))) {
+        else if (uNight > 0.01 && ((pk > 4.5 && pk < 5.5) || (pk > 10.5 && pk < 11.5 && paneHash < 0.45))) {
           vec3 pn = normalize(vPNormal);
           // Shop and cottage glass (5) shows a wider, deeper room than city
           // panes, and is always lit.

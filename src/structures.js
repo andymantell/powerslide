@@ -16,7 +16,7 @@ import { ENV } from './sky.js';
 import { waterTime } from './ground.js';
 import { lampSpots } from './lamps.js';
 
-const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
+const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10, ROCK = 12, SNOW = 13;
 // Structure half width: the parapet's inner face sits at the guardrail line
 // (set per level, as narrow-lane biomes move the guardrail in).
 let W = 5.45;
@@ -1599,8 +1599,10 @@ export const PLANS = {
     // Below the snout the valley floor runs on down gently.
     g.floor = (u) => (u >= 0 ? y0 + (y1 - y0) * u ** 1.1 : y0 + u * L * 0.08);
     g.half = (u) => Wd * (0.55 + 0.45 * smooth(-0.05, 0.45, u));
-    // Thin and sunk between its moraines down at the snout, fuller up top.
-    g.thick = (u) => (6 + 16 * smooth(0.2, 0.9, u)) * smooth(0, 0.05, u);
+    // Thin and sunk between its moraines down at the snout, fuller up top,
+    // ending in a short ice cliff (thick enough that the snowy valley floor
+    // under it doesn't show through).
+    g.thick = (u) => (6 + 16 * smooth(0.2, 0.9, u)) * smooth(-0.005, 0.015, u);
     const R = Wd * 4.5 + swing;
     const minX = Math.min(x0, x0 + ux * L * 1.3) - R, maxX = Math.max(x0, x0 + ux * L * 1.3) + R;
     const minZ = Math.min(z0, z0 + uz * L * 1.3) - R, maxZ = Math.max(z0, z0 + uz * L * 1.3) + R;
@@ -3036,7 +3038,7 @@ const BUILDS = {
           for (let k = 0; k < ring.length - 1; k++) {
             const r = Math.abs(Math.sin((chunk * 31 + k * 17 + side * 7) * 12.9898) * 43758.5453) % 1;
             const col = k >= 8 ? '#f6f8fb' : k === 0 ? '#c8cdd2' : r < 0.12 ? '#c9c6bd' : r < 0.45 ? '#e3e9ef' : r < 0.7 ? '#eef2f6' : '#dce4ec';
-            geo.quad(prev[k], ring[k], ring[k + 1], prev[k + 1], PLASTER, col, inside);
+            geo.quad(prev[k], ring[k], ring[k + 1], prev[k + 1], SNOW, col, inside);
           }
         }
         prev = ring;
@@ -3069,8 +3071,8 @@ const BUILDS = {
     const NU = 360, NV = 30;
     const pos = [], col = [], idx = [];
     const c = new THREE.Color(), tmp = new THREE.Color();
-    const ICE = new THREE.Color('#c6d0d6'), ICE2 = new THREE.Color('#aebcc4'), BLUE = new THREE.Color('#3f6f96');
-    const DIRT = new THREE.Color('#8a8278'), MORAINE = new THREE.Color('#6a665f'), SNOW = new THREE.Color('#f5f7fa');
+    const ICE = new THREE.Color('#b8c5cd'), ICE2 = new THREE.Color('#9fb0ba'), BLUE = new THREE.Color('#3f6f96');
+    const DIRT = new THREE.Color('#8a8278'), MORAINE = new THREE.Color('#6a665f'), FIRN = new THREE.Color('#f5f7fa');
     const hash = (a, b) => Math.abs(Math.sin(a * 127.1 + b * 311.7) * 43758.5453) % 1;
     for (let i = 0; i <= NU; i++) {
       const u = (1.12 * i) / NU;
@@ -3096,10 +3098,14 @@ const BUILDS = {
         if (u > 0.08 && u < 0.6) c.lerp(tmp.set('#b9c2c6'), 0.35 * smooth(0.0, 0.1, og) * (1 - smooth(0.25, 0.4, og)));
         if (crev > 0) c.lerp(BLUE, 0.85 * fall);
         c.lerp(tmp.set('#a9b2b6'), 0.25 * smooth(0.2, 0.9, hash(i >> 4, j >> 3)) * (1 - smooth(0.75, 0.9, u)));
-        c.lerp(SNOW, smooth(0.78, 0.98, u));
+        c.lerp(FIRN, smooth(0.78, 0.98, u));
         c.lerp(MORAINE, (1 - smooth(0.03, 0.07, Math.abs(q))) * (1 - smooth(0.7, 0.85, u)) * 0.9);
         c.lerp(DIRT, smooth(0.7, 0.95, Math.abs(q)) * 0.75 * (1 - smooth(0.85, 1.0, u)));
         c.lerp(DIRT, (1 - smooth(0.02, 0.09, u)) * 0.6);
+        // Lower down the ice is older and grimier.
+        c.lerp(tmp.set('#8d9ba3'), 0.45 * (1 - smooth(0.04, 0.3, u)));
+        // The snout's face: old blue ice streaked with grit.
+        c.lerp(tmp.set(hash(i, j) < 0.5 ? '#5d7a8c' : '#6f7b80'), (1 - smooth(0.0, 0.025, u)) * 0.7);
         col.push(c.r, c.g, c.b);
         if (i < NU && j < NV) {
           const a = i * (NV + 1) + j, b = a + NV + 1;
@@ -3111,6 +3117,7 @@ const BUILDS = {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     geo.setIndex(idx);
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2).map((_, i) => (i % 2 ? 0.5 : (SNOW + 0.5) / 8)), 2));
     geo.computeVertexNormals();
     // Whichever way the grid winds, the ice faces up.
     let up = 0;
@@ -3121,8 +3128,7 @@ const BUILDS = {
       geo.setIndex(idx);
       geo.computeVertexNormals();
     }
-    this.iceMat ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0 });
-    const m = new THREE.Mesh(geo, this.iceMat);
+    const m = new THREE.Mesh(geo, this.mat);
     m.receiveShadow = true;
     m.castShadow = false;
     this.group.add(m);
@@ -3640,17 +3646,17 @@ function rockGallery(job) {
 }
 
 // Adds a quad facing towards `toward` (or away from it with towards false).
-function fixFacing(geo, q, toward, towards, col = '#6c6964', both = false) {
+function fixFacing(geo, q, toward, towards, col = '#6c6964', both = false, kind = ROCK) {
   const n = new THREE.Vector3().subVectors(q[1], q[0]).cross(new THREE.Vector3().subVectors(q[2], q[0]));
   const m = new THREE.Vector3().addVectors(q[0], q[2]).multiplyScalar(0.5);
   const to = new THREE.Vector3().subVectors(toward, m);
   let [a, b, c, d] = q;
   if ((n.dot(to) > 0) !== towards) [b, d] = [d, b];
-  geo.tri(a, b, c, PLASTER, col);
-  geo.tri(a, c, d, PLASTER, col);
+  geo.tri(a, b, c, kind, col);
+  geo.tri(a, c, d, kind, col);
   if (both) {
-    geo.tri(a, c, b, PLASTER, col);
-    geo.tri(a, d, c, PLASTER, col);
+    geo.tri(a, c, b, kind, col);
+    geo.tri(a, d, c, kind, col);
   }
 }
 

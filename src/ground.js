@@ -227,10 +227,13 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         // slopes; only near-flat rock uses the top-down one.
         vec3 rw = pow(abs(gn) * vec3(1.0, 0.7, 1.0), vec3(4.0));
         rw /= rw.x + rw.y + rw.z;
+        // The rock's bedding dips gently and wanders up and down over a few
+        // hundred metres, so big faces don't show level stripes like a cake.
+        vec3 gpR = gp + vec3(0.0, dot(gp.xz, vec2(0.11, 0.06)) + sin(gp.x * 0.011 + sin(gp.z * 0.013) * 1.7) * 6.0 + sin(gp.z * 0.007 - gp.x * 0.004) * 9.0, 0.0);
         ${far ? `
         // Far tiles: one coarse sample per layer is plenty.
         vec4 aBase = texture2D(tBaseA, gp.xz * 0.02);
-        vec4 aRock = texture2D(tRockA, gp.xz * 0.012);
+        vec4 aRock = triA(tRockA, gpR, rw, 0.012);
         vec4 aGrav = texture2D(tGravA, gp.xz * 0.05);
         vec4 aSnow = texture2D(tSnowA, gp.xz * 0.02);
         ` : `
@@ -241,10 +244,14 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vec4 aBase = mix(texture2D(tBaseA, gp.xz * 0.33), texture2D(tBaseA, gUv2), smoothstep(0.35, 0.65, gN1));
         vec4 aRock = vec4(0.5);
         if (vSplat.x > 0.01) {
-          aRock = triA(tRockA, gp, rw, 0.16);
+          // Two samples with different dips, swapped between in big patches.
+          float rB = texture2D(tSnowA, vec2(gp.x + gp.z * 0.7, gp.y * 1.4) * 0.021 + 0.6).a;
+          aRock = mix(triA(tRockA, gpR, rw, 0.16), triA(tRockA, gpR * vec3(1.0, 1.3, 1.0) - vec3(0.0, gp.x * 0.2, 0.0) + 5.0, rw, 0.12), smoothstep(0.4, 0.6, rB));
           // A second, much larger sample breaks up the repeat on big faces.
-          vec4 aRockM = triA(tRockA, gp + 17.0, rw, 0.037);
-          aRock.rgb *= 0.55 + dot(aRockM.rgb, vec3(0.9));
+          // Its bedding is stretched tall and it's mixed with soft blotches,
+          // so from a distance the face doesn't read as even stripes.
+          vec4 aRockM = triA(tRockA, gpR * vec3(1.0, 0.3, 1.0) + 17.0, rw, 0.037);
+          aRock.rgb *= 0.5 + dot(aRockM.rgb, vec3(0.55)) + rB * 0.45;
           aRock.a = mix(aRock.a, aRockM.a, 0.35);
           // Lichen and weathering stains in big patches (uLichen.w sets how much).
           float lN = texture2D(tSnowA, vec2(gp.x + gp.z, gp.y) * 0.013 + 0.41).a;
@@ -317,7 +324,7 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         detail
           ? `
         vec3 nBase = topN(tBaseN, gp.xz * 0.33, gn);
-        vec3 nRock = bw.y > 0.01 ? triN(tRockN, gp, rw, gn, 0.16) : gn;
+        vec3 nRock = bw.y > 0.01 ? triN(tRockN, gpR, rw, gn, 0.16) : gn;
         vec3 nGrav = bw.z > 0.01 ? topN(tGravN, gp.xz * 0.45, gn) : gn;
         vec3 nSnow = bw.w > 0.01 ? topN(tSnowN, gp.xz * 0.12, gn) : gn;
         vec3 gN = normalize(nBase * bw.x + nRock * bw.y + nGrav * bw.z + nSnow * bw.w);
