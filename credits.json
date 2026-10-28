@@ -32,12 +32,6 @@
     },
     {
       "files": [
-        "src/assets/models/conifers.glb"
-      ],
-      "madeBy": "tools/blender/tree.py"
-    },
-    {
-      "files": [
         "src/assets/models/rocks.glb"
       ],
       "madeBy": "tools/blender/rocks.py"
@@ -1386,6 +1380,18 @@
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "downloaded": "2026-10-28",
       "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Trees grown with ez-tree",
+      "files": [
+        "src/assets/models/trees/*.glb"
+      ],
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "author": "Daniel Greenheck",
+      "licence": "MIT",
+      "licenceUrl": "https://github.com/dgreenheck/ez-tree/blob/main/LICENSE",
+      "downloaded": "2026-10-28",
+      "changes": "Generator code from the npm package @dgreenheck/ez-tree 1.1.0, vendored in tools/trees/ez-tree with its licence; its textures, materials, wind shader and trellis were taken out and leaf cards can be oblong. tools/trees/build.mjs grows our own species from its presets and writes the geometry only; the leaf, twig and bark textures are ours (tools/textures/gen.py)."
     }
   ],
   "code": [

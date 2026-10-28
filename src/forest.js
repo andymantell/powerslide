@@ -1,5 +1,5 @@
-// Trees. Models come from tools/blender/tree.py (trunk + alpha-tested branch
-// cards per variant). Trees near the rider are drawn as full models; the rest
+// Trees. Models come from tools/trees/build.mjs (one glb per species), grown with ez-tree (trunk and
+// branches + alpha-tested twig or leaf cards per variant). Trees near the rider are drawn as full models; the rest
 // are camera-facing impostors rendered from those same models at start-up, so
 // they match the lighting. Each LOD and variant is one InstancedMesh for the
 // whole world, refilled as the rider moves, which keeps draw calls fixed.
@@ -15,11 +15,22 @@ const snowOnTop = () => `
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.89, 0.93), smoothstep(0.4, 0.85, snowUp) * 0.75);
   }`;
 
-const MODEL = new URL('./assets/models/conifers.glb', import.meta.url).href;
-const TWIGS = {
-  spruce: new URL('./assets/textures/spruce_twig.png', import.meta.url).href,
-  pine: new URL('./assets/textures/pine_twig.png', import.meta.url).href,
+// One file per species, so a biome only loads the trees it uses.
+const modelUrl = (sp) => new URL(`./assets/models/trees/${sp}.glb`, import.meta.url).href;
+// Card texture per species (tools/textures/gen.py), and bark where it isn't
+// the default.
+const leafUrl = (n) => new URL(`./assets/textures/${n}.png`, import.meta.url).href;
+const LEAVES = {
+  spruce: 'spruce_twig',
+  pine: 'pine_twig',
+  oak: 'oak_leaves',
+  dwarfoak: 'oak_leaves',
+  ash: 'ash_leaves',
+  rowan: 'rowan_leaves',
+  birch: 'birch_leaves',
+  hawthorn: 'hawthorn_leaves',
 };
+const BARK = { birch: 'birch_bark' };
 const MAX_FULL = 1200;
 const MAX_IMP = 24000;
 const IMP_W = 256;
@@ -41,18 +52,24 @@ export function boostAlpha(shader, size = 512) {
 
 // Bakes soft self-occlusion into vertex colours: needles deep inside the
 // crown and low down are darker. Also bends normals outward from the trunk so
-// the cards shade as one volume rather than as flat planes.
+// the cards shade as one volume rather than as flat planes. The crown's
+// outline is measured in 1 m bands, so it fits cones and round crowns alike.
 function shapeFoliage(geo, H) {
   const pos = geo.attributes.position;
   const nor = geo.attributes.normal;
   const col = new Float32Array(pos.count * 3);
   const v = new THREE.Vector3();
-  let maxR = 0.01;
-  for (let i = 0; i < pos.count; i++) maxR = Math.max(maxR, Math.hypot(pos.getX(i), pos.getZ(i)));
+  const bands = new Float32Array(Math.ceil(H) + 2).fill(0.01);
+  for (let i = 0; i < pos.count; i++) {
+    const b = Math.max(0, Math.round(pos.getY(i)));
+    bands[b] = Math.max(bands[b], Math.hypot(pos.getX(i), pos.getZ(i)));
+  }
+  // Smooth the outline so a lone long branch doesn't hollow out its band.
+  const env = bands.map((_, b) => Math.max(bands[b - 1] ?? 0, bands[b], bands[b + 1] ?? 0));
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
     const r = Math.hypot(x, z);
-    const crownR = maxR * Math.max(0.08, 1 - y / H); // conical envelope
+    const crownR = Math.max(0.3, env[Math.max(0, Math.round(y))]);
     const outer = Math.min(1, r / crownR);
     const ao = (0.4 + 0.6 * outer ** 1.5) * (0.7 + 0.3 * (y / H));
     col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = ao;
@@ -65,9 +82,17 @@ function shapeFoliage(geo, H) {
 }
 
 export class Forest {
-  // species: the mesh name prefix in conifers.glb (tools/blender/tree.py SPECIES).
+  // species: a file in models/trees and its mesh name prefix (tools/trees/build.mjs SPECIES).
+  // An array mixes species, and 'oak:2' takes only that species' first two
+  // variants: every variant gets an equal share of the scattered trees, so
+  // the variant counts set the mix. Eight variants at most (Terrain.scatter
+  // gives each tree a variant number from 0 to 7).
   constructor(scene, renderer, q = {}, species = 'spruce') {
-    this.species = species;
+    this.mix = [species].flat().map((s) => {
+      const [name, n] = s.split(':');
+      return { name, n: n ? +n : 8 };
+    });
+    this.species = this.mix.map((m) => m.name);
     this.scene = scene;
     this.renderer = renderer;
     this.fullRadius = q.treeLodRadius ?? 90;
@@ -79,54 +104,75 @@ export class Forest {
     this.dirty = true;
     this.sources = new Set(); // Float32Arrays of [x, y, z, scale, yaw, variant, tint]
 
-    let twigLoaded;
-    const twig = new THREE.TextureLoader().load(TWIGS[species] || TWIGS.spruce, () => twigLoaded());
-    const twigReady = new Promise((res) => (twigLoaded = res));
-    twig.colorSpace = THREE.SRGBColorSpace;
-    twig.anisotropy = 4;
-    this.foliageMat = new THREE.MeshStandardMaterial({
-      map: twig,
-      vertexColors: true,
-      alphaTest: 0.45,
-      side: THREE.DoubleSide,
-      roughness: 1,
-      alphaToCoverage: !!q.antialias,
-    });
-    // Keep the bent normals on both faces (no back-face flip) and add a touch
-    // of light through the needles when looking towards the sun.
-    this.foliageMat.onBeforeCompile = (s) => {
-      s.fragmentShader = s.fragmentShader.replace(
-        '#include <normal_fragment_begin>',
-        '#include <normal_fragment_begin>\n  normal = normalize(vNormal);' + snowOnTop(),
-      );
-      boostAlpha(s);
-    };
-    this.foliageMat.customProgramCacheKey = () => `foliage-${ENV.snow}`;
-    this.barkMat = new THREE.MeshStandardMaterial({
-      map: groundTexture('bark', 'albedo', renderer),
-      normalMap: groundTexture('bark', 'normal', renderer),
-      roughness: 0.95,
-    });
+    // One twig or leaf card material per species.
+    this.foliageMats = {};
+    const loads = this.species.map(
+      (sp) =>
+        new Promise((res) => {
+          const twig = new THREE.TextureLoader().load(leafUrl(LEAVES[sp] || LEAVES.spruce), res, undefined, res);
+          twig.colorSpace = THREE.SRGBColorSpace;
+          twig.anisotropy = 4;
+          const mat = new THREE.MeshStandardMaterial({
+            map: twig,
+            vertexColors: true,
+            alphaTest: 0.45,
+            side: THREE.DoubleSide,
+            roughness: 1,
+            alphaToCoverage: !!q.antialias,
+          });
+          // Keep the bent normals on both faces (no back-face flip).
+          mat.onBeforeCompile = (s) => {
+            s.fragmentShader = s.fragmentShader.replace(
+              '#include <normal_fragment_begin>',
+              '#include <normal_fragment_begin>\n  normal = normalize(vNormal);' + snowOnTop(),
+            );
+            boostAlpha(s);
+          };
+          mat.customProgramCacheKey = () => `foliage-${ENV.snow}`;
+          this.foliageMats[sp] = mat;
+        }),
+    );
+    this.barkMats = {};
+    for (const sp of this.species) {
+      const b = BARK[sp] || 'bark';
+      this.barkMats[b] ??= new THREE.MeshStandardMaterial({
+        map: groundTexture(b, 'albedo', renderer),
+        normalMap: groundTexture(b, 'normal', renderer),
+        roughness: 0.95,
+      });
+    }
 
     trackLoad(
-      // The impostor bake needs the twig texture, so wait for both.
-      Promise.all([new GLTFLoader().loadAsync(MODEL), twigReady]).then(([gltf]) => this.build(gltf)),
+      // The impostor bake needs the twig textures, so wait for them too.
+      Promise.all([...this.species.map((sp) => new GLTFLoader().loadAsync(modelUrl(sp))), ...loads]).then((all) =>
+        this.build(all.slice(0, this.species.length)),
+      ),
     );
   }
 
-  build(gltf) {
+  build(gltfs) {
     const byName = {};
-    gltf.scene.traverse((o) => {
-      if (o.isMesh) byName[o.name] = o.geometry;
-    });
-    for (let v = 0; byName[`${this.species}${v}_trunk`]; v++) {
-      const trunk = byName[`${this.species}${v}_trunk`];
-      const fol = byName[`${this.species}${v}_foliage`];
+    for (const gltf of gltfs) {
+      gltf.scene.traverse((o) => {
+        if (o.isMesh) byName[o.name] = o.geometry;
+      });
+    }
+    // Variants alternate between species, so `variant % count` mixes them.
+    const list = [];
+    for (let v = 0; v < 8; v++) {
+      for (const { name, n } of this.mix) if (v < n && byName[`${name}${v}_trunk`] && list.length < 8) list.push([name, v]);
+    }
+    for (const [sp, v] of list) {
+      const trunk = byName[`${sp}${v}_trunk`];
+      const fol = byName[`${sp}${v}_foliage`];
       fol.computeBoundingBox();
-      const H = fol.boundingBox.max.y;
+      trunk.computeBoundingBox();
+      const H = Math.max(fol.boundingBox.max.y, trunk.boundingBox.max.y);
       shapeFoliage(fol, H);
-      const t = new THREE.InstancedMesh(trunk, this.barkMat, MAX_FULL);
-      const f = new THREE.InstancedMesh(fol, this.foliageMat, MAX_FULL);
+      const mat = this.foliageMats[sp];
+      const barkMat = this.barkMats[BARK[sp] || 'bark'];
+      const t = new THREE.InstancedMesh(trunk, barkMat, MAX_FULL);
+      const f = new THREE.InstancedMesh(fol, mat, MAX_FULL);
       for (const m of [t, f]) {
         m.count = 0;
         m.castShadow = true;
@@ -135,8 +181,11 @@ export class Forest {
         this.scene.add(m);
       }
       f.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX_FULL * 3), 3);
-      const w = Math.max(fol.boundingBox.max.x - fol.boundingBox.min.x, fol.boundingBox.max.z - fol.boundingBox.min.z);
-      this.variants.push({ trunk: t, foliage: f, H, W: w, imp: null });
+      // Impostors are centred on the trunk, so size them by the widest reach
+      // from it (crowns needn't be symmetric). The views turn, so x and z both count.
+      const bb = fol.boundingBox;
+      const w = 2 * Math.max(-bb.min.x, bb.max.x, -bb.min.z, bb.max.z);
+      this.variants.push({ trunk: t, foliage: f, H, W: w, imp: null, map: mat.map, barkMap: barkMat.map });
     }
     this.bakeImpostors();
     this.ready = true;
@@ -154,10 +203,12 @@ export class Forest {
     // shaders that write every pixel's alpha themselves, background included:
     // on iPad the multisampled sRGB bake came back with solid alpha, which
     // drew distant trees as dark rectangles.
-    const cols = this.variants.length * IMP_VIEWS;
+    // One small pair of targets per variant rather than one wide atlas:
+    // three regenerates a target's mipmaps after every render into it, and
+    // on an eight-variant atlas that was seconds of work per view.
     const opts = { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, depthBuffer: true };
-    const rt = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
-    const rtN = new THREE.WebGLRenderTarget(IMP_W * cols, IMP_H, opts);
+    const rts = this.variants.map(() => new THREE.WebGLRenderTarget(IMP_W * IMP_VIEWS, IMP_H, opts));
+    const rtNs = this.variants.map(() => new THREE.WebGLRenderTarget(IMP_W * IMP_VIEWS, IMP_H, opts));
     const prev = { target: r.getRenderTarget(), tone: r.toneMapping, clear: r.getClearAlpha(), autoClear: r.autoClear };
     const clearCol = r.getClearColor(new THREE.Color());
     r.toneMapping = THREE.NoToneMapping;
@@ -210,14 +261,16 @@ export class Forest {
     bg.frustumCulled = false;
     bg.renderOrder = -1;
     const sets = [
-      [rt, bakeMat(0, this.foliageMat.map, true, true), bakeMat(0, this.barkMat.map, false, false), bgMat('0.18, 0.26, 0.16')],
-      [rtN, bakeMat(1, this.foliageMat.map, false, true), bakeMat(1, this.barkMat.map, false, false), bgMat('0.5, 0.5, 1.0')],
+      [rts, bakeMat(0, null, true, true), bakeMat(0, null, false, false), bgMat('0.18, 0.26, 0.16')],
+      [rtNs, bakeMat(1, null, false, true), bakeMat(1, null, false, false), bgMat('0.5, 0.5, 1.0')],
     ];
-    for (const [target, mf, mt, mb] of sets) {
-      r.setRenderTarget(target);
+    for (const [targets, mf, mt, mb] of sets) {
       bg.material = mb;
       this.variants.forEach((v, i) => {
+        const target = targets[i];
         scene.clear();
+        mf.uniforms.map.value = v.map; // this variant's species
+        mt.uniforms.map.value = v.barkMap;
         const tree = new THREE.Group();
         tree.add(new THREE.Mesh(v.foliage.geometry, mf), new THREE.Mesh(v.trunk.geometry, mt));
         scene.add(bg, tree);
@@ -230,7 +283,7 @@ export class Forest {
         // azimuth a * 2pi / IMP_VIEWS in the tree's own frame.
         for (let a = 0; a < IMP_VIEWS; a++) {
           tree.rotation.y = (-a / IMP_VIEWS) * Math.PI * 2;
-          const x = (i * IMP_VIEWS + a) * IMP_W;
+          const x = a * IMP_W;
           // Set the column on the target itself: renderer.setViewport scales
           // by the device pixel ratio even for render targets, which on the
           // iPad (ratio 1.5 to 2) zoomed each tree into its neighbours and
@@ -244,7 +297,7 @@ export class Forest {
         }
       });
     }
-    for (const t of [rt, rtN]) {
+    for (const t of [...rts, ...rtNs]) {
       t.viewport.set(0, 0, t.width, t.height);
       t.scissor.set(0, 0, t.width, t.height);
       t.scissorTest = false;
@@ -256,17 +309,16 @@ export class Forest {
     r.autoClear = prev.autoClear;
     for (const set of sets) for (const m of set.slice(1)) m.dispose();
     bg.geometry.dispose();
-    this.impTargets = [rt, rtN]; // kept for debugging views
+    this.impTargets = [rts, rtNs]; // kept for debugging views
 
-    const n = this.variants.length;
     this.variants.forEach((v, i) => {
       const geo = new THREE.PlaneGeometry(v.impW, v.H * 1.02);
       geo.translate(0, v.H * 0.51, 0);
-      const mat = new THREE.MeshStandardMaterial({ map: rt.texture, alphaTest: 0.5, roughness: 1, alphaToCoverage: this.antialias });
+      const mat = new THREE.MeshStandardMaterial({ map: rts[i].texture, alphaTest: 0.5, roughness: 1, alphaToCoverage: this.antialias });
       const halfW = (v.impW / 2).toFixed(3);
       mat.onBeforeCompile = (s) => {
         boostAlpha(s, IMP_H);
-        s.uniforms.tImpN = { value: rtN.texture };
+        s.uniforms.tImpN = { value: rtNs[i].texture };
         s.fragmentShader = s.fragmentShader
           .replace(
             '#include <map_fragment>',
@@ -304,7 +356,7 @@ export class Forest {
             // Pick the baked view nearest the camera's direction in the tree's own frame.
             float bbA = atan(dot(bbF, normalize(instanceMatrix[0].xyz)), dot(bbF, normalize(instanceMatrix[2].xyz)));
             float bbV = mod(floor(bbA / ${(2 * Math.PI / IMP_VIEWS).toFixed(5)} + 0.5) + ${IMP_VIEWS}.0, ${IMP_VIEWS}.0);
-            vMapUv.x = (${i * IMP_VIEWS}.0 + bbV + uv.x) / ${n * IMP_VIEWS}.0;
+            vMapUv.x = (bbV + uv.x) / ${IMP_VIEWS}.0;
             vBbR = bbR;
             vBbF = bbF;
             transformedNormal = normalize((viewMatrix * vec4(bbF, 0.0)).xyz);`,

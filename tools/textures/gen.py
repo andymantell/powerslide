@@ -481,6 +481,172 @@ def pine_twig(name='pine_twig', seed=53, size=512):
     print('wrote', name)
 
 
+# Broadleaf sprays for the ez-tree trees (tools/trees/build.mjs): a twig with
+# its leaves seen from above, stem at the bottom centre like the conifer
+# twigs. Each species sets the leaf outline, size, count and colours.
+LEAVES = {
+    # Pedunculate oak: lobed leaves in bunches at the shoot tips, dark green.
+    'oak': dict(shape='lobed', lobes=4, n=80, length=(0.13, 0.2), width=0.5,
+                pal=('#26391a', '#4d6b2a', '#6f8a3a'), stem='#4a3a2a', seed=71),
+    # Ash: long compound leaves of paired leaflets, fresh mid green.
+    'ash': dict(shape='pinnate', pairs=5, n=26, length=(0.24, 0.32), width=0.3,
+                pal=('#30481d', '#5c7d30', '#86a24a'), stem='#5a5040', seed=72),
+    # Rowan: smaller, toothed compound leaves and bunches of red berries.
+    'rowan': dict(shape='pinnate', pairs=6, n=26, length=(0.2, 0.28), width=0.28, teeth=True,
+                  pal=('#2c4319', '#557530', '#7a9640'), stem='#5a4a3a', berries='#b8321e', seed=73),
+    # Silver birch: small, pointed, bright yellow-green leaves, many of them.
+    'birch': dict(shape='ovate', n=150, length=(0.07, 0.1), width=0.62, tip=0.7, teeth=True,
+                  pal=('#3a5320', '#6f8f33', '#a3b952'), stem='#3c2e26', seed=74),
+    # Hawthorn: tiny, deeply lobed dark leaves, dense, with a few red haws.
+    'hawthorn': dict(shape='lobed', lobes=3, n=190, length=(0.06, 0.085), width=0.75,
+                     pal=('#1f3216', '#3f5c24', '#5c7a30'), stem='#3a2c22', berries='#8e1f18', seed=75),
+}
+
+
+def leaf_outline(shape, L, W, lobes=5, tip=0.5, teeth=False, rng=None, n=60):
+    """Half-widths along a leaf of length L: returns (t, w) pairs."""
+    out = []
+    for i in range(n + 1):
+        t = i / n
+        if shape == 'ovate':
+            w = np.sin(np.pi * t ** tip) * W * 0.5 * (1 - t ** 3)
+        else:  # lobed
+            w = np.sin(np.pi * t ** 0.75) * W * 0.5
+            w *= 0.62 + 0.38 * abs(np.sin(t * np.pi * (lobes + 0.5)))
+        if teeth and i % 3 == 0:
+            w *= 0.9
+        out.append((t * L, w))
+    return out
+
+
+def leaf_twig(name):
+    sp = LEAVES[name]
+    size = 512
+    S = size * 4
+    rng = np.random.default_rng(sp['seed'])
+    dark, mid, light = (hexcol(c) for c in sp['pal'])
+    stem = hexcol(sp['stem'])
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    def c8(c, a=255):
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)) + (a,)
+
+    def blade(x, y, ang, L, W, shape, col):
+        pts = leaf_outline(shape, L, W, sp.get('lobes', 5), sp.get('tip', 0.5), sp.get('teeth', False), rng)
+        ca, sa = np.cos(ang), np.sin(ang)
+        left = [(x + ca * a - sa * w, y + sa * a + ca * w) for a, w in pts]
+        right = [(x + ca * a + sa * w, y + sa * a - ca * w) for a, w in pts[::-1]]
+        d.polygon(left + right, fill=c8(col))
+        # Paler midrib.
+        d.line([(x, y), (x + ca * L * 0.85, y + sa * L * 0.85)], fill=c8(lerp(col, light, 0.5)), width=max(2, int(S * 0.002)))
+
+    def leaf(x, y, ang, L):
+        shade = rng.random()
+        col = lerp(dark, mid, shade)
+        col = lerp(col, light, rng.random() ** 3 * 0.8)
+        if sp['shape'] == 'pinnate':
+            # A rachis with paired leaflets and one at the tip.
+            ca, sa = np.cos(ang), np.sin(ang)
+            d.line([(x, y), (x + ca * L, y + sa * L)], fill=c8(lerp(col, stem, 0.5)), width=max(2, int(S * 0.003)))
+            pairs = sp['pairs']
+            for k in range(pairs):
+                t = 0.18 + 0.78 * k / pairs
+                px, py = x + ca * L * t, y + sa * L * t
+                ll = L * 0.36 * (1 - 0.25 * t)
+                for side in (-1, 1):
+                    blade(px, py, ang + side * rng.uniform(0.7, 1.0), ll, ll * sp['width'], 'ovate', lerp(col, light, rng.random() * 0.25))
+            blade(x + ca * L * 0.95, y + sa * L * 0.95, ang, L * 0.32, L * 0.32 * sp['width'], 'ovate', col)
+        else:
+            blade(x, y, ang, L, L * sp['width'], sp['shape'], col)
+
+    # The twig: a main stem up the middle with side shoots, leaves along all
+    # of them, more towards the tips.
+    x0, y0 = S * 0.5, S * 0.98
+    shoots = [(x0, y0, -np.pi / 2, S * 0.85)]
+    for k in range(6):
+        t = 0.2 + 0.12 * k
+        side = 1 if k % 2 else -1
+        shoots.append((x0, y0 - S * 0.85 * t, -np.pi / 2 + side * rng.uniform(0.7, 1.0), S * 0.85 * (1 - t) * rng.uniform(0.75, 0.95)))
+    pts = []
+    for sx, sy, ang, L in shoots:
+        n = 30
+        line = []
+        a = ang
+        x, y = sx, sy
+        for i in range(n + 1):
+            line.append((x, y))
+            pts.append((x, y, a, i / n))
+            a += rng.normal(0, 0.02)
+            x += np.cos(a) * L / n
+            y += np.sin(a) * L / n
+        d.line(line, fill=c8(stem), width=max(2, int(S * 0.005)))
+    order = rng.permutation(len(pts))
+    placed = 0
+    for idx in order:
+        if placed >= sp['n']:
+            break
+        x, y, a, t = pts[idx]
+        if t < 0.15 or rng.random() > 0.3 + 0.7 * t:
+            continue
+        L = S * rng.uniform(*sp['length'])
+        blade_ang = a + rng.choice((-1, 1)) * rng.uniform(0.35, 1.2)
+        # Keep the whole leaf on the card.
+        ex, ey = x + np.cos(blade_ang) * L, y + np.sin(blade_ang) * L
+        m = S * 0.03
+        if not (m < ex < S - m and m < ey < S - m):
+            continue
+        leaf(x, y, blade_ang, L)
+        placed += 1
+    if 'berries' in sp:
+        bc = hexcol(sp['berries'])
+        tips = [p for p in pts if p[3] > 0.5]
+        for _ in range(3):
+            x, y, a, t = tips[rng.integers(len(tips))]
+            for _ in range(9):
+                bx, by = x + rng.normal(0, S * 0.02), y + rng.normal(0, S * 0.02)
+                r = S * 0.009
+                d.ellipse([bx - r, by - r, bx + r, by + r], fill=c8(lerp(bc, bc * 0.6, rng.random())))
+    img = img.resize((size, size), Image.LANCZOS)
+    arr = np.asarray(img) / 255.0
+    rgb, alpha = arr[..., :3], arr[..., 3]
+    rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
+    rgb = bleed(rgb, alpha)
+    rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
+    Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(os.path.join(OUT, f'{name}_leaves.png'), optimize=True)
+    print('wrote', f'{name}_leaves')
+
+
+def leaves():
+    for name in LEAVES:
+        leaf_twig(name)
+
+
+def birch_bark(name='birch_bark', seed=62):
+    """Silver birch: chalky white with dark horizontal lenticels and patches."""
+    n = 512
+    rng = np.random.default_rng(seed)
+    white, grey, black = hexcol('#e9e5dc'), hexcol('#b9b4aa'), hexcol('#26231f')
+    h = norm01(fbm(n, 8, 4, seed))
+    col = lerp(grey, white, smoothstep(0.25, 0.7, h))
+    marks = np.zeros((n, n))
+    yy, xx = np.mgrid[0:n, 0:n]
+    for _ in range(140):
+        # Short dark dashes running around the trunk (u is around, v along).
+        cx, cy = rng.integers(n), rng.integers(n)
+        L, T = rng.uniform(15, 70), rng.uniform(1.5, 4)
+        dx = (xx - cx + n // 2) % n - n // 2
+        marks = np.maximum(marks, np.clip(1 - (dx / L) ** 2 - ((yy - cy) / T) ** 2, 0, 1))
+    patches = smoothstep(0.7, 0.8, norm01(fbm(n, 6, 3, seed + 1)))
+    dark = np.clip(np.maximum(marks * 1.6, patches), 0, 1)
+    col = lerp(col, black, dark[..., None] * 0.9)
+    hh = norm01(h * 0.3 + (1 - dark) * 0.7)
+    old = N
+    globals()['N'] = n
+    save(name, col, hh, normal_from_height(hh, 4.0))
+    globals()['N'] = old
+
+
 def bark(name='bark', pal=None, seed=61):
     pal = pal or dict(dark='#2e231c', mid='#5a4636', light='#7d6a58')
     dark, mid, light = (hexcol(pal[k]) for k in ('dark', 'mid', 'light'))
@@ -664,7 +830,7 @@ def desert():
     tuft('desert_tuft', dict(dark='#6a5a32', mid='#93804a', light='#c4ae72', dry='#b08a58', flowers=['#e8c22a', '#d86a2a']), seed=89)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert)
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert, leaves=leaves, birch_bark=birch_bark)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

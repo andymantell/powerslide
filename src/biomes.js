@@ -3,8 +3,10 @@
 // Biomes without levels yet show as locked on the level select.
 //
 // `look` names each biome's entries in ATMOSPHERE (sky.js), GROUND_SETS
-// (ground.js), MARKINGS (roadmat.js) and the tree species in conifers.glb
-// (tools/blender/tree.py). A missing entry falls back to the alpine one.
+// (ground.js), MARKINGS (roadmat.js) and the tree species in models/trees
+// (tools/trees/build.mjs): one name, or an array for a mix, where 'oak:2'
+// takes that species' first two variants (see Forest). A missing entry falls
+// back to the alpine one.
 //
 // `drive: 'left'` makes traffic keep left (and the rider starts in the left lane).
 
@@ -28,7 +30,7 @@ export const BIOMES = [
     rules: { minRadius: 16, maxGrade: 0.15, minGrade: -0.06 },
     drive: 'left',
     rails: false,
-    look: { markings: 'uk', lane: 2.7 },
+    look: { markings: 'uk', lane: 2.7, species: ['dwarfoak:3', 'hawthorn:2', 'rowan:1', 'ash:1', 'birch:1'] },
   },
   {
     id: 'suburbs',
@@ -40,7 +42,7 @@ export const BIOMES = [
     rules: { minRadius: 14, maxGrade: 0.16, minGrade: -0.04 },
     drive: 'left',
     rails: false,
-    look: { markings: 'uk', lane: 3.0 },
+    look: { markings: 'uk', lane: 3.0, species: ['oak:2', 'ash:2', 'birch:2', 'rowan:2'] },
   },
   {
     id: 'forest',
@@ -71,7 +73,7 @@ export const BIOMES = [
     // corners and short climbs between the drops. Night by default.
     rules: { minRadius: 14, maxGrade: 0.17, minGrade: -0.04 },
     rails: false,
-    look: { lane: 3.3, time: 'night' },
+    look: { lane: 3.3, time: 'night', species: ['oak:2', 'ash:2', 'birch:2'] },
   },
   {
     id: 'coast',
@@ -83,7 +85,7 @@ export const BIOMES = [
     // keeps left.
     rules: { minRadius: 16, maxGrade: 0.13, minGrade: -0.05 },
     drive: 'left',
-    look: { markings: 'uk', lane: 3.0 },
+    look: { markings: 'uk', lane: 3.0, species: ['hawthorn:2', 'dwarfoak:2'] },
   },
   {
     id: 'pass',

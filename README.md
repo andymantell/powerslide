@@ -248,10 +248,18 @@ preset.
 ### Assets and visual tooling
 
 - `tools/textures/gen.py` generates the tileable ground, road, bark, twig,
-  grass tuft and deck textures in `src/assets/textures` (numpy, scipy and pillow).
+  leaf, grass tuft and deck textures in `src/assets/textures` (numpy, scipy and pillow).
+- `node tools/trees/build.mjs` grows the trees with
+  [ez-tree](https://github.com/dgreenheck/ez-tree) (MIT, vendored in
+  `tools/trees/ez-tree` with its textures and materials taken out) and writes
+  `src/assets/models/trees/<species>.glb`. `SPECIES` there holds each species' options
+  (spruce, pine, oak, dwarf oak, ash, rowan, birch, hawthorn); it prints each
+  tree's triangles, which should stay near 3,000 to 4,000 for the iPad. Each
+  biome picks its mix in `look.species` (src/biomes.js). `/tools/trees/`
+  previews a species or mix in a biome's light:
+  `?species=dwarfoak:3,hawthorn:2&biome=dartmoor&view=near|close|far&bare`.
 - `tools/blender/*.py` build the models in `src/assets/models` with Blender's
-  Python module (`pip install bpy` on Python 3.13): `tree.py` (spruces from
-  branch cards), `rocks.py` (boulders), `board.py` (deck, trucks, wheels) and
+  Python module (`pip install bpy` on Python 3.13): `rocks.py` (boulders), `board.py` (deck, trucks, wheels) and
   `rider.py` (skinned rider in race leathers; the helmet, shoes and gloves hang
   off the head, foot and hand bones, and `RIDER_RIG` in `src/rider.js` says how
   each bone follows the pose). `preview.py` renders Cycles previews of any
