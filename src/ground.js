@@ -8,7 +8,7 @@ import { addLampLights, lampsOn } from './lamps.js';
 
 // Dev only: ?tex=grass:acg_Grass004,rock:ph_rock_face swaps in a candidate
 // from tools/textures/audition/ (written by tools/textures/library.py).
-const AUDITION = import.meta.env.DEV
+const AUDITION = import.meta.env?.DEV
   ? Object.fromEntries((new URLSearchParams(location.search).get('tex') || '').split(',').filter(Boolean).map((p) => p.split(':')))
   : {};
 const url = (n) => {
