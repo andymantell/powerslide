@@ -62,7 +62,17 @@ export const BIOMES = [
     rules: { minRadius: 25, maxGrade: 0.14, minGrade: -0.03 },
     look: { lane: 3.6 },
   },
-  { id: 'city', name: 'City at Night', blurb: 'Steep streets, tram lines and buses.' },
+  {
+    id: 'city',
+    name: 'City at Night',
+    blurb: 'Steep streets, tram lines and buses.',
+    // Steep streets down a harbour city's hill after dark: kerbs and
+    // pavements instead of guardrails, tram lines, buses, tight junction
+    // corners and short climbs between the drops. Night by default.
+    rules: { minRadius: 14, maxGrade: 0.17, minGrade: -0.04 },
+    rails: false,
+    look: { lane: 3.3, time: 'night' },
+  },
   { id: 'coast', name: 'Coastal Cliffs', blurb: 'Hairpins, side winds and a long drop to the sea.' },
   { id: 'pass', name: 'High Alpine Pass', blurb: 'Switchbacks, meltwater and everything at once.' },
 ];

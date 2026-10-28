@@ -13,6 +13,7 @@ import { createPropMaterial } from './propmat.js';
 import { mulberry32, clamp } from './noise.js';
 import { Props } from './props.js';
 import { ENV } from './sky.js';
+import { lampSpots } from './lamps.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
 // Structure half width: the parapet's inner face sits at the guardrail line
@@ -271,6 +272,7 @@ export class Structures {
     this.endless = [];
     this.gondolas = [];
     this.lines = [];
+    lampSpots.length = 0;
   }
 
   // Terrain shaping and props for the level's features. Needs the road built.
@@ -588,7 +590,7 @@ export const PLANS = {
     job.L = L;
   },
 
-  // { type: 'flat', from, to, width } Gentle ground either side of the road,
+  // { type: 'flat', from, to, width, keep } Gentle ground either side of the road,
   // for a village or a farm: no cuttings or drops within `width` m (60).
   flat(job) {
     const { s0, s1 } = job;
@@ -597,8 +599,9 @@ export const PLANS = {
       const s = f.index;
       if (s < s0 - 40 || s > s1 + 40 || f.dist > W + 30) return h;
       const w = smooth(s0 - 40, s0, s) * (1 - smooth(s1, s1 + 40, s)) * (1 - smooth(W, W + 30, f.dist));
-      // A gentle rise away from the road, with a little of the old shape left.
-      const want = f.roadY - 0.25 + Math.max(0, f.dist - 8) * 0.05 + (h - f.roadY) * 0.12;
+      // A gentle rise away from the road, with a little of the old shape
+      // left (`keep`, 0.12).
+      const want = f.roadY - 0.25 + Math.max(0, f.dist - 8) * 0.05 + (h - f.roadY) * (job.f.keep ?? 0.12);
       return h + (want - h) * w;
     });
   },
@@ -782,7 +785,9 @@ export const PLANS = {
 
   // { type: 'street', from, to, side } A suburban street edge: kerb,
   // pavement and front-garden walls, hedges and fences, with lampposts.
-  // The kerb is what stops you (barrier 'kerb').
+  // The kerb is what stops you (barrier 'kerb'). "style": "city" leaves out
+  // the gardens and levels the ground further back for city blocks;
+  // "prom" is a seafront promenade.
   street(job) {
     const { s0, s1 } = job;
     const sides = edgeSides(job);
@@ -791,9 +796,10 @@ export const PLANS = {
     // into the hillside behind.
     this.terrain.mods.push((x, z, f, h) => {
       const s = f.index;
-      if (s < s0 - 12 || s > s1 + 12 || f.dist > P + 34 || !sides.includes(f.side)) return h;
+      if (s < s0 - 12 || s > s1 + 12 || f.dist > P + 60 || !sides.includes(f.side)) return h;
       // A promenade has no gardens: past its railing the ground is the beach's.
-      const back = job.f.style === 'prom' ? [P + 0.5, P + 3] : [P + 16, P + 34];
+      // A city street's blocks need level ground further back.
+      const back = job.f.style === 'prom' ? [P + 0.5, P + 3] : job.f.style === 'city' ? [P + 30, P + 60] : [P + 16, P + 34];
       const w = smooth(s0 - 12, s0, s) * (1 - smooth(s1, s1 + 12, s)) * (1 - smooth(back[0], back[1], f.dist));
       // Under the pavement the ground sits just below it; gardens a touch up.
       return h + (f.roadY + (f.dist < HALF_WIDTH + PAVE + 0.2 ? -0.15 : 0.05) - h) * w;
@@ -1109,6 +1115,133 @@ export const PLANS = {
   // { type: 'smoke', at, d, h, side } Smoke curling up from a chimney `h` m
   // above the ground at (at, d) ("side": "valley" as for props).
   smoke() {},
+
+  // ---------------------------------------------------------------- city
+  // { type: 'tram', from, to } Tram rails set in both lanes, with poles and
+  // overhead wires.
+  tram() {},
+
+  // { type: 'lights', from, to, every, style } Strings of lights across the
+  // street between the building fronts: red paper lanterns ("lanterns") or
+  // fairy lights ("fairy").
+  lights() {},
+
+  // { type: 'suspension', from, to, depth, river } A lit suspension bridge
+  // over a river `river` m wide (160) whose water lies `depth` m (28) below
+  // the deck. Keep the road straight and nearly level across it.
+  suspension(job) {
+    const { s0, s1, f } = job;
+    const mid = (s0 + s1) / 2;
+    const o = this.road.sample(mid, {});
+    const Wr = (f.river ?? 160) / 2;
+    const level = (job.level = o.y - (f.depth ?? 28));
+    const Lh = (s1 - s0) / 2;
+    Object.assign(job, { mid, o, Wr });
+    this.terrain.mods.push((x, z, fd, h) => {
+      const t = Math.abs((x - o.x) * o.dirX + (z - o.z) * o.dirZ);
+      if (t > Lh + 80) return h;
+      const n = Math.abs((x - o.x) * o.rightX + (z - o.z) * o.rightZ);
+      const fade = 1 - smooth(900, 1300, n);
+      // The river bed, a quay a few metres above the water, then the banks
+      // climbing back to the street at the bridge ends.
+      const want = t < Wr ? level - 6 : level + 3 + Math.max(0, t - Wr - 14) * ((o.y - level) / Math.max(20, Lh + 30 - Wr));
+      return h + (Math.min(h, want) - h) * fade;
+    });
+    // Boats moored along the banks and out on the water.
+    const boats = f.boats ?? 3;
+    for (let k = 0; k < boats; k++) {
+      const n = (k % 2 ? 1 : -1) * (60 + k * 70);
+      const t = (k % 2 ? -1 : 1) * (Wr - 14);
+      const x = o.x + o.rightX * n + o.dirX * t, z = o.z + o.rightZ * n + o.dirZ * t;
+      this.props.add(k % 2 ? 'riverboat_b' : 'riverboat', x, z, Math.atan2(o.dirX, o.dirZ) + Math.PI / 2, 1, level);
+    }
+  },
+
+  // { type: 'underpass', from, to } An orange-lit tunnel under the city:
+  // tiled walls, a roof with a paved square on top, fans, and retaining
+  // walls down the cutting either end.
+  underpass(job) {
+    const { s0, s1 } = job;
+    const R = 6.2;
+    const wall = HALF_WIDTH + 1.25;
+    this.terrain.mods.push((x, z, f, h) => {
+      const s = f.index;
+      if (s < s0 - 70 || s > s1 + 70 || f.dist > 90) return h;
+      const ends = smooth(s0 - 70, s0 - 60, s) * (1 - smooth(s1 + 60, s1 + 70, s));
+      // Nothing inside the walls (the ground the road would otherwise cut
+      // through), then the city up level with the roof beyond them.
+      if (f.dist < wall + 6) return h + (Math.min(h, f.roadY - 0.4) - h) * ends;
+      const ramp = smooth(s0 - 60, s0, s) * (1 - smooth(s1, s1 + 60, s));
+      const want = f.roadY + (R + 0.3) * ramp * smooth(wall + 6, wall + 10, f.dist) + Math.max(0, f.dist - 30) * 0.05;
+      return h + (want - h) * ends * (1 - smooth(60, 90, f.dist));
+    });
+    const fr = {};
+    for (let s = s0 - 60; s <= s1 + 60; s += 10) {
+      this.road.sample(s, fr);
+      for (const side of [-1, 1]) this.terrain.block(fr.x + fr.rightX * side * 14, fr.z + fr.rightZ * side * 14, 10);
+    }
+  },
+
+  // { type: 'fair', at, d } A riverside fair: a turning ferris wheel and a
+  // merry-go-round on level ground at `d` m from the road.
+  fair(job) {
+    const f = job.f;
+    const at = this.road.start + f.at;
+    const d = f.d ?? 40;
+    const sd = Math.sign(d) || 1;
+    this.terrain.mods.push((x, z, fd, h) => {
+      const s = fd.index;
+      if (s < at - 120 || s > at + 120 || fd.side !== sd || fd.dist > Math.abs(d) + 60) return h;
+      const w = smooth(at - 120, at - 70, s) * (1 - smooth(at + 70, at + 120, s)) * smooth(HALF_WIDTH + 2, HALF_WIDTH + 8, fd.dist) * (1 - smooth(Math.abs(d) + 35, Math.abs(d) + 60, fd.dist));
+      return h + (fd.roadY - 0.3 - h) * w;
+    });
+    const p = Props.at(this.road, at, d, 'along');
+    job.wheel = { x: p.x, z: p.z, yaw: p.yaw };
+    this.props.add('ferris_legs', p.x, p.z, p.yaw);
+    const q = Props.at(this.road, at + 45, d * 0.8, 0);
+    job.carousel = { x: q.x, z: q.z };
+    this.terrain.block(q.x, q.z, 9);
+  },
+
+  // { type: 'harbour', from, to, side, near } Docks: a quay wall `near` m
+  // (30) out from the road with deep water beyond, a container ship moored
+  // along it and cranes on the quay.
+  harbour(job) {
+    const { s0, s1, f } = job;
+    const side = (job.side = f.side === 'left' ? -1 : 1);
+    const near = (job.near = f.near ?? 30);
+    let lo = Infinity;
+    for (let s = s0; s <= s1; s += 4) lo = Math.min(lo, this.road.y[Math.round(s)]);
+    const level = (job.level = lo - 3);
+    Object.assign(job, { far: near + 400 });
+    this.terrain.mods.push((x, z, fd, h) => {
+      const s = fd.index;
+      if (s < s0 - 60 || s > s1 + 60 || fd.side !== side || fd.dist < HALF_WIDTH + 1) return h;
+      const along = smooth(s0 - 60, s0 - 10, s) * (1 - smooth(s1 + 10, s1 + 60, s));
+      const inner = s > s0 && s < s1;
+      // The quay apron at street level, then a sheer drop into the water.
+      const want = fd.dist < near ? fd.roadY - 0.3 : inner ? level - 8 : h;
+      return h + (want - h) * (fd.dist < near ? along : 1) * (1 - smooth(near + 380, near + 420, fd.dist));
+    });
+    const fr = {};
+    for (let s = s0; s <= s1; s += 15) {
+      this.road.sample(s, fr);
+      for (let d = near + 8; d < near + 400; d += 15) this.terrain.block(fr.x + fr.rightX * d * side, fr.z + fr.rightZ * d * side, 14);
+    }
+    for (let s = s0 + 8; s < s1; s += 16) {
+      this.road.sample(s, fr);
+      const d = side * (near - 1.0);
+      this.props.add('bollard_quay', fr.x + fr.rightX * d, fr.z + fr.rightZ * d, 0, 1, fr.y - 0.26);
+    }
+    const mid = (s0 + s1) / 2;
+    const ship = Props.at(this.road, mid, side * (near + 18), 'along');
+    this.props.add('ship', ship.x, ship.z, ship.yaw, 1, level);
+    const cranes = f.cranes ?? 3;
+    for (let k = 0; k < cranes; k++) {
+      const c = Props.at(this.road, mid - 60 + k * 60, side * (near - 12), 180);
+      this.props.add('crane', c.x, c.z, c.yaw);
+    }
+  },
 };
 
 // ---------------------------------------------------------------- builds
@@ -1753,6 +1886,14 @@ const BUILDS = {
         sweep(geo, this.road, a, b, [[o, -0.3], [o + side * (PAVE - 0.15), -0.3], [o + side * (PAVE - 0.15), 0.1], [o, 0.1]], PAVING, '#a3a19b', { step: 1 });
       }
       // Front gardens: a wall, hedge or fence each, with a gap for the drive.
+      // A city street has none: the paving runs on back to the buildings.
+      if (job.f.style === 'city') {
+        for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + PAVE + 0.5)) {
+          const o = side * (HALF_WIDTH + PAVE);
+          sweep(geo, this.road, a, b, [[o, -0.4], [o + side * 9, -0.4], [o + side * 9, 0.08], [o, 0.08]], PAVING, '#94918a', { step: 2 });
+        }
+        continue;
+      }
       const g = side * (HALF_WIDTH + PAVE + 0.25);
       const styles = job.f.style === 'prom' ? ['railing'] : ['brick', 'brick', 'hedge', 'picket', 'hedge', 'low'];
       for (const [a, b] of this.openRuns(job.s0, job.s1, side, SIDE_HALF + PAVE + 0.5)) {
@@ -1922,6 +2063,334 @@ const BUILDS = {
         },
       });
     }
+  },
+
+  // ---------------------------------------------------------------- city
+  tram(job) {
+    const { s0, s1 } = job;
+    const geo = new Geo();
+    const lane = HALF_WIDTH - 0.75;
+    // Grooved rails, two to a lane, flush with the tarmac.
+    for (const c of [-lane / 2, lane / 2]) {
+      for (const g of [-0.7175, 0.7175]) {
+        const d = c + g;
+        const h = crownAt(d) + 0.006;
+        sweep(geo, this.road, s0, s1, [[d - 0.05, h - 0.02], [d + 0.05, h - 0.02], [d + 0.05, h], [d - 0.05, h]], METAL, '#8a8c8e', { step: 2, caps: false });
+        sweep(geo, this.road, s0, s1, [[d - 0.012, h - 0.01], [d + 0.012, h - 0.01], [d + 0.012, h + 0.002], [d - 0.012, h + 0.002]], PAINT, '#141414', { step: 2, caps: false });
+      }
+    }
+    // Poles in pairs, span wires across and a contact wire over each lane,
+    // sagging a little between the spans.
+    const fr = {};
+    const poles = [];
+    for (let s = s0 + 10; s < s1; s += 32) {
+      this.road.sample(s, fr);
+      const pair = [-1, 1].map((side) => {
+        const d = side * (HALF_WIDTH + 1.35);
+        const x = fr.x + fr.rightX * d, z = fr.z + fr.rightZ * d;
+        const y = this.terrain.heightAt(x, z);
+        strut(geo, new THREE.Vector3(x, Math.min(y, fr.y) - 0.5, z), new THREE.Vector3(x, fr.y + 7.6, z), 0.1, METAL, '#2a3a32');
+        return new THREE.Vector3(x, fr.y + 6.9, z);
+      });
+      strut(geo, pair[0], pair[1], 0.012, METAL, '#1e1e1e');
+      poles.push({ s, f: { ...fr } });
+    }
+    for (let i = 0; i + 1 < poles.length; i++) {
+      for (const c of [-lane / 2, lane / 2]) {
+        const n = 6;
+        let prev = null;
+        for (let k = 0; k <= n; k++) {
+          const s = poles[i].s + ((poles[i + 1].s - poles[i].s) * k) / n;
+          this.road.sample(s, fr);
+          const p = new THREE.Vector3(fr.x + fr.rightX * c, fr.y + 5.9 - 0.25 * Math.sin((k / n) * Math.PI), fr.z + fr.rightZ * c);
+          if (prev) strut(geo, prev, p, 0.012, METAL, '#1e1e1e');
+          prev = p;
+        }
+      }
+    }
+    this.mesh(geo);
+  },
+
+  lights(job) {
+    const { s0, s1, f } = job;
+    const geo = new Geo();
+    const fairy = f.style === 'fairy';
+    const every = f.every ?? (fairy ? 6 : 9);
+    const reach = HALF_WIDTH + PAVE + 0.4;
+    const fr = {};
+    const cols = fairy ? ['#ffe2a0'] : ['#ff2a14', '#ff3a1a', '#ff6a1a'];
+    let k = 0;
+    for (let s = s0; s <= s1; s += every, k++) {
+      this.road.sample(s, fr);
+      // Lanterns hang straight across; fairy lights zigzag from one side to
+      // the other and back down the street.
+      const s2 = fairy ? Math.min(s1, s + every) : s;
+      const fb = this.road.sample(s2, {});
+      const flip = fairy && k % 2 ? -1 : 1;
+      const y = fairy ? 5.6 : 7.2;
+      const a = new THREE.Vector3(fr.x - fr.rightX * reach * flip, fr.y + y, fr.z - fr.rightZ * reach * flip);
+      const b = new THREE.Vector3(fb.x + fb.rightX * reach * flip, fb.y + y, fb.z + fb.rightZ * reach * flip);
+      const L = a.distanceTo(b);
+      const n = Math.floor(L / (fairy ? 0.5 : 1.5));
+      const sag = fairy ? 1.0 : 1.4;
+      const at = (u) => new THREE.Vector3().lerpVectors(a, b, u).setY(a.y + (b.y - a.y) * u - sag * 4 * u * (1 - u));
+      let prev = at(0);
+      for (let i = 1; i <= 12; i++) {
+        const p = at(i / 12);
+        strut(geo, prev, p, 0.01, METAL, '#1a1a1a');
+        prev = p;
+      }
+      const along = new THREE.Vector3(b.x - a.x, 0, b.z - a.z).normalize();
+      const across = new THREE.Vector3(-along.z, 0, along.x);
+      for (let i = 1; i < n; i++) {
+        const p = at(i / n);
+        const col = cols[(i + k) % cols.length];
+        if (fairy) {
+          geo.box(p.x, p.z, p.y - 0.14, p.y - 0.04, along, 0.05, across, 0.05, EMISSIVE, col);
+        } else {
+          // A paper lantern: a fat red body, gold caps and a tassel.
+          geo.box(p.x, p.z, p.y - 0.75, p.y - 0.15, along, 0.26, across, 0.26, EMISSIVE, col);
+          geo.box(p.x, p.z, p.y - 0.7, p.y - 0.2, along, 0.32, across, 0.18, EMISSIVE, col);
+          geo.box(p.x, p.z, p.y - 0.15, p.y - 0.05, along, 0.14, across, 0.14, PAINT, '#c89a2a');
+          geo.box(p.x, p.z, p.y - 0.85, p.y - 0.75, along, 0.14, across, 0.14, PAINT, '#c89a2a');
+          geo.box(p.x, p.z, p.y - 1.15, p.y - 0.85, along, 0.03, across, 0.03, PAINT, '#d8302a');
+        }
+      }
+    }
+    this.mesh(geo, false);
+  },
+
+  suspension(job) {
+    const { s0, s1, mid, Wr, level } = job;
+    const geo = new Geo();
+    const road = this.road;
+    const RED = '#b8432c';
+    const w = HALF_WIDTH + 2.4; // to the outside of the walkways
+    // Deck: a steel box with a stiffening truss either side, walkways and railings.
+    sweep(geo, road, s0, s1, [[-w, -2.6], [w, -2.6], [w, -0.05], [-w, -0.05]], METAL, '#5a5c5e');
+    for (const side of [-1, 1]) {
+      const o = side * HALF_WIDTH;
+      sweep(geo, road, s0, s1, [[o, -0.1], [o + side * 2.3, -0.1], [o + side * 2.3, 0.18], [o, 0.18]], PAVING, '#9a968e');
+      sweep(geo, road, s0, s1, [[o + side * 2.2, 1.05], [o + side * 2.4, 1.05], [o + side * 2.4, 1.15], [o + side * 2.2, 1.15]], METAL, RED);
+      sweep(geo, road, s0, s1, [[o + side * 2.2, 0.5], [o + side * 2.4, 0.5], [o + side * 2.4, 0.56], [o + side * 2.2, 0.56]], METAL, RED);
+      sweep(geo, road, s0, s1, [[o, 0.18], [o + side * 0.25, 0.18], [o + side * 0.25, 0.95], [o, 0.95]], METAL, '#8a8c8e');
+    }
+    const fr = {};
+    for (let s = s0; s <= s1; s += 2.5) {
+      road.sample(s, fr);
+      for (const side of [-1, 1]) {
+        const d = side * (w - 0.1);
+        const p = new THREE.Vector3(fr.x + fr.rightX * d, fr.y, fr.z + fr.rightZ * d);
+        strut(geo, p, p.clone().setY(fr.y + 1.1), 0.03, METAL, RED);
+        // The truss under the deck edge: a diagonal to the next panel point.
+        if (s + 2.5 <= s1) {
+          const fn = road.sample(s + 2.5, {});
+          const up = Math.round(s / 2.5) % 2 ? 1 : 0;
+          strut(geo, new THREE.Vector3(p.x, fr.y - 2.6 + up * 2.5, p.z), new THREE.Vector3(fn.x + fn.rightX * d, fn.y - 0.1 - up * 2.5, fn.z + fn.rightZ * d), 0.06, METAL, RED);
+        }
+      }
+    }
+    // Towers on piers near each bank, 50 m over the deck.
+    const H = 52;
+    const towers = [mid - (Wr - 16), mid + (Wr - 16)];
+    const cw = w + 0.6;
+    const top = [];
+    for (const st of towers) {
+      road.sample(st, fr);
+      const along = new THREE.Vector3(fr.dirX, 0, fr.dirZ), across = new THREE.Vector3(fr.rightX, 0, fr.rightZ);
+      geo.box(fr.x, fr.z, level - 6, level + 2, along, 7, across, cw + 4, MASONRY, '#8a8478');
+      for (const side of [-1, 1]) {
+        const x = fr.x + fr.rightX * side * cw, z = fr.z + fr.rightZ * side * cw;
+        geo.box(x, z, level + 2, fr.y + H, along, 2.0, across, 1.6, PAINT, RED);
+        geo.box(x, z, fr.y + H, fr.y + H + 2.5, along, 1.4, across, 1.1, PAINT, RED);
+        // Floodlit faces.
+        geo.box(x - fr.dirX * 2.05, z - fr.dirZ * 2.05, fr.y + 4, fr.y + H - 2, along, 0.05, across, 1.2, EMISSIVE, '#d86a3a');
+        geo.box(x + fr.dirX * 2.05, z + fr.dirZ * 2.05, fr.y + 4, fr.y + H - 2, along, 0.05, across, 1.2, EMISSIVE, '#d86a3a');
+        top.push({ s: st, side, p: new THREE.Vector3(x, fr.y + H + 1, z) });
+      }
+      for (const hb of [fr.y - 3, fr.y + 14, fr.y + 30, fr.y + H - 3]) {
+        geo.box(fr.x, fr.z, hb, hb + 2.4, along, 1.4, across, cw, PAINT, RED);
+      }
+      geo.box(fr.x, fr.z, fr.y + H - 0.2, fr.y + H, along, 0.3, across, cw + 1.6, EMISSIVE, '#ff2a1a');
+    }
+    // Main cables: anchored at the deck ends, over the tower tops, sagging to
+    // just above the deck in the middle; hangers down to the deck, and a
+    // string of lights along each.
+    for (const side of [-1, 1]) {
+      const [ta, tb] = top.filter((t) => t.side === side);
+      const yOf = (s) => {
+        road.sample(s, fr);
+        if (s < ta.s) return fr.y + 0.5 + (ta.p.y - fr.y - 0.5) * ((s - s0) / (ta.s - s0)) ** 1.4;
+        if (s > tb.s) return fr.y + 0.5 + (tb.p.y - fr.y - 0.5) * ((s1 - s) / (s1 - tb.s)) ** 1.4;
+        const u = (s - ta.s) / (tb.s - ta.s);
+        return fr.y + 3 + (ta.p.y - fr.y - 3) * (2 * u - 1) ** 2;
+      };
+      let prev = null;
+      for (let s = s0; s <= s1 + 0.01; s += 4) {
+        const y = yOf(s);
+        road.sample(s, fr);
+        const d = side * cw;
+        const p = new THREE.Vector3(fr.x + fr.rightX * d, y, fr.z + fr.rightZ * d);
+        if (prev) strut(geo, prev, p, 0.35, METAL, RED);
+        if (y - fr.y > 2) strut(geo, p, new THREE.Vector3(p.x, fr.y + 0.2, p.z), 0.05, METAL, RED);
+        geo.box(p.x, p.z, y + 0.35, y + 0.6, new THREE.Vector3(fr.dirX, 0, fr.dirZ), 0.12, new THREE.Vector3(fr.rightX, 0, fr.rightZ), 0.12, EMISSIVE, '#fff0c8');
+        prev = p;
+      }
+    }
+    // Lamps along the walkways.
+    for (let s = s0 + 6; s < s1; s += 24) {
+      road.sample(s, fr);
+      for (const side of [-1, 1]) {
+        const d = side * (w - 0.3);
+        const p = new THREE.Vector3(fr.x + fr.rightX * d, fr.y, fr.z + fr.rightZ * d);
+        strut(geo, p, p.clone().setY(fr.y + 5), 0.06, METAL, '#2a2a2a');
+        geo.box(p.x, p.z, fr.y + 5, fr.y + 5.5, new THREE.Vector3(fr.dirX, 0, fr.dirZ), 0.25, new THREE.Vector3(fr.rightX, 0, fr.rightZ), 0.25, EMISSIVE, '#ffe0a0');
+        lampSpots.push([p.x, fr.y + 5.3, p.z]);
+      }
+    }
+    // Piers under the approach spans, wherever the ground is below the deck.
+    for (let s = s0 + 12; s < s1 - 6; s += 24) {
+      if (Math.abs(s - mid) < Wr) continue;
+      road.sample(s, fr);
+      const g = Math.min(this.terrain.heightAt(fr.x, fr.z), this.terrain.heightAt(fr.x + fr.rightX * w, fr.z + fr.rightZ * w), this.terrain.heightAt(fr.x - fr.rightX * w, fr.z - fr.rightZ * w));
+      if (g < fr.y - 3) geo.box(fr.x, fr.z, g - 2, fr.y - 2.6, new THREE.Vector3(fr.dirX, 0, fr.dirZ), 1.2, new THREE.Vector3(fr.rightX, 0, fr.rightZ), w - 1.5, MASONRY, '#8a8478');
+    }
+    this.mesh(geo);
+    // The river and its quays.
+    const { o } = job;
+    const qgeo = new Geo();
+    const ax = new THREE.Vector3(o.rightX, 0, o.rightZ), az = new THREE.Vector3(o.dirX, 0, o.dirZ);
+    for (const t of [-Wr, Wr]) {
+      for (let n = -1100; n < 1100; n += 20) {
+        const x = o.x + o.dirX * t + o.rightX * (n + 10), z = o.z + o.dirZ * t + o.rightZ * (n + 10);
+        qgeo.box(x, z, level - 6, level + 3.1, ax, 10.05, az, 0.8, MASONRY, '#7a7468');
+      }
+    }
+    this.mesh(qgeo);
+    waterStrip.call(this, o, Wr + 1, 1150, level);
+  },
+
+  underpass(job) {
+    const { s0, s1 } = job;
+    const geo = new Geo();
+    const road = this.road;
+    const wall = HALF_WIDTH + 1.25;
+    const R = 6.2;
+    const fr = {};
+    for (const side of [-1, 1]) {
+      const o = side * HALF_WIDTH;
+      // A raised walkway, then the tiled wall with a dark dado and a band.
+      sweep(geo, road, s0 - 60, s1 + 60, [[o, -0.2], [o + side * 1.0, -0.2], [o + side * 1.0, 0.25], [o, 0.25]], PAVING, '#8a867e');
+      sweep(geo, road, s0, s1, [[side * wall, 0], [side * (wall + 0.4), 0], [side * (wall + 0.4), R - 1], [side * wall, R - 1]], PLASTER, '#e2d8bc');
+      sweep(geo, road, s0, s1, [[side * (wall - 0.02), 0], [side * wall, 0], [side * wall, 1.2], [side * (wall - 0.02), 1.2]], PAINT, '#3a4a5a', { caps: false });
+      sweep(geo, road, s0, s1, [[side * (wall - 0.02), 3.0], [side * wall, 3.0], [side * wall, 3.25], [side * (wall - 0.02), 3.25]], PAINT, '#c87a2a', { caps: false });
+    }
+    // The cutting walls either end, as high as the ground beside them.
+    for (const [a, b] of [[s0 - 60, s0], [s1, s1 + 60]]) {
+      for (let s = a; s < b; s += 2) {
+        road.sample(s, fr);
+        const fb = road.sample(s + 2, {});
+        // As high as the city beside the cutting (see the plan), with a
+        // paved top reaching back over the ground behind.
+        const hOf = (q) => Math.max(0.6, (R + 0.3) * smooth(s0 - 60, s0, q) * (1 - smooth(s1, s1 + 60, q)) + 0.15);
+        const h0 = hOf(s), h1 = hOf(s + 2);
+        for (const side of [-1, 1]) {
+          const d = side * (wall + 0.2);
+          const P = (q, dd, h) => new THREE.Vector3(q.x + q.rightX * dd, q.y + h, q.z + q.rightZ * dd);
+          const c = P(fr, d + side * 5, 1);
+          geo.quad(P(fr, d, -0.3), P(fb, d, -0.3), P(fb, d, h1), P(fr, d, h0), MASONRY, '#8a8478', c);
+          geo.quad(P(fr, d, h0), P(fb, d, h1), P(fb, d + side * 0.5, h1), P(fr, d + side * 0.5, h0), PLASTER, '#a8a298', c.clone().setY(c.y - 50));
+          geo.quad(P(fr, d + side * 0.5, h0 - 0.1), P(fb, d + side * 0.5, h1 - 0.1), P(fb, d + side * 10, h1 - 0.1), P(fr, d + side * 10, h0 - 0.1), PAVING, '#8a867e', c.clone().setY(c.y - 50));
+        }
+      }
+    }
+    // Roof slab with a paved square on top, the portals' faces and lights.
+    sweep(geo, road, s0, s1, [[-wall - 0.4, R - 1], [wall + 0.4, R - 1], [wall + 0.4, R + 0.2], [-wall - 0.4, R + 0.2]], PLASTER, '#6a665e');
+    sweep(geo, road, s0, s1, [[-wall - 10.5, R + 0.2], [wall + 10.5, R + 0.2], [wall + 10.5, R + 0.3], [-wall - 10.5, R + 0.3]], PAVING, '#9a968e');
+    for (const s of [s0, s1]) {
+      road.sample(s, fr);
+      const along = new THREE.Vector3(fr.dirX, 0, fr.dirZ), across = new THREE.Vector3(fr.rightX, 0, fr.rightZ);
+      geo.box(fr.x, fr.z, fr.y + R - 1.6, fr.y + R + 1.1, along, 0.6, across, wall + 2.5, MASONRY, '#8a8478');
+      geo.box(fr.x - fr.dirX * 0.62 * (s === s0 ? 1 : -1), fr.z - fr.dirZ * 0.62 * (s === s0 ? 1 : -1), fr.y + R - 0.6, fr.y + R + 0.2, along, 0.03, across, 2.4, EMISSIVE, '#ff9a30');
+    }
+    for (let s = s0 + 3; s < s1; s += 6) {
+      road.sample(s, fr);
+      const along = new THREE.Vector3(fr.dirX, 0, fr.dirZ), across = new THREE.Vector3(fr.rightX, 0, fr.rightZ);
+      for (const side of [-1, 1]) {
+        const d = side * (wall - 0.05);
+        geo.box(fr.x + fr.rightX * d, fr.z + fr.rightZ * d, fr.y + R - 1.6, fr.y + R - 1.35, along, 1.2, across, 0.08, EMISSIVE, '#ff9a30');
+      }
+      if (Math.round((s - s0) / 6) % 3 === 0) lampSpots.push([fr.x, fr.y + R - 1.5, fr.z]);
+      // Jet fans in pairs under the roof.
+      if (Math.round((s - s0 - 3) / 6) % 12 === 6) {
+        for (const side of [-1, 1]) {
+          const x = fr.x + fr.rightX * side * 1.8, z = fr.z + fr.rightZ * side * 1.8;
+          geo.box(x, z, fr.y + R - 2.3, fr.y + R - 1.0, along, 2.0, across, 0.6, METAL, '#8a8c8e');
+          geo.box(x - fr.dirX * 2.02, z - fr.dirZ * 2.02, fr.y + R - 2.2, fr.y + R - 1.1, along, 0.02, across, 0.5, PAINT, '#1a1a1a');
+        }
+      }
+    }
+    this.mesh(geo);
+  },
+
+  fair(job) {
+    const g = this.props.geos.get('ferris_wheel'), gc = this.props.geos.get('ferris_cab'), gm = this.props.geos.get('carousel');
+    if (!g || !gc || !gm) return;
+    const { wheel, carousel } = job;
+    const base = this.terrain.heightAt(wheel.x, wheel.z);
+    const hub = new THREE.Group();
+    hub.position.set(wheel.x, base + 26, wheel.z);
+    hub.rotation.y = wheel.yaw;
+    this.group.add(hub);
+    const rim = new THREE.Mesh(g, this.mat);
+    hub.add(rim);
+    const N = 16;
+    const cabs = new THREE.InstancedMesh(gc, this.mat, N);
+    hub.add(cabs);
+    const round = new THREE.Mesh(gm, this.mat);
+    round.position.set(carousel.x, this.terrain.heightAt(carousel.x, carousel.z), carousel.z);
+    this.group.add(round);
+    const m4 = new THREE.Matrix4();
+    this.gondolas.push({
+      update: (time) => {
+        const a = time * 0.06;
+        rim.rotation.z = a;
+        for (let i = 0; i < N; i++) {
+          const t = a + (i * Math.PI * 2) / N;
+          m4.makeTranslation(22 * Math.cos(t), 22 * Math.sin(t), 0);
+          cabs.setMatrixAt(i, m4);
+        }
+        cabs.instanceMatrix.needsUpdate = true;
+        round.rotation.y = time * 0.5;
+      },
+    });
+  },
+
+  harbour(job) {
+    const { s0, s1, side, near, level } = job;
+    const geo = new Geo();
+    const fr = {};
+    // The quay wall and its edge, mooring bollards along it.
+    for (let s = s0; s < s1; s += 4) {
+      this.road.sample(s, fr);
+      const fb = this.road.sample(Math.min(s1, s + 4), {});
+      const P = (q, d, y) => new THREE.Vector3(q.x + q.rightX * side * d, y, q.z + q.rightZ * side * d);
+      const c = P(fr, near - 5, fr.y);
+      geo.quad(P(fr, near, level - 8), P(fb, near, level - 8), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), MASONRY, '#6a665e', c);
+      geo.quad(P(fr, near - 0.6, fr.y - 0.25), P(fb, near - 0.6, fb.y - 0.25), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), PAINT, '#c8b83a', c.clone().setY(c.y - 50));
+      // The apron: concrete hardstanding from the road out to the edge.
+      geo.quad(P(fr, HALF_WIDTH + 0.3, fr.y - 0.28), P(fb, HALF_WIDTH + 0.3, fb.y - 0.28), P(fb, near - 0.6, fb.y - 0.26), P(fr, near - 0.6, fr.y - 0.26), PAVING, '#8a867e', c.clone().setY(c.y - 50));
+    }
+    // End walls where the dock meets the shore.
+    for (const s of [s0, s1]) {
+      this.road.sample(s, fr);
+      const along = new THREE.Vector3(fr.dirX, 0, fr.dirZ), across = new THREE.Vector3(fr.rightX, 0, fr.rightZ);
+      const mid = near + 200;
+      geo.box(fr.x + fr.rightX * side * mid, fr.z + fr.rightZ * side * mid, level - 8, fr.y - 0.25, along, 0.8, across, 200, MASONRY, '#6a665e');
+    }
+    this.mesh(geo);
+    Object.assign(job, { side, near: near + 0.5, far: near + 400 });
+    BUILDS.lake.call(this, job);
   },
 };
 
@@ -2166,6 +2635,22 @@ function archSpan(geo, road, sa, sb, R, pierW, vSpring, col) {
 
 // A stream along a polyline: water ribbon following the ground downhill,
 // foaming where it's steep, with boulders on its banks.
+// A flat sheet of water `half` m either side of the line through o along
+// its dir (a road sample), reaching `len` m out along its right vector.
+function waterStrip(o, half, len, level) {
+  const pos = [];
+  for (const t of [-half, half]) for (const n of [-len, len]) pos.push(o.x + o.dirX * t + o.rightX * n, level, o.z + o.dirZ * t + o.rightZ * n);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex([0, 1, 2, 2, 1, 3]);
+  g.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(pos.filter((_, i) => i % 3 !== 1).map((v) => v / 14), 2));
+  this.lakeMat.side = THREE.DoubleSide;
+  const m = new THREE.Mesh(g, this.lakeMat);
+  m.receiveShadow = true;
+  this.group.add(m);
+}
+
 function river(pts, width, fall = false) {
   const t = this.terrain;
   const P = [];

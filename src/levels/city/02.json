@@ -1,0 +1,4916 @@
+{
+  "id": "city-02",
+  "name": "Tram Hill",
+  "biome": "city",
+  "seed": 6102,
+  "hint": "The steepest streets in town! Tram rails run down the middle of each lane. Brake on the flat bits between the drops, and look out for the tram stop.",
+  "pieces": [
+    {
+      "straight": 140,
+      "grade": 0.08
+    },
+    {
+      "straight": 200,
+      "grade": 0.15,
+      "ramp": 30
+    },
+    {
+      "straight": 60,
+      "grade": 0.04,
+      "ramp": 20
+    },
+    {
+      "straight": 200,
+      "grade": 0.16,
+      "ramp": 30
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 60,
+      "grade": 0.08
+    },
+    {
+      "straight": 220,
+      "grade": 0.15,
+      "ramp": 30
+    },
+    {
+      "straight": 60,
+      "grade": 0.04,
+      "ramp": 20
+    },
+    {
+      "straight": 220,
+      "grade": 0.14,
+      "ramp": 30
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 70,
+      "grade": 0.08
+    },
+    {
+      "straight": 160,
+      "grade": 0.12
+    },
+    {
+      "straight": 80,
+      "grade": 0.04
+    }
+  ],
+  "features": [
+    {
+      "type": "street",
+      "from": -60,
+      "to": 1468,
+      "style": "city"
+    },
+    {
+      "type": "tram",
+      "from": -40,
+      "to": 1468
+    }
+  ],
+  "props": [
+    {
+      "type": "victorian_a",
+      "at": -43.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": -40.5,
+      "d": -42.24
+    },
+    {
+      "type": "victorian_c",
+      "at": -37.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": -36.1,
+      "d": -41.0
+    },
+    {
+      "type": "victorian_d",
+      "at": -30.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": -28.0,
+      "d": -40.42
+    },
+    {
+      "type": "victorian_d",
+      "at": -24.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": -21.8,
+      "d": -39.26
+    },
+    {
+      "type": "victorian_d",
+      "at": -18.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": -21.2,
+      "d": -37.77
+    },
+    {
+      "type": "victorian_b",
+      "at": -12.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": -12.4,
+      "d": -39.23
+    },
+    {
+      "type": "victorian_e",
+      "at": -6.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": -3.9,
+      "d": -42.23
+    },
+    {
+      "type": "victorian_c",
+      "at": -0.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": -1.1,
+      "d": -43.22
+    },
+    {
+      "type": "victorian_d",
+      "at": 6.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 7.3,
+      "d": -38.35
+    },
+    {
+      "type": "victorian_d",
+      "at": 12.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 13.5,
+      "d": -39.99
+    },
+    {
+      "type": "victorian_c",
+      "at": 18.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 20.2,
+      "d": -40.24
+    },
+    {
+      "type": "victorian_c",
+      "at": 24.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 30.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 29.2,
+      "d": -44.01
+    },
+    {
+      "type": "victorian_e",
+      "at": 37.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 38.2,
+      "d": -41.05
+    },
+    {
+      "type": "victorian_b",
+      "at": 43.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 46.5,
+      "d": -41.34
+    },
+    {
+      "type": "victorian_c",
+      "at": 49.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 53.1,
+      "d": -37.2
+    },
+    {
+      "type": "victorian_a",
+      "at": 55.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 56.7,
+      "d": -43.68
+    },
+    {
+      "type": "victorian_b",
+      "at": 61.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 67.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 73.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 72.5,
+      "d": -37.73
+    },
+    {
+      "type": "victorian_a",
+      "at": 79.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 76.0,
+      "d": -42.19
+    },
+    {
+      "type": "victorian_c",
+      "at": 85.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 87.7,
+      "d": -40.53
+    },
+    {
+      "type": "victorian_e",
+      "at": 91.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 89.0,
+      "d": -36.64
+    },
+    {
+      "type": "victorian_e",
+      "at": 97.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 94.8,
+      "d": -39.05
+    },
+    {
+      "type": "victorian_d",
+      "at": 103.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 105.8,
+      "d": -43.57
+    },
+    {
+      "type": "victorian_e",
+      "at": 110.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 113.8,
+      "d": -37.1
+    },
+    {
+      "type": "victorian_a",
+      "at": 116.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 116.5,
+      "d": -42.6
+    },
+    {
+      "type": "victorian_c",
+      "at": 122.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 120.6,
+      "d": -41.2
+    },
+    {
+      "type": "victorian_a",
+      "at": 128.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 130.0,
+      "d": -38.37
+    },
+    {
+      "type": "victorian_b",
+      "at": 134.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 132.5,
+      "d": -43.68
+    },
+    {
+      "type": "victorian_a",
+      "at": 140.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 146.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 147.7,
+      "d": -41.34
+    },
+    {
+      "type": "victorian_f",
+      "at": 153.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 152.6,
+      "d": -40.56
+    },
+    {
+      "type": "victorian_a",
+      "at": 159.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 156.1,
+      "d": -42.14
+    },
+    {
+      "type": "victorian_a",
+      "at": 165.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 162.1,
+      "d": -36.55
+    },
+    {
+      "type": "victorian_d",
+      "at": 171.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 170.5,
+      "d": -41.83
+    },
+    {
+      "type": "victorian_b",
+      "at": 177.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 177.1,
+      "d": -36.52
+    },
+    {
+      "type": "victorian_d",
+      "at": 183.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 190.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 189.0,
+      "d": -40.5
+    },
+    {
+      "type": "victorian_e",
+      "at": 196.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 200.2,
+      "d": -39.33
+    },
+    {
+      "type": "victorian_f",
+      "at": 202.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 200.8,
+      "d": -43.07
+    },
+    {
+      "type": "victorian_a",
+      "at": 208.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 214.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 217.6,
+      "d": -41.26
+    },
+    {
+      "type": "victorian_a",
+      "at": 220.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 217.1,
+      "d": -42.39
+    },
+    {
+      "type": "victorian_e",
+      "at": 226.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 226.3,
+      "d": -42.38
+    },
+    {
+      "type": "victorian_a",
+      "at": 232.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 229.3,
+      "d": -43.15
+    },
+    {
+      "type": "victorian_b",
+      "at": 238.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 239.8,
+      "d": -40.11
+    },
+    {
+      "type": "victorian_f",
+      "at": 244.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 248.6,
+      "d": -37.48
+    },
+    {
+      "type": "victorian_d",
+      "at": 251.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 252.8,
+      "d": -42.17
+    },
+    {
+      "type": "victorian_d",
+      "at": 257.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 263.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 261.3,
+      "d": -39.77
+    },
+    {
+      "type": "victorian_a",
+      "at": 269.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 266.2,
+      "d": -39.2
+    },
+    {
+      "type": "victorian_b",
+      "at": 275.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 282.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 288.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 287.3,
+      "d": -42.02
+    },
+    {
+      "type": "victorian_c",
+      "at": 294.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 292.8,
+      "d": -37.6
+    },
+    {
+      "type": "victorian_d",
+      "at": 300.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 298.8,
+      "d": -40.46
+    },
+    {
+      "type": "victorian_b",
+      "at": 306.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 304.7,
+      "d": -43.35
+    },
+    {
+      "type": "victorian_e",
+      "at": 312.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 312.5,
+      "d": -36.59
+    },
+    {
+      "type": "victorian_f",
+      "at": 319.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 315.5,
+      "d": -38.54
+    },
+    {
+      "type": "victorian_f",
+      "at": 325.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 331.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 330.0,
+      "d": -42.31
+    },
+    {
+      "type": "victorian_f",
+      "at": 337.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 335.1,
+      "d": -42.88
+    },
+    {
+      "type": "victorian_f",
+      "at": 343.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 349.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 351.0,
+      "d": -42.88
+    },
+    {
+      "type": "victorian_b",
+      "at": 355.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 354.9,
+      "d": -38.07
+    },
+    {
+      "type": "victorian_d",
+      "at": 362.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 368.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 369.0,
+      "d": -40.27
+    },
+    {
+      "type": "victorian_a",
+      "at": 374.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 374.4,
+      "d": -40.46
+    },
+    {
+      "type": "victorian_f",
+      "at": 380.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 379.4,
+      "d": -43.6
+    },
+    {
+      "type": "victorian_f",
+      "at": 386.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 386.6,
+      "d": -41.75
+    },
+    {
+      "type": "victorian_c",
+      "at": 392.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 399.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 396.4,
+      "d": -42.35
+    },
+    {
+      "type": "victorian_d",
+      "at": 405.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 407.5,
+      "d": -43.26
+    },
+    {
+      "type": "victorian_b",
+      "at": 411.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 412.6,
+      "d": -37.6
+    },
+    {
+      "type": "victorian_d",
+      "at": 417.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 423.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 429.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 435.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 436.0,
+      "d": -43.67
+    },
+    {
+      "type": "victorian_c",
+      "at": 441.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 445.3,
+      "d": -38.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 447.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 453.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 454.2,
+      "d": -43.16
+    },
+    {
+      "type": "victorian_f",
+      "at": 460.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 458.0,
+      "d": -40.01
+    },
+    {
+      "type": "victorian_c",
+      "at": 466.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 463.1,
+      "d": -42.9
+    },
+    {
+      "type": "victorian_c",
+      "at": 472.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 469.0,
+      "d": -40.01
+    },
+    {
+      "type": "victorian_d",
+      "at": 478.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 484.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 490.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 489.3,
+      "d": -37.15
+    },
+    {
+      "type": "victorian_b",
+      "at": 496.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 494.2,
+      "d": -37.47
+    },
+    {
+      "type": "victorian_c",
+      "at": 502.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 509.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 515.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 521.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 525.1,
+      "d": -42.29
+    },
+    {
+      "type": "victorian_f",
+      "at": 527.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 533.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 535.0,
+      "d": -36.93
+    },
+    {
+      "type": "victorian_d",
+      "at": 540.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 539.6,
+      "d": -37.05
+    },
+    {
+      "type": "victorian_c",
+      "at": 546.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 552.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 551.2,
+      "d": -43.69
+    },
+    {
+      "type": "victorian_f",
+      "at": 558.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 557.2,
+      "d": -42.95
+    },
+    {
+      "type": "victorian_e",
+      "at": 564.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 568.0,
+      "d": -39.23
+    },
+    {
+      "type": "victorian_d",
+      "at": 570.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 573.1,
+      "d": -39.0
+    },
+    {
+      "type": "victorian_c",
+      "at": 576.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 574.4,
+      "d": -42.01
+    },
+    {
+      "type": "victorian_a",
+      "at": 583.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 584.3,
+      "d": -41.24
+    },
+    {
+      "type": "victorian_b",
+      "at": 589.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 595.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 596.1,
+      "d": -37.28
+    },
+    {
+      "type": "victorian_f",
+      "at": 601.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 599.5,
+      "d": -36.78
+    },
+    {
+      "type": "victorian_d",
+      "at": 607.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 608.3,
+      "d": -41.32
+    },
+    {
+      "type": "victorian_e",
+      "at": 614.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 617.9,
+      "d": -43.08
+    },
+    {
+      "type": "victorian_d",
+      "at": 620.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 616.5,
+      "d": -37.22
+    },
+    {
+      "type": "victorian_b",
+      "at": 626.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 626.4,
+      "d": -37.75
+    },
+    {
+      "type": "victorian_d",
+      "at": 632.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 630.5,
+      "d": -41.7
+    },
+    {
+      "type": "victorian_a",
+      "at": 638.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 642.4,
+      "d": -39.04
+    },
+    {
+      "type": "victorian_d",
+      "at": 644.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 642.8,
+      "d": -40.2
+    },
+    {
+      "type": "victorian_b",
+      "at": 651.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 647.5,
+      "d": -37.95
+    },
+    {
+      "type": "victorian_e",
+      "at": 657.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 660.3,
+      "d": -37.47
+    },
+    {
+      "type": "victorian_b",
+      "at": 663.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 660.3,
+      "d": -38.04
+    },
+    {
+      "type": "victorian_b",
+      "at": 669.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 670.4,
+      "d": -43.22
+    },
+    {
+      "type": "victorian_f",
+      "at": 675.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 673.0,
+      "d": -37.19
+    },
+    {
+      "type": "victorian_f",
+      "at": 681.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 688.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 685.1,
+      "d": -37.39
+    },
+    {
+      "type": "victorian_c",
+      "at": 694.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 700.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 702.4,
+      "d": -44.25
+    },
+    {
+      "type": "victorian_f",
+      "at": 706.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 707.6,
+      "d": -36.59
+    },
+    {
+      "type": "victorian_b",
+      "at": 712.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 713.1,
+      "d": -41.51
+    },
+    {
+      "type": "victorian_f",
+      "at": 718.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 718.5,
+      "d": -36.73
+    },
+    {
+      "type": "victorian_b",
+      "at": 724.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 731.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 728.2,
+      "d": -41.9
+    },
+    {
+      "type": "victorian_a",
+      "at": 737.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 779.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 785.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 789.1,
+      "d": -41.69
+    },
+    {
+      "type": "victorian_c",
+      "at": 791.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 793.0,
+      "d": -42.22
+    },
+    {
+      "type": "victorian_a",
+      "at": 798.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 796.3,
+      "d": -42.17
+    },
+    {
+      "type": "victorian_f",
+      "at": 804.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 810.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 813.4,
+      "d": -44.11
+    },
+    {
+      "type": "victorian_e",
+      "at": 816.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 817.2,
+      "d": -39.91
+    },
+    {
+      "type": "victorian_e",
+      "at": 822.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 820.1,
+      "d": -41.19
+    },
+    {
+      "type": "victorian_b",
+      "at": 829.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 830.3,
+      "d": -43.43
+    },
+    {
+      "type": "victorian_c",
+      "at": 835.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 841.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 839.0,
+      "d": -38.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 847.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 846.2,
+      "d": -39.87
+    },
+    {
+      "type": "victorian_f",
+      "at": 853.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 854.2,
+      "d": -38.05
+    },
+    {
+      "type": "victorian_d",
+      "at": 859.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 860.4,
+      "d": -43.66
+    },
+    {
+      "type": "victorian_d",
+      "at": 865.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 863.1,
+      "d": -38.74
+    },
+    {
+      "type": "victorian_b",
+      "at": 872.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 875.5,
+      "d": -39.03
+    },
+    {
+      "type": "victorian_d",
+      "at": 878.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 879.5,
+      "d": -40.84
+    },
+    {
+      "type": "victorian_b",
+      "at": 884.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 886.3,
+      "d": -42.95
+    },
+    {
+      "type": "victorian_d",
+      "at": 890.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 894.1,
+      "d": -38.63
+    },
+    {
+      "type": "victorian_a",
+      "at": 896.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 897.3,
+      "d": -40.7
+    },
+    {
+      "type": "victorian_d",
+      "at": 902.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 900.4,
+      "d": -38.53
+    },
+    {
+      "type": "victorian_c",
+      "at": 908.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 909.3,
+      "d": -41.99
+    },
+    {
+      "type": "victorian_b",
+      "at": 914.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 914.7,
+      "d": -37.38
+    },
+    {
+      "type": "victorian_c",
+      "at": 920.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 921.8,
+      "d": -41.52
+    },
+    {
+      "type": "victorian_a",
+      "at": 927.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 923.9,
+      "d": -41.71
+    },
+    {
+      "type": "victorian_b",
+      "at": 933.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 934.6,
+      "d": -40.14
+    },
+    {
+      "type": "victorian_c",
+      "at": 939.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 943.0,
+      "d": -41.2
+    },
+    {
+      "type": "victorian_c",
+      "at": 945.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 943.8,
+      "d": -40.18
+    },
+    {
+      "type": "victorian_e",
+      "at": 951.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 957.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 953.8,
+      "d": -41.73
+    },
+    {
+      "type": "victorian_f",
+      "at": 964.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 960.6,
+      "d": -40.67
+    },
+    {
+      "type": "victorian_d",
+      "at": 970.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 972.5,
+      "d": -37.65
+    },
+    {
+      "type": "victorian_e",
+      "at": 976.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 978.8,
+      "d": -41.74
+    },
+    {
+      "type": "victorian_a",
+      "at": 982.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 988.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 985.3,
+      "d": -41.13
+    },
+    {
+      "type": "victorian_b",
+      "at": 994.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 990.5,
+      "d": -39.59
+    },
+    {
+      "type": "victorian_c",
+      "at": 1000.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 997.1,
+      "d": -40.49
+    },
+    {
+      "type": "victorian_d",
+      "at": 1006.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1004.0,
+      "d": -37.39
+    },
+    {
+      "type": "victorian_a",
+      "at": 1013.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1019.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1025.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1031.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1032.5,
+      "d": -37.37
+    },
+    {
+      "type": "victorian_a",
+      "at": 1037.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1041.6,
+      "d": -41.45
+    },
+    {
+      "type": "victorian_c",
+      "at": 1044.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1050.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1052.3,
+      "d": -39.18
+    },
+    {
+      "type": "victorian_a",
+      "at": 1056.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1062.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1066.3,
+      "d": -40.73
+    },
+    {
+      "type": "victorian_f",
+      "at": 1068.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1070.4,
+      "d": -39.27
+    },
+    {
+      "type": "victorian_d",
+      "at": 1074.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1081.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1084.6,
+      "d": -42.39
+    },
+    {
+      "type": "victorian_e",
+      "at": 1087.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1089.1,
+      "d": -41.57
+    },
+    {
+      "type": "victorian_a",
+      "at": 1093.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1094.4,
+      "d": -39.99
+    },
+    {
+      "type": "victorian_d",
+      "at": 1099.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1101.3,
+      "d": -39.25
+    },
+    {
+      "type": "victorian_c",
+      "at": 1105.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1107.3,
+      "d": -41.54
+    },
+    {
+      "type": "victorian_d",
+      "at": 1112.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1114.5,
+      "d": -39.61
+    },
+    {
+      "type": "victorian_e",
+      "at": 1118.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1124.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1125.8,
+      "d": -41.69
+    },
+    {
+      "type": "victorian_a",
+      "at": 1130.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1127.5,
+      "d": -43.89
+    },
+    {
+      "type": "victorian_e",
+      "at": 1136.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1134.1,
+      "d": -43.02
+    },
+    {
+      "type": "victorian_a",
+      "at": 1142.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1142.0,
+      "d": -43.7
+    },
+    {
+      "type": "victorian_a",
+      "at": 1148.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1145.1,
+      "d": -40.3
+    },
+    {
+      "type": "victorian_a",
+      "at": 1155.1,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 1154.9,
+      "d": -43.98
+    },
+    {
+      "type": "victorian_d",
+      "at": 1161.4,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_e",
+      "at": 1159.0,
+      "d": -42.72
+    },
+    {
+      "type": "victorian_c",
+      "at": 1167.5,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 1168.0,
+      "d": -42.6
+    },
+    {
+      "type": "victorian_c",
+      "at": 1173.6,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 1174.2,
+      "d": -38.73
+    },
+    {
+      "type": "victorian_b",
+      "at": 1179.9,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_f",
+      "at": 1186.0,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 1183.7,
+      "d": -40.54
+    },
+    {
+      "type": "victorian_c",
+      "at": 1192.2,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_e",
+      "at": 1195.1,
+      "d": -36.81
+    },
+    {
+      "type": "victorian_f",
+      "at": 1198.4,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 1199.8,
+      "d": -42.61
+    },
+    {
+      "type": "victorian_b",
+      "at": 1204.6,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_f",
+      "at": 1210.8,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 1214.7,
+      "d": -38.53
+    },
+    {
+      "type": "victorian_d",
+      "at": 1216.9,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 1218.9,
+      "d": -38.98
+    },
+    {
+      "type": "victorian_a",
+      "at": 1223.1,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_a",
+      "at": 1221.6,
+      "d": -41.36
+    },
+    {
+      "type": "victorian_a",
+      "at": 1229.3,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 1226.7,
+      "d": -43.23
+    },
+    {
+      "type": "victorian_d",
+      "at": 1235.5,
+      "d": -17.3
+    },
+    {
+      "type": "victorian_c",
+      "at": 1241.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1242.0,
+      "d": -43.64
+    },
+    {
+      "type": "victorian_f",
+      "at": 1248.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1251.3,
+      "d": -40.73
+    },
+    {
+      "type": "victorian_a",
+      "at": 1254.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1251.7,
+      "d": -38.82
+    },
+    {
+      "type": "victorian_a",
+      "at": 1260.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1262.7,
+      "d": -37.58
+    },
+    {
+      "type": "victorian_e",
+      "at": 1266.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1268.9,
+      "d": -41.51
+    },
+    {
+      "type": "victorian_b",
+      "at": 1272.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1278.8,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1277.8,
+      "d": -36.92
+    },
+    {
+      "type": "victorian_f",
+      "at": 1285.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1282.1,
+      "d": -39.74
+    },
+    {
+      "type": "victorian_c",
+      "at": 1291.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1293.3,
+      "d": -39.07
+    },
+    {
+      "type": "victorian_a",
+      "at": 1297.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1303.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1309.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1311.0,
+      "d": -38.73
+    },
+    {
+      "type": "victorian_b",
+      "at": 1316.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1322.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1328.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1330.3,
+      "d": -41.78
+    },
+    {
+      "type": "victorian_b",
+      "at": 1334.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1335.0,
+      "d": -42.58
+    },
+    {
+      "type": "victorian_c",
+      "at": 1340.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1346.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1347.9,
+      "d": -36.65
+    },
+    {
+      "type": "victorian_d",
+      "at": 1353.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1359.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1365.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1362.4,
+      "d": -43.96
+    },
+    {
+      "type": "victorian_f",
+      "at": 1371.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1372.3,
+      "d": -41.96
+    },
+    {
+      "type": "victorian_e",
+      "at": 1377.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1383.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1385.1,
+      "d": -36.93
+    },
+    {
+      "type": "victorian_b",
+      "at": 1390.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1391.4,
+      "d": -41.74
+    },
+    {
+      "type": "victorian_c",
+      "at": 1396.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1393.0,
+      "d": -36.5
+    },
+    {
+      "type": "victorian_c",
+      "at": 1402.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1400.8,
+      "d": -38.16
+    },
+    {
+      "type": "victorian_b",
+      "at": 1408.2,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1414.4,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1415.6,
+      "d": -42.46
+    },
+    {
+      "type": "victorian_a",
+      "at": 1420.6,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1417.3,
+      "d": -36.61
+    },
+    {
+      "type": "victorian_b",
+      "at": 1426.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1429.2,
+      "d": -43.13
+    },
+    {
+      "type": "victorian_c",
+      "at": 1432.7,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1438.9,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1445.0,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1447.9,
+      "d": -39.44
+    },
+    {
+      "type": "victorian_d",
+      "at": 1451.1,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1449.5,
+      "d": -40.96
+    },
+    {
+      "type": "victorian_e",
+      "at": 1457.3,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1453.8,
+      "d": -36.41
+    },
+    {
+      "type": "victorian_e",
+      "at": 1463.5,
+      "d": -16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1466.7,
+      "d": -43.14
+    },
+    {
+      "type": "victorian_e",
+      "at": -46.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": -46.5,
+      "d": 38.77
+    },
+    {
+      "type": "victorian_f",
+      "at": -40.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": -37.4,
+      "d": 43.83
+    },
+    {
+      "type": "victorian_b",
+      "at": -34.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": -33.9,
+      "d": 41.19
+    },
+    {
+      "type": "victorian_f",
+      "at": -28.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": -28.2,
+      "d": 42.09
+    },
+    {
+      "type": "victorian_d",
+      "at": -22.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": -18.8,
+      "d": 42.21
+    },
+    {
+      "type": "victorian_a",
+      "at": -16.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": -16.4,
+      "d": 38.01
+    },
+    {
+      "type": "victorian_f",
+      "at": -9.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": -9.9,
+      "d": 38.35
+    },
+    {
+      "type": "victorian_a",
+      "at": -3.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": -6.3,
+      "d": 41.87
+    },
+    {
+      "type": "victorian_d",
+      "at": 2.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": -1.0,
+      "d": 44.14
+    },
+    {
+      "type": "victorian_a",
+      "at": 8.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 12.4,
+      "d": 41.0
+    },
+    {
+      "type": "victorian_c",
+      "at": 14.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 15.9,
+      "d": 42.42
+    },
+    {
+      "type": "victorian_f",
+      "at": 20.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 27.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 23.6,
+      "d": 36.54
+    },
+    {
+      "type": "victorian_e",
+      "at": 33.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 31.5,
+      "d": 37.31
+    },
+    {
+      "type": "victorian_a",
+      "at": 39.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 45.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 46.7,
+      "d": 37.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 51.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 57.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 58.5,
+      "d": 37.17
+    },
+    {
+      "type": "victorian_a",
+      "at": 64.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 61.9,
+      "d": 42.94
+    },
+    {
+      "type": "victorian_a",
+      "at": 70.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 70.9,
+      "d": 41.51
+    },
+    {
+      "type": "victorian_f",
+      "at": 76.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 74.0,
+      "d": 37.4
+    },
+    {
+      "type": "victorian_b",
+      "at": 82.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 88.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 87.8,
+      "d": 36.37
+    },
+    {
+      "type": "victorian_e",
+      "at": 94.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 93.1,
+      "d": 42.55
+    },
+    {
+      "type": "victorian_f",
+      "at": 101.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 104.8,
+      "d": 44.31
+    },
+    {
+      "type": "victorian_b",
+      "at": 107.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 105.5,
+      "d": 43.61
+    },
+    {
+      "type": "victorian_e",
+      "at": 113.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 115.8,
+      "d": 43.96
+    },
+    {
+      "type": "victorian_e",
+      "at": 119.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 120.4,
+      "d": 36.87
+    },
+    {
+      "type": "victorian_b",
+      "at": 125.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 124.4,
+      "d": 40.19
+    },
+    {
+      "type": "victorian_b",
+      "at": 131.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 128.4,
+      "d": 39.08
+    },
+    {
+      "type": "victorian_b",
+      "at": 137.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 140.1,
+      "d": 43.74
+    },
+    {
+      "type": "victorian_a",
+      "at": 143.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 142.2,
+      "d": 42.66
+    },
+    {
+      "type": "victorian_b",
+      "at": 150.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 146.4,
+      "d": 37.25
+    },
+    {
+      "type": "victorian_e",
+      "at": 156.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 162.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 168.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 171.8,
+      "d": 43.7
+    },
+    {
+      "type": "victorian_a",
+      "at": 174.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 180.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 186.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 184.5,
+      "d": 41.22
+    },
+    {
+      "type": "victorian_a",
+      "at": 193.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 199.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 205.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 201.3,
+      "d": 43.52
+    },
+    {
+      "type": "victorian_f",
+      "at": 211.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 209.3,
+      "d": 41.9
+    },
+    {
+      "type": "victorian_a",
+      "at": 217.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 214.3,
+      "d": 44.28
+    },
+    {
+      "type": "victorian_d",
+      "at": 223.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 229.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 228.8,
+      "d": 41.05
+    },
+    {
+      "type": "victorian_d",
+      "at": 235.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 235.0,
+      "d": 43.32
+    },
+    {
+      "type": "victorian_a",
+      "at": 242.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 241.7,
+      "d": 43.96
+    },
+    {
+      "type": "victorian_f",
+      "at": 248.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 254.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 256.8,
+      "d": 42.84
+    },
+    {
+      "type": "victorian_c",
+      "at": 260.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 259.3,
+      "d": 43.95
+    },
+    {
+      "type": "victorian_b",
+      "at": 267.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 270.0,
+      "d": 38.3
+    },
+    {
+      "type": "victorian_a",
+      "at": 273.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 270.1,
+      "d": 43.39
+    },
+    {
+      "type": "victorian_a",
+      "at": 279.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 280.9,
+      "d": 36.7
+    },
+    {
+      "type": "victorian_a",
+      "at": 285.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 291.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 289.0,
+      "d": 44.34
+    },
+    {
+      "type": "victorian_f",
+      "at": 298.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 298.8,
+      "d": 37.66
+    },
+    {
+      "type": "victorian_b",
+      "at": 304.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 306.3,
+      "d": 36.81
+    },
+    {
+      "type": "victorian_b",
+      "at": 310.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 312.2,
+      "d": 39.96
+    },
+    {
+      "type": "victorian_a",
+      "at": 316.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 319.2,
+      "d": 41.34
+    },
+    {
+      "type": "victorian_b",
+      "at": 322.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 328.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 326.1,
+      "d": 37.74
+    },
+    {
+      "type": "victorian_b",
+      "at": 334.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 335.0,
+      "d": 36.57
+    },
+    {
+      "type": "victorian_a",
+      "at": 341.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 339.3,
+      "d": 42.81
+    },
+    {
+      "type": "victorian_e",
+      "at": 347.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 344.2,
+      "d": 40.9
+    },
+    {
+      "type": "victorian_c",
+      "at": 353.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 356.4,
+      "d": 43.15
+    },
+    {
+      "type": "victorian_a",
+      "at": 359.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 355.6,
+      "d": 41.82
+    },
+    {
+      "type": "victorian_b",
+      "at": 365.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 366.8,
+      "d": 36.9
+    },
+    {
+      "type": "victorian_e",
+      "at": 371.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 374.4,
+      "d": 38.37
+    },
+    {
+      "type": "victorian_f",
+      "at": 377.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 380.1,
+      "d": 38.99
+    },
+    {
+      "type": "victorian_a",
+      "at": 383.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 384.5,
+      "d": 37.15
+    },
+    {
+      "type": "victorian_d",
+      "at": 390.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 388.4,
+      "d": 42.42
+    },
+    {
+      "type": "victorian_c",
+      "at": 396.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 397.3,
+      "d": 39.14
+    },
+    {
+      "type": "victorian_a",
+      "at": 402.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 408.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 414.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 413.1,
+      "d": 43.87
+    },
+    {
+      "type": "victorian_c",
+      "at": 421.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 421.4,
+      "d": 42.53
+    },
+    {
+      "type": "victorian_e",
+      "at": 427.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 430.3,
+      "d": 40.07
+    },
+    {
+      "type": "victorian_a",
+      "at": 433.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 430.5,
+      "d": 38.92
+    },
+    {
+      "type": "victorian_f",
+      "at": 439.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 438.7,
+      "d": 39.97
+    },
+    {
+      "type": "victorian_c",
+      "at": 445.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 452.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 454.6,
+      "d": 39.23
+    },
+    {
+      "type": "victorian_f",
+      "at": 458.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 454.2,
+      "d": 43.02
+    },
+    {
+      "type": "victorian_a",
+      "at": 464.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 465.5,
+      "d": 42.58
+    },
+    {
+      "type": "victorian_b",
+      "at": 470.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 476.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 475.6,
+      "d": 36.35
+    },
+    {
+      "type": "victorian_c",
+      "at": 482.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 480.1,
+      "d": 38.96
+    },
+    {
+      "type": "victorian_b",
+      "at": 488.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 487.3,
+      "d": 39.46
+    },
+    {
+      "type": "victorian_a",
+      "at": 494.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 495.9,
+      "d": 39.39
+    },
+    {
+      "type": "victorian_b",
+      "at": 500.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 507.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 513.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 516.8,
+      "d": 41.86
+    },
+    {
+      "type": "victorian_d",
+      "at": 519.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 517.6,
+      "d": 41.31
+    },
+    {
+      "type": "victorian_d",
+      "at": 525.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 526.5,
+      "d": 38.02
+    },
+    {
+      "type": "victorian_d",
+      "at": 531.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 529.6,
+      "d": 38.74
+    },
+    {
+      "type": "victorian_f",
+      "at": 537.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 534.4,
+      "d": 37.83
+    },
+    {
+      "type": "victorian_c",
+      "at": 544.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 541.8,
+      "d": 37.92
+    },
+    {
+      "type": "victorian_a",
+      "at": 550.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 550.5,
+      "d": 39.05
+    },
+    {
+      "type": "victorian_b",
+      "at": 556.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 556.7,
+      "d": 42.43
+    },
+    {
+      "type": "victorian_f",
+      "at": 562.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 560.9,
+      "d": 37.55
+    },
+    {
+      "type": "victorian_d",
+      "at": 568.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 566.2,
+      "d": 43.39
+    },
+    {
+      "type": "victorian_e",
+      "at": 574.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 572.0,
+      "d": 38.56
+    },
+    {
+      "type": "victorian_f",
+      "at": 581.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 587.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 589.8,
+      "d": 43.01
+    },
+    {
+      "type": "victorian_e",
+      "at": 593.6,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 599.8,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 602.2,
+      "d": 42.22
+    },
+    {
+      "type": "victorian_c",
+      "at": 606.0,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 607.1,
+      "d": 37.4
+    },
+    {
+      "type": "victorian_f",
+      "at": 612.2,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 608.3,
+      "d": 41.15
+    },
+    {
+      "type": "victorian_a",
+      "at": 618.5,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_c",
+      "at": 615.8,
+      "d": 38.24
+    },
+    {
+      "type": "victorian_c",
+      "at": 624.7,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_e",
+      "at": 630.8,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_e",
+      "at": 636.8,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 640.1,
+      "d": 44.04
+    },
+    {
+      "type": "victorian_f",
+      "at": 642.9,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 640.9,
+      "d": 37.75
+    },
+    {
+      "type": "victorian_b",
+      "at": 648.9,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_a",
+      "at": 645.7,
+      "d": 40.27
+    },
+    {
+      "type": "victorian_a",
+      "at": 655.2,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 652.8,
+      "d": 41.34
+    },
+    {
+      "type": "victorian_d",
+      "at": 661.3,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 657.9,
+      "d": 43.55
+    },
+    {
+      "type": "victorian_f",
+      "at": 667.3,
+      "d": 17.3
+    },
+    {
+      "type": "victorian_c",
+      "at": 668.9,
+      "d": 39.67
+    },
+    {
+      "type": "victorian_b",
+      "at": 673.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 673.5,
+      "d": 40.7
+    },
+    {
+      "type": "victorian_a",
+      "at": 679.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 678.3,
+      "d": 38.3
+    },
+    {
+      "type": "victorian_b",
+      "at": 685.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 685.4,
+      "d": 37.45
+    },
+    {
+      "type": "victorian_a",
+      "at": 692.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 693.0,
+      "d": 44.35
+    },
+    {
+      "type": "victorian_c",
+      "at": 698.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 695.1,
+      "d": 37.54
+    },
+    {
+      "type": "victorian_f",
+      "at": 704.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 700.7,
+      "d": 39.61
+    },
+    {
+      "type": "victorian_d",
+      "at": 710.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 716.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 716.7,
+      "d": 36.72
+    },
+    {
+      "type": "victorian_b",
+      "at": 723.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 729.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 730.2,
+      "d": 41.13
+    },
+    {
+      "type": "victorian_f",
+      "at": 735.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 736.2,
+      "d": 39.67
+    },
+    {
+      "type": "victorian_f",
+      "at": 783.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 780.1,
+      "d": 36.94
+    },
+    {
+      "type": "victorian_d",
+      "at": 789.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 786.9,
+      "d": 36.38
+    },
+    {
+      "type": "victorian_e",
+      "at": 796.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 794.4,
+      "d": 37.48
+    },
+    {
+      "type": "victorian_b",
+      "at": 802.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 799.0,
+      "d": 36.67
+    },
+    {
+      "type": "victorian_a",
+      "at": 808.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 808.4,
+      "d": 39.02
+    },
+    {
+      "type": "victorian_f",
+      "at": 814.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 814.5,
+      "d": 44.25
+    },
+    {
+      "type": "victorian_f",
+      "at": 820.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 826.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 826.1,
+      "d": 43.86
+    },
+    {
+      "type": "victorian_e",
+      "at": 832.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 828.5,
+      "d": 42.6
+    },
+    {
+      "type": "victorian_d",
+      "at": 838.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 836.9,
+      "d": 41.92
+    },
+    {
+      "type": "victorian_d",
+      "at": 844.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 845.5,
+      "d": 40.63
+    },
+    {
+      "type": "victorian_d",
+      "at": 850.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 851.3,
+      "d": 40.17
+    },
+    {
+      "type": "victorian_b",
+      "at": 856.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 857.2,
+      "d": 43.81
+    },
+    {
+      "type": "victorian_a",
+      "at": 862.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 864.7,
+      "d": 38.91
+    },
+    {
+      "type": "victorian_a",
+      "at": 868.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 867.7,
+      "d": 41.37
+    },
+    {
+      "type": "victorian_f",
+      "at": 874.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 873.1,
+      "d": 37.33
+    },
+    {
+      "type": "victorian_e",
+      "at": 880.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 877.0,
+      "d": 43.38
+    },
+    {
+      "type": "victorian_b",
+      "at": 887.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 885.8,
+      "d": 37.04
+    },
+    {
+      "type": "victorian_d",
+      "at": 893.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 889.6,
+      "d": 43.01
+    },
+    {
+      "type": "victorian_c",
+      "at": 899.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 896.8,
+      "d": 43.95
+    },
+    {
+      "type": "victorian_a",
+      "at": 905.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 908.8,
+      "d": 43.33
+    },
+    {
+      "type": "victorian_c",
+      "at": 911.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 907.5,
+      "d": 37.39
+    },
+    {
+      "type": "victorian_c",
+      "at": 917.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 913.6,
+      "d": 41.72
+    },
+    {
+      "type": "victorian_f",
+      "at": 923.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 922.0,
+      "d": 43.66
+    },
+    {
+      "type": "victorian_a",
+      "at": 929.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 935.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 942.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 941.2,
+      "d": 44.0
+    },
+    {
+      "type": "victorian_d",
+      "at": 948.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 946.3,
+      "d": 36.91
+    },
+    {
+      "type": "victorian_f",
+      "at": 954.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 960.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 957.5,
+      "d": 39.63
+    },
+    {
+      "type": "victorian_e",
+      "at": 966.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 972.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 975.1,
+      "d": 43.48
+    },
+    {
+      "type": "victorian_b",
+      "at": 978.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 981.7,
+      "d": 38.31
+    },
+    {
+      "type": "victorian_f",
+      "at": 985.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 987.1,
+      "d": 41.46
+    },
+    {
+      "type": "victorian_a",
+      "at": 991.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 992.0,
+      "d": 42.99
+    },
+    {
+      "type": "victorian_d",
+      "at": 997.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 997.2,
+      "d": 42.19
+    },
+    {
+      "type": "victorian_a",
+      "at": 1003.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1004.2,
+      "d": 43.49
+    },
+    {
+      "type": "victorian_e",
+      "at": 1009.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1009.6,
+      "d": 42.06
+    },
+    {
+      "type": "victorian_c",
+      "at": 1015.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1013.6,
+      "d": 36.46
+    },
+    {
+      "type": "victorian_a",
+      "at": 1021.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1019.9,
+      "d": 37.31
+    },
+    {
+      "type": "victorian_a",
+      "at": 1028.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1030.7,
+      "d": 39.97
+    },
+    {
+      "type": "victorian_c",
+      "at": 1034.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1035.7,
+      "d": 41.11
+    },
+    {
+      "type": "victorian_f",
+      "at": 1040.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1039.5,
+      "d": 36.76
+    },
+    {
+      "type": "victorian_c",
+      "at": 1046.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1046.9,
+      "d": 43.54
+    },
+    {
+      "type": "victorian_f",
+      "at": 1052.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1049.8,
+      "d": 40.87
+    },
+    {
+      "type": "victorian_d",
+      "at": 1058.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1062.7,
+      "d": 38.44
+    },
+    {
+      "type": "victorian_c",
+      "at": 1065.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1067.5,
+      "d": 42.56
+    },
+    {
+      "type": "victorian_c",
+      "at": 1071.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1071.6,
+      "d": 43.45
+    },
+    {
+      "type": "victorian_e",
+      "at": 1077.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1078.6,
+      "d": 36.71
+    },
+    {
+      "type": "victorian_e",
+      "at": 1083.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1082.1,
+      "d": 44.08
+    },
+    {
+      "type": "victorian_c",
+      "at": 1089.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1088.4,
+      "d": 39.33
+    },
+    {
+      "type": "victorian_e",
+      "at": 1095.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1095.7,
+      "d": 40.19
+    },
+    {
+      "type": "victorian_f",
+      "at": 1102.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1108.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1105.9,
+      "d": 43.4
+    },
+    {
+      "type": "victorian_b",
+      "at": 1114.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1111.9,
+      "d": 43.39
+    },
+    {
+      "type": "victorian_c",
+      "at": 1120.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1120.2,
+      "d": 38.8
+    },
+    {
+      "type": "victorian_b",
+      "at": 1126.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1125.1,
+      "d": 42.76
+    },
+    {
+      "type": "victorian_c",
+      "at": 1133.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1134.7,
+      "d": 43.41
+    },
+    {
+      "type": "victorian_f",
+      "at": 1139.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1145.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1141.8,
+      "d": 40.58
+    },
+    {
+      "type": "victorian_b",
+      "at": 1151.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1152.0,
+      "d": 36.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1157.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1156.5,
+      "d": 40.61
+    },
+    {
+      "type": "victorian_f",
+      "at": 1164.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1161.1,
+      "d": 42.62
+    },
+    {
+      "type": "victorian_f",
+      "at": 1170.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1171.1,
+      "d": 41.69
+    },
+    {
+      "type": "victorian_a",
+      "at": 1176.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1175.1,
+      "d": 40.72
+    },
+    {
+      "type": "victorian_d",
+      "at": 1182.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1180.1,
+      "d": 36.46
+    },
+    {
+      "type": "victorian_e",
+      "at": 1188.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1188.9,
+      "d": 40.14
+    },
+    {
+      "type": "victorian_b",
+      "at": 1194.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1197.3,
+      "d": 39.49
+    },
+    {
+      "type": "victorian_d",
+      "at": 1200.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1201.0,
+      "d": 40.84
+    },
+    {
+      "type": "victorian_e",
+      "at": 1206.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1208.5,
+      "d": 44.01
+    },
+    {
+      "type": "victorian_c",
+      "at": 1213.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1216.9,
+      "d": 44.12
+    },
+    {
+      "type": "victorian_f",
+      "at": 1219.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1217.3,
+      "d": 42.56
+    },
+    {
+      "type": "victorian_e",
+      "at": 1225.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1231.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1231.6,
+      "d": 37.91
+    },
+    {
+      "type": "victorian_d",
+      "at": 1237.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1239.5,
+      "d": 42.15
+    },
+    {
+      "type": "victorian_e",
+      "at": 1243.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1245.2,
+      "d": 43.82
+    },
+    {
+      "type": "victorian_c",
+      "at": 1249.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1248.9,
+      "d": 44.24
+    },
+    {
+      "type": "victorian_f",
+      "at": 1255.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1258.6,
+      "d": 38.06
+    },
+    {
+      "type": "victorian_d",
+      "at": 1262.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1263.1,
+      "d": 37.3
+    },
+    {
+      "type": "victorian_d",
+      "at": 1268.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1270.2,
+      "d": 43.35
+    },
+    {
+      "type": "victorian_b",
+      "at": 1274.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1280.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1286.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1282.6,
+      "d": 37.97
+    },
+    {
+      "type": "victorian_a",
+      "at": 1292.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1289.3,
+      "d": 40.14
+    },
+    {
+      "type": "victorian_b",
+      "at": 1298.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1305.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1301.5,
+      "d": 41.98
+    },
+    {
+      "type": "victorian_d",
+      "at": 1311.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1313.4,
+      "d": 37.83
+    },
+    {
+      "type": "victorian_d",
+      "at": 1317.4,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1319.8,
+      "d": 39.52
+    },
+    {
+      "type": "victorian_b",
+      "at": 1323.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1323.9,
+      "d": 40.24
+    },
+    {
+      "type": "victorian_a",
+      "at": 1329.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1336.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1337.1,
+      "d": 39.12
+    },
+    {
+      "type": "victorian_e",
+      "at": 1342.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1348.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1354.9,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1355.1,
+      "d": 43.41
+    },
+    {
+      "type": "victorian_b",
+      "at": 1361.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1358.3,
+      "d": 36.62
+    },
+    {
+      "type": "victorian_a",
+      "at": 1367.1,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1369.9,
+      "d": 44.3
+    },
+    {
+      "type": "victorian_c",
+      "at": 1373.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1370.5,
+      "d": 40.53
+    },
+    {
+      "type": "victorian_e",
+      "at": 1379.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1383.1,
+      "d": 39.17
+    },
+    {
+      "type": "victorian_d",
+      "at": 1385.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_b",
+      "at": 1382.7,
+      "d": 38.59
+    },
+    {
+      "type": "victorian_b",
+      "at": 1392.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1389.4,
+      "d": 44.27
+    },
+    {
+      "type": "victorian_d",
+      "at": 1398.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1401.3,
+      "d": 38.91
+    },
+    {
+      "type": "victorian_f",
+      "at": 1404.2,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1406.3,
+      "d": 39.77
+    },
+    {
+      "type": "victorian_c",
+      "at": 1410.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1413.5,
+      "d": 38.41
+    },
+    {
+      "type": "victorian_e",
+      "at": 1416.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1417.9,
+      "d": 44.29
+    },
+    {
+      "type": "victorian_b",
+      "at": 1422.6,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_e",
+      "at": 1421.9,
+      "d": 38.87
+    },
+    {
+      "type": "victorian_c",
+      "at": 1428.7,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1427.3,
+      "d": 38.32
+    },
+    {
+      "type": "victorian_f",
+      "at": 1434.8,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1434.1,
+      "d": 37.58
+    },
+    {
+      "type": "victorian_b",
+      "at": 1441.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_d",
+      "at": 1441.6,
+      "d": 43.5
+    },
+    {
+      "type": "victorian_d",
+      "at": 1447.0,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_a",
+      "at": 1447.9,
+      "d": 40.02
+    },
+    {
+      "type": "victorian_b",
+      "at": 1453.3,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_c",
+      "at": 1456.5,
+      "d": 43.02
+    },
+    {
+      "type": "victorian_e",
+      "at": 1459.5,
+      "d": 16.85
+    },
+    {
+      "type": "victorian_f",
+      "at": 1457.5,
+      "d": 44.07
+    },
+    {
+      "type": "victorian_d",
+      "at": 1465.8,
+      "d": 16.85
+    },
+    {
+      "type": "tram_stop",
+      "at": 760,
+      "d": 5.1,
+      "yaw": "along"
+    },
+    {
+      "type": "tram_stop",
+      "at": 760,
+      "d": -5.1,
+      "yaw": "along"
+    },
+    {
+      "type": "block_e",
+      "at": 760,
+      "d": 17.5
+    },
+    {
+      "type": "block_b",
+      "at": 760,
+      "d": -17.5
+    },
+    {
+      "type": "street_tree",
+      "at": 29.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 98.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 127.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 185.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 283.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 306.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 335.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 386.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 403.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 432.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 455.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 530.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 633.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 892.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 909.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 978.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1012.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1052.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1069.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1098.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1115.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1161.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1178.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1218.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1247.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1270.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1299.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1316.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1356.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1402.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1425.9,
+      "d": -5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 11.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 51.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 74.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 91.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 108.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 154.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 183.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 252.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 309.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 332.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 361.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 419.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 442.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 494.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 517.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 540.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 603.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 626.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 649.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 666.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 741.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 793.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 839.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 862.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 891.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 908.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 937.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 977.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1023.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1069.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1121.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1173.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1225.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1265.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1311.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1328.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1351.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1385.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1402.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1431.7,
+      "d": 5.4
+    },
+    {
+      "type": "street_tree",
+      "at": 1454.7,
+      "d": 5.4
+    },
+    {
+      "type": "hydrant",
+      "at": 369,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 486,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 578,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 1330,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 27,
+      "d": -4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 106,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 982,
+      "d": -4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 430,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 558,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 171,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 1243,
+      "d": 4.6
+    },
+    {
+      "type": "hydrant",
+      "at": 839,
+      "d": -4.6
+    },
+    {
+      "type": "tram",
+      "at": 460,
+      "d": 40,
+      "yaw": "along"
+    },
+    {
+      "type": "tram_red",
+      "at": 460,
+      "d": 44,
+      "yaw": "along"
+    },
+    {
+      "type": "tower_a",
+      "at": 992,
+      "d": -702,
+      "yaw": 6
+    },
+    {
+      "type": "tower_b",
+      "at": 915,
+      "d": 274,
+      "yaw": -8
+    },
+    {
+      "type": "tower_c",
+      "at": 234,
+      "d": -597,
+      "yaw": -18
+    },
+    {
+      "type": "tower_d",
+      "at": 972,
+      "d": -793,
+      "yaw": -20
+    },
+    {
+      "type": "tower_e",
+      "at": 786,
+      "d": 274,
+      "yaw": -17
+    },
+    {
+      "type": "tower_a",
+      "at": 380,
+      "d": 368,
+      "yaw": 17
+    },
+    {
+      "scatter": [
+        "block_a",
+        "block_b",
+        "block_c",
+        "block_d",
+        "block_e",
+        "block_f",
+        "neon_a"
+      ],
+      "from": 0,
+      "to": 1470,
+      "near": 50,
+      "far": 260,
+      "count": 122,
+      "face": "road"
+    }
+  ],
+  "terrain": {
+    "treeDensity": 0.04
+  },
+  "sky": {
+    "time": "night",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 100,
+    "score": 2100
+  }
+}

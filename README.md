@@ -127,7 +127,7 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   `fall`), `gallery` (avalanche gallery), `lake`, `cableway` (gondolas
   crossing overhead at `angle` degrees), `bunting` (flags over the road,
   `count` and `every`) and `flat` (gentle ground either side for a village or
-  farm, `width`). Bridges and galleries have walls on both sides. Dartmoor
+  farm, `width`; `keep` is how much of the hills is left, 0.12). Bridges and galleries have walls on both sides. Dartmoor
   adds `walls` (dry-stone walls) and `hedge` (Devon hedge banks) along a
   stretch, on both sides or one (`side`), which you crash into like a
   guardrail; `grid` (a cattle grid that rattles the board, with a gate and a
@@ -155,7 +155,16 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   `railway` (a freight line running beside the road at `d` m, with trains
   every `every` seconds), `raildeck` (the road crosses a railway cutting on a
   bridge at `angle`) and `dust` (dust blowing across the road; `"wind":
-  "right"` reverses it).
+  "right"` reverses it). City at Night uses `street` with `"style":
+  "city"` (paving back to the buildings, no gardens) and adds `tram` (tram
+  rails in both lanes with poles and overhead wires), `lights` (strings
+  across the street every `every` m: `"style": "lanterns"` or `"fairy"`),
+  `suspension` (a lit suspension bridge over a river `river` m wide, `depth`
+  m below the deck; keep the road straight and nearly level), `underpass`
+  (a tiled, orange-lit tunnel under the city with cuttings either end),
+  `fair` (a turning ferris wheel and a merry-go-round at `at`/`d`) and
+  `harbour` (a quay `near` m out on `side`, with a container ship and
+  `cranes`).
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.
@@ -171,7 +180,8 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   (how close to the road trees grow), `relief`,
   `maxRelief` and `snowLine` (metres above the road).
 - `sky` sets the time of day (`dawn`, `day`, `dusk`, `night`) and weather
-  (`clear`, `cloudy`, `mist`, `rain`, `snow`). Rain also makes the road wet
+  (`clear`, `cloudy`, `mist`, `wet`, `rain`, `snow`; `wet` is just after
+  rain, with the road still shining). Rain also makes the road wet
   and less grippy. The sound follows it (rain, wind, night-time animals).
 - `ambience` changes the biome's sounds for one level (see Sound below).
 - `seed` fixes the scenery, the guardrail sides and the traffic, so every run
@@ -218,7 +228,8 @@ preset.
   and how far off centre the rider sits, across every pose and the steps between.
 - `tools/blender/props.py` builds every roadside prop into `props.glb`, with a
   colour and a surface kind (planks, shingles, masonry, plaster, glass, metal,
-  lights) per vertex; `tools/textures/props.py` makes the detail texture the
+  lights, and for the city, windows that light up one pane at a time at
+  night) per vertex; `tools/textures/props.py` makes the detail texture the
   prop shader (`src/propmat.js`) adds on top. `/tools/props/` shows them all
   (`?only=chalet,barn`), and `node tools/props/shoot.mjs out.png [query]`
   saves it.

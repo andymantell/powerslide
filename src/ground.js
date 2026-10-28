@@ -65,6 +65,13 @@ export const GROUND_SETS = {
     // No rock patches on the flats: top-down sandstone read as dark stains.
     relief: 0.9, maxRelief: 160, snowLine: 1e5, treeDensity: 0, outcrops: 0,
   },
+  // City at Night: park grass between the blocks on gentle hills, a few
+  // street trees, sand along the harbour.
+  city: {
+    base: 'lawn', rock: 'rock', gravel: 'gravel', snow: 'snow', tuft: 'lawn_tuft', tuftDensity: 0.15, shore: 'sand',
+    patchLo: [0.8, 0.86, 0.78], patchHi: [1.0, 1.0, 0.9],
+    relief: 0.45, maxRelief: 70, snowLine: 1e5, treeDensity: 0.12,
+  },
 };
 
 // Paving for pavements and other flat hard surfaces built as geometry: 600 mm

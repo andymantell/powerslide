@@ -16,6 +16,8 @@ const PACKS = {
   suburbs: new URL('./assets/models/props_suburbs.glb', import.meta.url).href,
   forest: new URL('./assets/models/props_forest.glb', import.meta.url).href,
   canyon: new URL('./assets/models/props_canyon.glb', import.meta.url).href,
+  // The city shares the suburbs' street furniture.
+  city: [new URL('./assets/models/props_suburbs.glb', import.meta.url).href, new URL('./assets/models/props_city.glb', import.meta.url).href],
 };
 
 // r: keep-out radius for trees, rocks and grass (m). pad: buildings get a level
@@ -246,6 +248,61 @@ export const PROP_TYPES = {
   tankcar: { r: 0, ...MID },
   hopper: { r: 0, ...MID },
   flatcar: { r: 0, ...MID },
+  // City at Night (and the suburbs' street furniture)
+  block_a: { r: 12, pad: 12, ...BIG },
+  block_b: { r: 10, pad: 10, ...BIG },
+  block_c: { r: 15, pad: 15, ...BIG },
+  block_d: { r: 12, pad: 12, ...BIG },
+  block_e: { r: 10, pad: 10, ...BIG },
+  block_f: { r: 16, pad: 16, ...BIG },
+  neon_a: { r: 12, pad: 12, ...BIG },
+  neon_b: { r: 10, pad: 10, ...BIG },
+  neon_c: { r: 15, pad: 15, ...BIG },
+  neon_d: { r: 12, pad: 12, ...BIG },
+  victorian_a: { r: 7, pad: 7, ...BIG },
+  victorian_b: { r: 7, pad: 7, ...BIG },
+  victorian_c: { r: 7, pad: 7, ...BIG },
+  victorian_d: { r: 7, pad: 7, ...BIG },
+  victorian_e: { r: 7, pad: 7, ...BIG },
+  victorian_f: { r: 7, pad: 7, ...BIG },
+  tower_a: { r: 22, pad: 22, ...BIG, far: 4000 },
+  tower_b: { r: 24, pad: 24, ...BIG, far: 4000 },
+  tower_c: { r: 18, pad: 18, ...BIG, far: 4000 },
+  tower_d: { r: 20, pad: 20, ...BIG, far: 4000 },
+  tower_e: { r: 28, pad: 28, ...BIG, far: 4000 },
+  screen: { r: 0, ...BIG },
+  billboard: { r: 0, ...BIG },
+  tram: { r: 0, ...MID },
+  tram_red: { r: 0, ...MID },
+  tram_stop: { r: 0, ...MID },
+  lantern_gate: { r: 0, ...BIG },
+  food_stall: { r: 2, ...SMALL },
+  food_stall_b: { r: 2, ...SMALL },
+  food_stall_c: { r: 2, ...SMALL },
+  market_stall: { r: 2.5, ...MID },
+  market_stall_b: { r: 2.5, ...MID },
+  market_stall_c: { r: 2.5, ...MID },
+  market_stall_d: { r: 2.5, ...MID },
+  crates: { r: 1, ...SMALL },
+  stadium: { r: 80, pad: 80, ...BIG, far: 3000 },
+  carpark_city: { r: 22, pad: 22, ...MID },
+  ferris_legs: { r: 10, pad: 10, ...BIG, far: 3000 },
+  ferris_wheel: { r: 0, ...BIG, far: 3000 },
+  ferris_cab: { r: 0, ...BIG },
+  carousel: { r: 8, pad: 8, ...MID },
+  fair_stall: { r: 3, ...MID },
+  fair_stall_b: { r: 3, ...MID },
+  containers: { r: 14, pad: 14, ...BIG },
+  containers_b: { r: 8, pad: 8, ...BIG },
+  containers_c: { r: 20, pad: 20, ...BIG },
+  crane: { r: 12, ...BIG, far: 3000 },
+  ship: { r: 0, ...BIG, far: 3000 },
+  warehouse: { r: 34, pad: 34, ...BIG },
+  bollard_quay: { r: 0.5, ...SMALL },
+  riverboat: { r: 0, ...MID },
+  riverboat_b: { r: 0, ...MID },
+  hydrant: { r: 0.3, ...SMALL },
+  street_tree: { r: 2, ...MID },
 };
 
 const DEG = Math.PI / 180;
@@ -262,7 +319,7 @@ export class Props {
     this.lastX = Infinity;
     this.lastZ = Infinity;
     const loader = new GLTFLoader();
-    for (const url of [MODEL, PACKS[pack]].filter(Boolean)) {
+    for (const url of [MODEL, PACKS[pack]].flat().filter(Boolean)) {
       trackLoad(
         loader.loadAsync(url).then((gltf) => {
           gltf.scene.traverse((o) => {
@@ -311,15 +368,19 @@ export class Props {
   // all props are added and before the terrain tiles build.
   shape() {
     const t = this.terrain;
+    // Level at the ground height under the middle of each building, all
+    // measured before any terrace goes in: on a steep street a row of
+    // overlapping terraces would otherwise each take the last one's level.
+    const pads = [];
     for (const p of this.list) {
       const def = PROP_TYPES[p.type];
       if (def.r) t.block(p.x, p.z, def.r * p.scale);
       if (def.pad && p.y === null) {
-        // Level at the ground height under the middle of the building.
         p.y = t.heightAt(p.x, p.z);
-        t.mods.push(terrace(p.x, p.z, def.pad * p.scale, p.y));
+        pads.push(terrace(p.x, p.z, def.pad * p.scale, p.y));
       }
     }
+    t.mods.push(...pads);
   }
 
   // Settles the remaining props on the finished terrain and fills the meshes.

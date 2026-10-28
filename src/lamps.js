@@ -46,6 +46,10 @@ export const lampsOn = () => (on() ? 1 : 0);
 
 const tmp = new THREE.Vector3();
 
+// Other lights to treat as lamp heads, [x, y, z] each: the lights in a
+// tunnel, say. src/structures.js fills it for each level.
+export const lampSpots = [];
+
 // Moves the nearest lamp heads into the camera's view space.
 export function updateLamps(props, camera, px, pz) {
   if (!on()) return;
@@ -61,8 +65,12 @@ export function updateLamps(props, camera, px, pz) {
       if (d > 140 * 140) continue;
       best.push([d, x, arr[i + 1] + 7.8 * s, z]);
     }
-    best.sort((a, b) => a[0] - b[0]);
   }
+  for (const [x, y, z] of lampSpots) {
+    const d = (x - px) ** 2 + (z - pz) ** 2;
+    if (d < 140 * 140) best.push([d, x, y, z]);
+  }
+  best.sort((a, b) => a[0] - b[0]);
   for (let k = 0; k < MAX; k++) {
     const b = best[k];
     if (!b) {

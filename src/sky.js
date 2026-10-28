@@ -69,6 +69,25 @@ export const ATMOSPHERE = {
     envIntensity: 0.55,
     fogScale: 0.9,
   },
+  // A harbour city: by day a hazy coastal sky, and at night (`times`) the
+  // sky over the streets glows orange from the city's own lights.
+  city: {
+    sunAzimuth: -2.2,
+    sunElevation: 0.5,
+    zenith: '#2c5aa0',
+    horizon: '#c4ccd4',
+    haze: '#b4bcc4',
+    sunHaze: '#ecd8bc',
+    sunColor: '#fff0dc',
+    sunIntensity: 2.9,
+    cloudCover: 0.5,
+    cloudColor: '#ffffff',
+    envIntensity: 0.6,
+    fogScale: 1.3,
+    times: {
+      night: { horizon: '#4a3a3c', haze: '#2a2530', sunHaze: '#3e3440', cloudColor: '#4a3c42', zenith: '#070b1a', envIntensity: 2.0 },
+    },
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,
@@ -110,6 +129,8 @@ export const WEATHER = {
   clear: {},
   cloudy: { cloudCover: 0.86, sunIntensity: 0.45, envIntensity: 1.35, grey: 0.45, fogScale: 1.4, cloudSun: 0.75 },
   mist: { cloudCover: 0.8, sunIntensity: 0.5, envIntensity: 1.3, grey: 0.7, fogScale: 11, cloudAmb: 1.5, cloudSun: 0.6, cloudHaze: 5 },
+  // Just after rain: the road and pavements still shine, but nothing falls.
+  wet: { cloudCover: 0.7, sunIntensity: 0.6, envIntensity: 1.2, grey: 0.35, fogScale: 1.6, wet: 1, cloudSun: 0.6 },
   rain: { cloudCover: 0.97, sunIntensity: 0.22, envIntensity: 1.15, grey: 0.75, dim: 0.72, fogScale: 2.6, wet: 1, precip: 1, cloudSun: 0.3, cloudAmb: 0.85 },
   snow: { cloudCover: 0.93, sunIntensity: 0.3, envIntensity: 1.4, grey: 0.8, fogScale: 3, precip: 1, snow: true, cloudSun: 0.45 },
 };
@@ -125,7 +146,8 @@ const COLOURS = ['zenith', 'horizon', 'haze', 'sunHaze', 'sunColor', 'cloudColor
 // weather applied. Also fills in ENV.
 export function atmosphereFor(biomeId, time = 'day', weather = 'clear') {
   const base = ATMOSPHERE[biomeId] || ATMOSPHERE.alpine;
-  const t = TIME[time] || TIME.day;
+  // A biome can adjust a time of day (`times`), say for a city's glow.
+  const t = { ...(TIME[time] || TIME.day), ...base.times?.[time] };
   const w = WEATHER[weather] || WEATHER.clear;
   const a = { ...base };
   const c = new THREE.Color();
