@@ -6,7 +6,16 @@
 import * as THREE from 'three';
 import { addLampLights, lampsOn } from './lamps.js';
 
-const url = (n) => new URL(`./assets/textures/${n}.webp`, import.meta.url).href;
+// Dev only: ?tex=grass:acg_Grass004,rock:ph_rock_face swaps in a candidate
+// from tools/textures/audition/ (written by tools/textures/library.py).
+const AUDITION = import.meta.env.DEV
+  ? Object.fromEntries((new URLSearchParams(location.search).get('tex') || '').split(',').filter(Boolean).map((p) => p.split(':')))
+  : {};
+const url = (n) => {
+  const [name] = n.split(/_(?=albedo|normal)/);
+  if (AUDITION[name]) return `/tools/textures/audition/${AUDITION[name]}/${n}.webp`;
+  return new URL(`./assets/textures/${n}.webp`, import.meta.url).href;
+};
 const loader = new THREE.TextureLoader();
 const cache = new Map();
 const pending = [];

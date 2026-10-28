@@ -7,7 +7,8 @@
 // or v_back_up_side_ahead_lookUp_lookSide for any other camera (metres from
 // the rider along, up and across the road, + right).
 // Without `at`, it shoots five points spread along the level.
-//   SHOT_URL (default http://localhost:5173/) and SHOT_DPR (2 = iPad) apply.
+//   SHOT_URL (default http://localhost:5173/), SHOT_DPR (2 = iPad) and SHOT_QUERY
+//   (extra URL parameters, e.g. tex=grass:acg_Grass004) apply.
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -33,7 +34,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, dev
 page.on('console', (m) => { if (m.type() === 'error') console.log('[page]', m.text()); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript((q) => localStorage.setItem('powerslide.quality', JSON.stringify(q)), quality);
-await page.goto(`${base}?level=${id}`);
+await page.goto(`${base}?level=${id}${process.env.SHOT_QUERY ? `&${process.env.SHOT_QUERY}` : ''}`);
 await page.waitForFunction(() => window.__powerslide && window.__powerslide.game.mode === 'intro', null, { timeout: 590000 });
 await page.evaluate(() => window.__powerslide.bakeClouds?.(Infinity));
 

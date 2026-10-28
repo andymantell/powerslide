@@ -5,3 +5,5 @@ __pycache__/
 tools/sounds/.cache/
 tools/props/audition/dl/
 tools/props/audition/out/
+tools/textures/.cache/
+tools/textures/audition/
