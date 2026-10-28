@@ -44,7 +44,7 @@ export const GROUND_SETS = {
     base: 'moor', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'moor_tuft',
     // Dark heathery hollows, tawny moor grass, rusty bracken patches.
     patchLo: [0.72, 0.66, 0.62], patchHi: [1.12, 1.0, 0.8], patchC: [1.15, 0.7, 0.45, 0.7],
-    relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.15,
+    relief: 0.5, maxRelief: 70, snowLine: 1e5, treeDensity: 0.07,
   },
   // Hillside Suburbs: mown lawns and verges, gentle hills, few wild trees,
   // and only the odd clump of long grass.
