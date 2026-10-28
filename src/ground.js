@@ -57,6 +57,13 @@ export const GROUND_SETS = {
     patchLo: [0.8, 0.8, 0.74], patchHi: [1.08, 1.04, 0.94],
     relief: 0.85, maxRelief: 140, snowLine: 1e5, treeDensity: 2.6, treeClear: 6.5,
   },
+  // Desert Canyon: red sand and grit, sandstone in every cutting and cliff,
+  // tufts of dry grass and no trees.
+  canyon: {
+    base: 'desert', rock: 'sandstone', gravel: 'gravel', snow: 'snow', tuft: 'desert_tuft', tuftDensity: 0.25, shore: 'sand',
+    patchLo: [0.9, 0.86, 0.82], patchHi: [1.08, 1.02, 0.94],
+    relief: 0.9, maxRelief: 160, snowLine: 1e5, treeDensity: 0,
+  },
 };
 
 // Paving for pavements and other flat hard surfaces built as geometry: 600 mm

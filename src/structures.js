@@ -982,6 +982,120 @@ export const PLANS = {
     PLANS.burnt.call(this, job);
   },
 
+  // ---------------------------------------------------------------- canyon
+  // { type: 'arch', at, span } The road runs under a natural rock arch; its
+  // feet are what you crash into.
+  arch(job) {
+    const at = (job.s0 + job.s1) / 2;
+    const m = this.road.sample(at, {});
+    this.terrain.mods.push((x, z, f, h) => {
+      const r = Math.hypot(x - m.x, z - m.z);
+      if (r > 34) return h;
+      return h + (m.y - 0.3 - h) * (1 - smooth(20, 34, r));
+    });
+    this.props.add('rock_arch', m.x, m.z, Math.atan2(-m.rightZ, m.rightX), 1, m.y - 0.2);
+    this.terrain.block(m.x, m.z, 20);
+  },
+
+  // { type: 'slot', from, to, height } Sheer rock walls `height` m high (40)
+  // close in on both sides, right beside the road.
+  slot(job) {
+    const { s0, s1 } = job;
+    const H = job.f.height ?? 40;
+    const inner = RAIL_OFFSET + 0.6;
+    this.terrain.mods.push((x, z, f, h) => {
+      const s = f.index;
+      if (s < s0 - 40 || s > s1 + 40 || f.dist > 90) return h;
+      const along = smooth(s0 - 40, s0 + 10, s) * (1 - smooth(s1 - 10, s1 + 40, s));
+      // Up from the verge to the top in a few metres, then the canyon rim
+      // eases back into the hills.
+      const wall = f.roadY + H * smooth(inner + 5, inner + 9, f.dist) * (0.85 + 0.15 * Math.sin(s * 0.11 + f.side * 2));
+      const want = Math.max(h, wall);
+      return h + (want - h) * along * (1 - smooth(50, 90, f.dist));
+    });
+    for (let s = s0; s <= s1; s += 14) {
+      const fr = this.road.sample(s, {});
+      for (const side of [-1, 1]) this.terrain.block(fr.x + fr.rightX * side * (inner + 4), fr.z + fr.rightZ * side * (inner + 4), 6);
+    }
+  },
+
+  // { type: 'dam', from, to, side, depth } The road runs along the crest of a
+  // concrete dam: the reservoir on `side` (add a lake there), and a drop of
+  // `depth` m (70) on the other.
+  dam(job) {
+    const { s0, s1 } = job;
+    const wet = job.f.side === 'right' ? 1 : -1;
+    const depth = job.f.depth ?? 70;
+    job.wet = wet;
+    job.depth = depth;
+    this.terrain.mods.push((x, z, f, h) => {
+      const s = f.index;
+      if (s < s0 - 60 || s > s1 + 60 || f.side === wet || f.dist > 400) return h;
+      const along = smooth(s0 - 50, s0 + 5, s) * (1 - smooth(s1 - 5, s1 + 50, s));
+      const want = Math.min(h, f.roadY - depth * smooth(W + 1, W + 25, f.dist));
+      return h + (want - h) * along;
+    });
+  },
+
+  // { type: 'railway', from, to, d, every } A railway alongside the road `d` m
+  // out (+ right), curving away at the end, with a long freight train.
+  railway(job) {
+    const road = this.road;
+    const d = job.f.d ?? 22;
+    const k = Math.sign(d) || 1;
+    const pts = [], ys = [];
+    const fr = {};
+    for (let s = job.s0; s <= job.s1; s += 4) {
+      road.sample(s, fr);
+      pts.push(fr.x + fr.rightX * d, fr.z + fr.rightZ * d);
+      ys.push(fr.y - 1.0);
+    }
+    // Then away across the desert, gently curving off.
+    road.sample(job.s1, fr);
+    let x = pts[pts.length - 2], z = pts[pts.length - 1], dx = fr.dirX, dz = fr.dirZ, y = ys[ys.length - 1];
+    const grade = (ys[ys.length - 1] - ys[Math.max(0, ys.length - 10)]) / 36;
+    for (let i = 0; i < 70; i++) {
+      dx += fr.rightX * k * 0.014;
+      dz += fr.rightZ * k * 0.014;
+      const l = Math.hypot(dx, dz);
+      dx /= l;
+      dz /= l;
+      x += dx * 4;
+      z += dz * 4;
+      y += grade * 4 * Math.max(0, 1 - i / 30);
+      pts.push(x, z);
+      ys.push(y);
+    }
+    job.pts = pts;
+    job.ys = ys;
+    this.terrain.mods.push(railBed(pts, ys, 5));
+    for (let i = 0; i < pts.length; i += 6) this.terrain.block(pts[i], pts[i + 1], 6);
+  },
+
+  // { type: 'raildeck', at, span, angle, every } The road bridges a railway
+  // in a cutting below; a freight train passes under every `every` s.
+  raildeck(job) {
+    const road = this.road;
+    const at = (job.s0 + job.s1) / 2;
+    const m = road.sample(at, {});
+    const a = ((job.f.angle ?? 70) * Math.PI) / 180;
+    // Along the line: turned `angle` from the road direction.
+    const ux = m.dirX * Math.cos(a) + m.rightX * Math.sin(a), uz = m.dirZ * Math.cos(a) + m.rightZ * Math.sin(a);
+    const railY = m.y - (job.f.depth ?? 8.5);
+    const pts = [], ys = [];
+    for (let t = -500; t <= 500; t += 5) {
+      pts.push(m.x + ux * t, m.z + uz * t);
+      ys.push(railY + Math.abs(t) * 0.004);
+    }
+    Object.assign(job, { at, pts, ys, railY });
+    this.terrain.mods.push(railBed(pts, ys, 7));
+    for (let i = 0; i < pts.length; i += 6) this.terrain.block(pts[i], pts[i + 1], 7);
+  },
+
+  // { type: 'dust', at, wind } Sand blowing across the road in gusts, from
+  // the left unless `wind` is 'right'.
+  dust() {},
+
   // { type: 'smoke', at, d, h, side } Smoke curling up from a chimney `h` m
   // above the ground at (at, d) ("side": "valley" as for props).
   smoke() {},
@@ -991,6 +1105,130 @@ export const PLANS = {
 const BUILDS = {
 
   tunneltree() {},
+  arch() {},
+
+  // Banded sandstone cliffs either side, built as geometry so the strata
+  // run level (the terrain behind them carries the rim).
+  slot(job) {
+    const { s0, s1 } = job;
+    const H = job.f.height ?? 40;
+    const inner = RAIL_OFFSET + 0.6;
+    const geo = new Geo();
+    const rnd = mulberry32(Math.round(s0));
+    const REDS = ['#9a4a2e', '#b0603a', '#c27a4a', '#8a3e26', '#a85a36', '#d09060'];
+    const bands = Array.from({ length: 12 }, () => REDS[Math.floor(rnd() * REDS.length)]);
+    const ph = [rnd() * 6, rnd() * 6, rnd() * 6];
+    const fr = {};
+    const rows = Math.ceil(H / 2.5);
+    for (const side of [-1, 1]) {
+      let prev = null;
+      for (let s = s0 - 6; s <= s1 + 6.01; s += 2.5) {
+        this.road.sample(s, fr);
+        const ends = smooth(s0 - 6, s0 + 6, s) * (1 - smooth(s1 - 6, s1 + 6, s));
+        const ring = [];
+        for (let i = 0; i <= rows; i++) {
+          const h = (i / rows) * H * (0.85 + 0.15 * Math.sin(s * 0.11 + side * 2)) * ends;
+          // Ledges and bulges, the face leaning back a little with height.
+          const d = inner + 0.3 + 1.2 * (0.5 + 0.5 * Math.sin(s * 0.21 + h * 0.15 + ph[0] + side)) + 0.6 * Math.sin(h * 0.9 + ph[1]) ** 2 + h * 0.05 + (1 - ends) * 6;
+          ring.push(new THREE.Vector3(fr.x + fr.rightX * side * d, fr.y - 1.5 + h, fr.z + fr.rightZ * side * d));
+        }
+        if (prev) {
+          for (let i = 0; i < rows; i++) {
+            const hm = (prev[i].y + ring[i + 1].y) / 2 - fr.y;
+            const col = bands[Math.floor(Math.max(0, hm + 2 * Math.sin(s * 0.05 + ph[2])) / (H / 10)) % bands.length];
+            const c = new THREE.Vector3(fr.x, prev[i].y, fr.z);
+            geo.quad(prev[i], ring[i], ring[i + 1], prev[i + 1], PLASTER, col, c);
+          }
+        }
+        prev = ring;
+      }
+    }
+    this.mesh(geo);
+  },
+
+  dam(job) {
+    const { s0, s1, wet, depth } = job;
+    const road = this.road;
+    const geo = new Geo();
+    const dry = -wet;
+    deckAndParapets(geo, road, s0, s1, MASONRY, CONCRETE);
+    // The downstream face curving down to the canyon floor, and the
+    // upstream face into the water.
+    const face = [];
+    for (let i = 0; i <= 8; i++) {
+      const t = i / 8;
+      face.push([dry * (W + 0.2 + depth * 0.7 * t ** 1.6), -1.3 - depth * t]);
+    }
+    sweep(geo, road, s0, s1, [[dry * W, -1.3], ...face, [dry * W, -depth - 1.3]], MASONRY, CONCRETE, { step: 4 });
+    sweep(geo, road, s0, s1, [[wet * W, -1.3], [wet * (W + 0.5), -1.3], [wet * (W + 9), -24], [wet * W, -24]], MASONRY, '#a8a090', { step: 4 });
+    // Expansion joints down the face.
+    for (let s = s0 + 12; s < s1 - 6; s += 15) {
+      const { f, along, across } = frame(road, s);
+      for (let i = 0; i < 8; i++) {
+        const [d0, h0] = face[i], [d1, h1] = face[i + 1];
+        const a = new THREE.Vector3(f.x + across.x * d0, f.y + h0, f.z + across.z * d0);
+        const b = new THREE.Vector3(f.x + across.x * d1, f.y + h1, f.z + across.z * d1);
+        strut(geo, a.addScaledVector(across, dry * 0.05), b.addScaledVector(across, dry * 0.05), 0.12, MASONRY, '#9a9284');
+      }
+    }
+    this.mesh(geo);
+  },
+
+  railway(job) {
+    track.call(this, job.pts, job.ys);
+    freight.call(this, job.pts, job.ys, { every: job.f.every ?? 70, speed: job.f.speed ?? 16, cars: job.f.cars ?? 14, phase: job.f.phase ?? 0 });
+  },
+
+  raildeck(job) {
+    const road = this.road;
+    const span = job.f.span ?? 18;
+    const s0 = job.at - span / 2, s1 = job.at + span / 2;
+    const geo = new Geo();
+    deckAndParapets(geo, road, s0, s1, MASONRY, CONCRETE);
+    // Concrete abutments down into the cutting either side of the line.
+    for (const s of [s0, s1]) {
+      const { f, along, across } = frame(road, s);
+      geo.box(f.x, f.z, job.railY - 1, f.y - 1.3, along, 1.2, across, W + 0.4, MASONRY, CONCRETE);
+    }
+    const { f, along, across } = frame(road, job.at);
+    for (const k of [-1, 1]) {
+      const c = new THREE.Vector3(f.x, 0, f.z).addScaledVector(across, k * (W - 0.6));
+      geo.box(c.x, c.z, f.y - 2.9, f.y - 1.3, along, span / 2, across, 0.5, MASONRY, '#a8a090');
+    }
+    this.mesh(geo);
+    track.call(this, job.pts, job.ys);
+    freight.call(this, job.pts, job.ys, { every: job.f.every ?? 40, speed: 20, cars: 10, phase: job.f.phase ?? 6 });
+  },
+
+  dust(job) {
+    const f = job.f;
+    const s = this.road.start + f.at;
+    const fr = this.road.sample(s, {});
+    const tex = smokeTexture();
+    const puffs = [];
+    const N = 10;
+    for (let i = 0; i < N; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: f.color ?? '#d8a878', transparent: true, depthWrite: false, opacity: 0 }));
+      this.group.add(sp);
+      puffs.push(sp);
+    }
+    const dir = f.wind === 'right' ? -1 : 1;
+    this.gondolas.push({
+      update: (time) => {
+        for (let i = 0; i < N; i++) {
+          const ph = (time * 0.12 + i / N) % 1;
+          const along = Math.sin(i * 12.9) * 12;
+          const across = dir * (-16 + ph * 32);
+          const sp = puffs[i];
+          const y = this.terrain.heightAt(fr.x + fr.rightX * across + fr.dirX * along, fr.z + fr.rightZ * across + fr.dirZ * along);
+          sp.position.set(fr.x + fr.rightX * across + fr.dirX * along, Math.max(y, fr.y) + 0.4 + ph * 1.2, fr.z + fr.rightZ * across + fr.dirZ * along);
+          const r = 1.5 + ph * 3;
+          sp.scale.set(r * 1.8, r * 0.7, 1);
+          sp.material.opacity = Math.sin(ph * Math.PI) * 0.45 * (0.5 + 0.5 * Math.sin(time * 0.7 + i));
+        }
+      },
+    });
+  },
 
   trestle(job) {
     const { ox, oz, ux, uz, vx, vz, top, ext } = job;
@@ -2003,6 +2241,129 @@ function smokeTexture() {
   smokeTex = new THREE.CanvasTexture(c);
   smokeTex.colorSpace = THREE.SRGBColorSpace;
   return smokeTex;
+}
+
+// Terrain for a railway along a polyline [x, z, ...] at heights ys: a level
+// bed `width` wide, cut down through rises and banked up over dips.
+function railBed(pts, ys, width) {
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (let i = 0; i < pts.length; i += 2) {
+    minX = Math.min(minX, pts[i]);
+    maxX = Math.max(maxX, pts[i]);
+    minZ = Math.min(minZ, pts[i + 1]);
+    maxZ = Math.max(maxZ, pts[i + 1]);
+  }
+  const R = width + 40;
+  return (x, z, f, h) => {
+    if (x < minX - R || x > maxX + R || z < minZ - R || z > maxZ + R) return h;
+    let best = Infinity, by = 0;
+    for (let i = 0; i < pts.length - 2; i += 2) {
+      const ax = pts[i], az = pts[i + 1], ex = pts[i + 2] - ax, ez = pts[i + 3] - az;
+      const l2 = ex * ex + ez * ez || 1;
+      const t = Math.min(1, Math.max(0, ((x - ax) * ex + (z - az) * ez) / l2));
+      const d = Math.hypot(ax + ex * t - x, az + ez * t - z);
+      if (d < best) {
+        best = d;
+        by = ys[i / 2] + (ys[i / 2 + 1] - ys[i / 2]) * t;
+      }
+    }
+    if (best > R) return h;
+    const out = Math.max(0, best - width / 2);
+    // The road itself is never touched.
+    if (f.dist < RAIL_OFFSET + 1) return h;
+    const want = h > by ? Math.min(h, by - 0.35 + out * 1.1) : Math.max(h, by - 0.35 - out * 1.5);
+    return h + (want - h) * (1 - smooth(width / 2 + 25, R, best)) * smooth(RAIL_OFFSET + 1, RAIL_OFFSET + 4, f.dist);
+  };
+}
+
+// Ballast, sleepers and two rails along a polyline.
+function track(pts, ys) {
+  const geo = new Geo();
+  const up = new THREE.Vector3(0, 1, 0);
+  let carry = 0;
+  for (let i = 0; i < pts.length - 2; i += 2) {
+    const a = new THREE.Vector3(pts[i], ys[i / 2], pts[i + 1]);
+    const b = new THREE.Vector3(pts[i + 2], ys[i / 2 + 1], pts[i + 3]);
+    const L = a.distanceTo(b);
+    if (L < 0.01) continue;
+    const dir = new THREE.Vector3().subVectors(b, a).normalize();
+    const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+    const ax = new THREE.Vector3(dir.x, 0, dir.z).normalize();
+    const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+    geo.box(mid.x, mid.z, mid.y - 0.5, mid.y - 0.05, ax, L / 2 + 0.05, side, 1.7, MASONRY, '#8a7a6a');
+    for (const k of [-0.72, 0.72]) strut(geo, a.clone().addScaledVector(side, k).setY(a.y + 0.1), b.clone().addScaledVector(side, k).setY(b.y + 0.1), 0.05, METAL, '#5a4a40');
+    for (let t = carry; t < L; t += 0.7) {
+      const p = a.clone().lerp(b, t / L);
+      geo.box(p.x, p.z, p.y - 0.08, p.y + 0.05, ax, 0.12, side, 1.25, PLANKS, '#4a3a2e');
+      carry = t + 0.7 - L;
+    }
+  }
+  this.mesh(geo);
+}
+
+// A freight train running along a polyline: a locomotive and `cars` cars,
+// out of sight between runs.
+function freight(pts, ys, { every, speed, cars, phase }) {
+  const types = ['locomotive', 'boxcar', 'tankcar', 'hopper', 'boxcar', 'flatcar', 'hopper', 'tankcar'];
+  const lens = { locomotive: 20.5, boxcar: 14.5, tankcar: 14.5, hopper: 14.5, flatcar: 14.5 };
+  const consist = [];
+  let off = 0;
+  for (let k = 0; k <= cars; k++) {
+    const t = k === 0 ? 'locomotive' : types[1 + ((k * 5) % (types.length - 1))];
+    consist.push({ t, off: off + lens[t] / 2 });
+    off += lens[t];
+  }
+  const meshes = {};
+  for (const c of consist) {
+    const g = this.props.geos.get(c.t);
+    if (!g) return;
+    meshes[c.t] ||= { g, list: [] };
+    meshes[c.t].list.push(c);
+  }
+  for (const m of Object.values(meshes)) {
+    m.im = new THREE.InstancedMesh(m.g, this.mat, m.list.length);
+    m.im.castShadow = true;
+    m.im.frustumCulled = false;
+    this.group.add(m.im);
+  }
+  // Cumulative length along the line.
+  const cum = [0];
+  for (let i = 2; i < pts.length; i += 2) cum.push(cum[cum.length - 1] + Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]));
+  const total = cum[cum.length - 1];
+  const P = new THREE.Vector3(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), m4 = new THREE.Matrix4(), Y = new THREE.Vector3(0, 1, 0);
+  const at = (u) => {
+    let lo = 0, hi = cum.length - 1;
+    while (hi - lo > 1) {
+      const mid = (lo + hi) >> 1;
+      if (cum[mid] > u) hi = mid;
+      else lo = mid;
+    }
+    const t = (u - cum[lo]) / (cum[hi] - cum[lo] || 1);
+    const x = pts[lo * 2] + (pts[hi * 2] - pts[lo * 2]) * t, z = pts[lo * 2 + 1] + (pts[hi * 2 + 1] - pts[lo * 2 + 1]) * t;
+    const y = ys[lo] + (ys[hi] - ys[lo]) * t;
+    return [x, y, z, Math.atan2(pts[hi * 2] - pts[lo * 2], pts[hi * 2 + 1] - pts[lo * 2 + 1])];
+  };
+  const period = (total + off) / speed + every;
+  this.gondolas.push({
+    update: (time) => {
+      const head = (((time + phase) % period) + period) % period * speed;
+      for (const m of Object.values(meshes)) {
+        m.list.forEach((c, i) => {
+          const u = head - c.off;
+          if (u < 0 || u > total) P.set(0, -1e4, 0), q.identity();
+          else {
+            const [x, y, z, yaw] = at(u);
+            P.set(x, y + 0.15, z);
+            // The cab (model -Y, three +Z) leads.
+            q.setFromAxisAngle(Y, yaw);
+          }
+          m4.compose(P, q, one);
+          m.im.setMatrixAt(i, m4);
+        });
+        m.im.instanceMatrix.needsUpdate = true;
+      }
+    },
+  });
 }
 
 // ---------------------------------------------------------------- suburbs

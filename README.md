@@ -148,7 +148,14 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   (chimney smoke `h` m up at `at`/`d`, `"side": "valley"` as for props),
   `firebreak` (a strip cleared of trees across the road, `width`), and
   `burnt` and `clearing` (no living trees out to `far` m along a stretch:
-  dress a burnt one with `snag` props).
+  dress a burnt one with `snag` props). Desert Canyon adds `arch` (the road
+  runs under a natural rock arch at `at`), `slot` (sheer banded sandstone
+  walls `height` m high either side, from/to), `dam` (the road runs along the
+  crest of a dam: reservoir on `side`, a drop of `depth` m on the other),
+  `railway` (a freight line running beside the road at `d` m, with trains
+  every `every` seconds), `raildeck` (the road crosses a railway cutting on a
+  bridge at `angle`) and `dust` (dust blowing across the road; `"wind":
+  "right"` reverses it).
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.

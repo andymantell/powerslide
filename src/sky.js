@@ -53,6 +53,22 @@ export const ATMOSPHERE = {
     envIntensity: 0.5,
     fogScale: 1.6,
   },
+  // Desert: a fierce high sun in a deep blue sky, a few high clouds and a
+  // warm, dusty haze low down.
+  canyon: {
+    sunAzimuth: -2.3,
+    sunElevation: 0.72,
+    zenith: '#1d4fa8',
+    horizon: '#d8cdb8',
+    haze: '#d4bfa0',
+    sunHaze: '#f4dcb0',
+    sunColor: '#fff2dc',
+    sunIntensity: 3.4,
+    cloudCover: 0.18,
+    cloudColor: '#ffffff',
+    envIntensity: 0.55,
+    fogScale: 0.9,
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,

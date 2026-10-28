@@ -1,0 +1,141 @@
+{
+  "id": "canyon-02",
+  "name": "Mesa View",
+  "biome": "canyon",
+  "seed": 5102,
+  "hint": "Look at those giant flat-topped mesas! The straights here are long and steep, so watch your speed before the bends.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 110
+    },
+    {
+      "straight": 240,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 220,
+      "grade": 0.11
+    },
+    {
+      "bend": "left",
+      "radius": 160,
+      "length": 120
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70,
+      "grade": 0.07
+    },
+    {
+      "straight": 150
+    }
+  ],
+  "features": [],
+  "props": [
+    {
+      "type": "mesa",
+      "at": 350,
+      "d": -330,
+      "yaw": 20,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa_b",
+      "at": 700,
+      "d": 380,
+      "yaw": 80,
+      "scale": 1.5
+    },
+    {
+      "type": "butte",
+      "at": 950,
+      "d": -260,
+      "yaw": 0,
+      "scale": 1.3
+    },
+    {
+      "type": "butte_b",
+      "at": 1200,
+      "d": 300,
+      "yaw": 40,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa",
+      "at": 1500,
+      "d": -600,
+      "yaw": 120,
+      "scale": 1.6
+    },
+    {
+      "type": "butte",
+      "at": 1300,
+      "d": 600,
+      "yaw": 0,
+      "scale": 1.5
+    },
+    {
+      "type": "viewpoint",
+      "at": 90,
+      "d": 9
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1340,
+      "near": 9,
+      "far": 90,
+      "count": 52
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1340,
+      "near": 8,
+      "far": 60,
+      "count": 96
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 115,
+    "score": 2000
+  }
+}

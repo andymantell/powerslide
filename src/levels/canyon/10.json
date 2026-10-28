@@ -1,0 +1,380 @@
+{
+  "id": "canyon-10",
+  "name": "The Big Drop",
+  "biome": "canyon",
+  "seed": 5110,
+  "hint": "The steepest road yet, all the way from the canyon rim to the valley floor: under the arch, through the slot canyon, past the freight train and the blowing sand, to the trading post!",
+  "pieces": [
+    {
+      "straight": 120,
+      "grade": 0.03
+    },
+    {
+      "straight": 300,
+      "grade": 0.13,
+      "ramp": 40
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 120
+    },
+    {
+      "straight": 300,
+      "grade": 0.14
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 260,
+      "grade": 0.13
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80,
+      "grade": 0.1
+    },
+    {
+      "straight": 160
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 60
+    },
+    {
+      "straight": 60
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 55
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 300,
+      "grade": 0.13
+    },
+    {
+      "bend": "right",
+      "radius": 140,
+      "length": 120
+    },
+    {
+      "straight": 300,
+      "grade": 0.14
+    },
+    {
+      "bend": "left",
+      "radius": 160,
+      "length": 130
+    },
+    {
+      "straight": 260,
+      "grade": 0.12
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 280,
+      "grade": 0.13
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70,
+      "grade": 0.1
+    },
+    {
+      "straight": 260,
+      "grade": 0.12
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "straight": 150,
+      "grade": 0.03,
+      "ramp": 40
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": -60,
+      "to": 110,
+      "width": 60
+    },
+    {
+      "type": "arch",
+      "at": 1090,
+      "span": 12
+    },
+    {
+      "type": "slot",
+      "from": 1270,
+      "to": 1725,
+      "height": 45
+    },
+    {
+      "type": "railway",
+      "from": 1795,
+      "to": 2685,
+      "d": -26,
+      "every": 50,
+      "speed": 17,
+      "phase": 0
+    },
+    {
+      "type": "flat",
+      "from": 3565,
+      "to": 4030,
+      "width": 60
+    },
+    {
+      "type": "grit",
+      "at": 2932,
+      "d": -1.4,
+      "len": 8,
+      "width": 7.0
+    },
+    {
+      "type": "grit",
+      "at": 2937,
+      "d": -0.9,
+      "len": 8,
+      "width": 6.0
+    },
+    {
+      "type": "grit",
+      "at": 2947,
+      "d": -1.4,
+      "len": 8,
+      "width": 6.0
+    },
+    {
+      "type": "dust",
+      "at": 2940,
+      "wind": "left"
+    },
+    {
+      "type": "grit",
+      "at": 3278,
+      "d": -0.8,
+      "len": 8,
+      "width": 5.0
+    },
+    {
+      "type": "grit",
+      "at": 3290,
+      "d": 1.1,
+      "len": 8,
+      "width": 6.0
+    },
+    {
+      "type": "grit",
+      "at": 3299,
+      "d": -0.6,
+      "len": 8,
+      "width": 6.0
+    },
+    {
+      "type": "dust",
+      "at": 3290,
+      "wind": "left"
+    },
+    {
+      "type": "grit",
+      "at": 3639,
+      "d": 0.6,
+      "len": 8,
+      "width": 5.0
+    },
+    {
+      "type": "grit",
+      "at": 3650,
+      "d": 0.8,
+      "len": 6,
+      "width": 6.0
+    },
+    {
+      "type": "grit",
+      "at": 3660,
+      "d": -0.4,
+      "len": 6,
+      "width": 5.0
+    },
+    {
+      "type": "dust",
+      "at": 3650,
+      "wind": "left"
+    }
+  ],
+  "props": [
+    {
+      "type": "viewpoint",
+      "at": 40,
+      "d": -10
+    },
+    {
+      "type": "telescope",
+      "at": 60,
+      "d": 8
+    },
+    {
+      "scatter": [
+        "hoodoo",
+        "hoodoo_b"
+      ],
+      "from": 940,
+      "to": 1300,
+      "near": 14,
+      "far": 80,
+      "count": 14
+    },
+    {
+      "type": "trading_post",
+      "at": 3975,
+      "d": 18
+    },
+    {
+      "type": "pickup",
+      "at": 3950,
+      "d": 12,
+      "yaw": 40
+    },
+    {
+      "type": "windmill",
+      "at": 4005,
+      "d": -20
+    },
+    {
+      "type": "mesa",
+      "at": 541,
+      "d": 990,
+      "yaw": 278,
+      "scale": 1.2
+    },
+    {
+      "type": "mesa_b",
+      "at": 2690,
+      "d": 880,
+      "yaw": 23,
+      "scale": 1.4
+    },
+    {
+      "type": "butte",
+      "at": 3406,
+      "d": -1326,
+      "yaw": 349,
+      "scale": 1.2
+    },
+    {
+      "type": "butte_b",
+      "at": 128,
+      "d": 1300,
+      "yaw": 237,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa",
+      "at": 3450,
+      "d": -823,
+      "yaw": 340,
+      "scale": 1.6
+    },
+    {
+      "type": "mesa_b",
+      "at": 604,
+      "d": -886,
+      "yaw": 353,
+      "scale": 1.2
+    },
+    {
+      "type": "butte",
+      "at": 1407,
+      "d": 890,
+      "yaw": 245,
+      "scale": 1.2
+    },
+    {
+      "type": "butte_b",
+      "at": 2106,
+      "d": -694,
+      "yaw": 109,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa",
+      "at": 3805,
+      "d": -1255,
+      "yaw": 173,
+      "scale": 1.3
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 4025,
+      "near": 9,
+      "far": 90,
+      "count": 179
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 4025,
+      "near": 8,
+      "far": 60,
+      "count": 288
+    }
+  ],
+  "sky": {
+    "time": "dawn",
+    "weather": "clear"
+  },
+  "checkpoints": [
+    1300,
+    2625
+  ],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 240,
+    "score": 6300
+  }
+}

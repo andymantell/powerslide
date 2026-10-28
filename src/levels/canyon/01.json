@@ -1,0 +1,160 @@
+{
+  "id": "canyon-01",
+  "name": "Motel Strip",
+  "biome": "canyon",
+  "seed": 5101,
+  "hint": "Welcome to the desert! Past the motel the road drops away in one long, fast straight. Tuck for speed, but if the board starts to wobble, stand up and brake.",
+  "pieces": [
+    {
+      "straight": 180,
+      "grade": 0.03
+    },
+    {
+      "straight": 260,
+      "grade": 0.09,
+      "ramp": 40
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 120
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 220,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80,
+      "grade": 0.07
+    },
+    {
+      "straight": 160
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": -60,
+      "to": 170,
+      "width": 70
+    }
+  ],
+  "props": [
+    {
+      "type": "motel",
+      "at": 70,
+      "d": -34
+    },
+    {
+      "type": "carpark",
+      "at": 70,
+      "d": -15,
+      "yaw": "along"
+    },
+    {
+      "type": "neon_sign",
+      "at": 125,
+      "d": -9
+    },
+    {
+      "type": "pickup",
+      "at": 62,
+      "d": -14,
+      "yaw": "across"
+    },
+    {
+      "type": "pickup_b",
+      "at": 80,
+      "d": -15,
+      "yaw": "across"
+    },
+    {
+      "type": "mesa",
+      "at": 177,
+      "d": -592,
+      "yaw": 178,
+      "scale": 1.3
+    },
+    {
+      "type": "mesa_b",
+      "at": 860,
+      "d": -439,
+      "yaw": 10,
+      "scale": 1.5
+    },
+    {
+      "type": "butte",
+      "at": 571,
+      "d": -1011,
+      "yaw": 96,
+      "scale": 1.5
+    },
+    {
+      "type": "butte_b",
+      "at": 780,
+      "d": -1206,
+      "yaw": 11,
+      "scale": 1.1
+    },
+    {
+      "type": "mesa",
+      "at": 715,
+      "d": 1002,
+      "yaw": 349,
+      "scale": 1.5
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1310,
+      "near": 9,
+      "far": 90,
+      "count": 73
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1310,
+      "near": 8,
+      "far": 60,
+      "count": 94
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.2,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 125,
+    "score": 1800
+  }
+}

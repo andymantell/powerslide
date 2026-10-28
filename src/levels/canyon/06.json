@@ -1,0 +1,167 @@
+{
+  "id": "canyon-06",
+  "name": "Dam Crossing",
+  "biome": "canyon",
+  "seed": 5106,
+  "hint": "Ride along the top of a giant dam! The lake is on one side and a huge drop on the other. Stay away from the edges!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 100,
+      "grade": 0.05
+    },
+    {
+      "straight": 60,
+      "grade": 0.0,
+      "ramp": 50
+    },
+    {
+      "straight": 300,
+      "grade": 0.0
+    },
+    {
+      "straight": 60,
+      "grade": 0.06,
+      "ramp": 40
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 90,
+      "grade": 0.1
+    },
+    {
+      "straight": 220
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 60,
+      "grade": 0.07
+    },
+    {
+      "straight": 160
+    }
+  ],
+  "features": [
+    {
+      "type": "lake",
+      "from": 570,
+      "to": 950,
+      "side": "left",
+      "near": 10,
+      "far": 500,
+      "below": 3.0
+    },
+    {
+      "type": "dam",
+      "from": 610,
+      "to": 910,
+      "side": "left",
+      "depth": 70
+    }
+  ],
+  "props": [
+    {
+      "type": "intake_tower",
+      "at": 700,
+      "d": -26
+    },
+    {
+      "type": "intake_tower",
+      "at": 810,
+      "d": -26
+    },
+    {
+      "row": "pylon",
+      "from": 410,
+      "to": 1210,
+      "d": 60,
+      "every": 90
+    },
+    {
+      "type": "mesa",
+      "at": 1190,
+      "d": -811,
+      "yaw": 94,
+      "scale": 1.1
+    },
+    {
+      "type": "mesa_b",
+      "at": 994,
+      "d": 1267,
+      "yaw": 265,
+      "scale": 1.3
+    },
+    {
+      "type": "butte",
+      "at": 33,
+      "d": 1112,
+      "yaw": 263,
+      "scale": 1.3
+    },
+    {
+      "type": "butte_b",
+      "at": 807,
+      "d": -533,
+      "yaw": 199,
+      "scale": 1.5
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1490,
+      "near": 9,
+      "far": 90,
+      "count": 49
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1490,
+      "near": 8,
+      "far": 60,
+      "count": 107
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 155,
+    "score": 2600
+  }
+}

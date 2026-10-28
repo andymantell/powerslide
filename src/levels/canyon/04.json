@@ -1,0 +1,145 @@
+{
+  "id": "canyon-04",
+  "name": "Arch Rock",
+  "biome": "canyon",
+  "seed": 5104,
+  "hint": "The road runs right under a giant stone arch carved by the wind. Keep to the middle of the road, the rock is hard!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 110,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 240,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 130,
+      "length": 100
+    },
+    {
+      "straight": 200,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60,
+      "grade": 0.07
+    },
+    {
+      "straight": 160
+    }
+  ],
+  "features": [
+    {
+      "type": "arch",
+      "at": 680,
+      "span": 12
+    }
+  ],
+  "props": [
+    {
+      "type": "viewpoint",
+      "at": 590,
+      "d": -11
+    },
+    {
+      "scatter": [
+        "hoodoo",
+        "hoodoo_b",
+        "boulder_red_b"
+      ],
+      "from": 430,
+      "to": 830,
+      "near": 14,
+      "far": 80,
+      "count": 24
+    },
+    {
+      "type": "mesa",
+      "at": 305,
+      "d": -1035,
+      "yaw": 172,
+      "scale": 1.1
+    },
+    {
+      "type": "mesa_b",
+      "at": 26,
+      "d": 1110,
+      "yaw": 275,
+      "scale": 1.2
+    },
+    {
+      "type": "butte",
+      "at": 692,
+      "d": 1091,
+      "yaw": 298,
+      "scale": 1.2
+    },
+    {
+      "type": "butte_b",
+      "at": 1216,
+      "d": -1137,
+      "yaw": 290,
+      "scale": 1.5
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1280,
+      "near": 9,
+      "far": 90,
+      "count": 71
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1280,
+      "near": 8,
+      "far": 60,
+      "count": 92
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 110,
+    "score": 2100
+  }
+}

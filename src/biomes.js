@@ -52,7 +52,16 @@ export const BIOMES = [
     rules: { minRadius: 16, maxGrade: 0.12, minGrade: -0.03 },
     look: { species: 'pine', lane: 3.3 },
   },
-  { id: 'canyon', name: 'Desert Canyon', blurb: 'Long, steep straights fast enough to wobble.' },
+  {
+    id: 'canyon',
+    name: 'Desert Canyon',
+    blurb: 'Long, steep straights fast enough to wobble.',
+    // A wide desert highway down through red rock: long straight pitches
+    // steep enough to reach wobble speed, sweeping bends between them, and
+    // sand blowing across the road. Guardrails on the drops.
+    rules: { minRadius: 25, maxGrade: 0.14, minGrade: -0.03 },
+    look: { lane: 3.6 },
+  },
   { id: 'city', name: 'City at Night', blurb: 'Steep streets, tram lines and buses.' },
   { id: 'coast', name: 'Coastal Cliffs', blurb: 'Hairpins, side winds and a long drop to the sea.' },
   { id: 'pass', name: 'High Alpine Pass', blurb: 'Switchbacks, meltwater and everything at once.' },

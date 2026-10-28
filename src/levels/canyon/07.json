@@ -1,0 +1,209 @@
+{
+  "id": "canyon-07",
+  "name": "Ghost Town",
+  "biome": "canyon",
+  "seed": 5107,
+  "hint": "Nobody has lived in this wild west town for a hundred years. Roll down the main street past the saloon and the old jail. Yee-ha!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "straight": 300,
+      "grade": 0.03,
+      "ramp": 40
+    },
+    {
+      "straight": 200,
+      "grade": 0.1,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.07
+    },
+    {
+      "straight": 160
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 430,
+      "to": 770,
+      "width": 70
+    }
+  ],
+  "props": [
+    {
+      "type": "saloon",
+      "at": 510,
+      "d": 16
+    },
+    {
+      "type": "store",
+      "at": 540,
+      "d": -15
+    },
+    {
+      "type": "bank",
+      "at": 580,
+      "d": 15
+    },
+    {
+      "type": "jail",
+      "at": 610,
+      "d": -14
+    },
+    {
+      "type": "store",
+      "at": 650,
+      "d": 15
+    },
+    {
+      "type": "saloon",
+      "at": 690,
+      "d": -16
+    },
+    {
+      "type": "water_tank_west",
+      "at": 730,
+      "d": 18
+    },
+    {
+      "type": "windmill",
+      "at": 480,
+      "d": -22
+    },
+    {
+      "type": "hitching_rail",
+      "at": 512,
+      "d": 8.5,
+      "yaw": "along"
+    },
+    {
+      "type": "hitching_rail",
+      "at": 688,
+      "d": -8.5,
+      "yaw": "along"
+    },
+    {
+      "type": "wagon_wheel",
+      "at": 560,
+      "d": 9
+    },
+    {
+      "type": "wagon_wheel",
+      "at": 630,
+      "d": -9
+    },
+    {
+      "scatter": [
+        "tumbleweed"
+      ],
+      "from": 450,
+      "to": 750,
+      "near": 5,
+      "far": 30,
+      "count": 14
+    },
+    {
+      "type": "mesa",
+      "at": 473,
+      "d": -725,
+      "yaw": 17,
+      "scale": 1.5
+    },
+    {
+      "type": "mesa_b",
+      "at": 137,
+      "d": -1214,
+      "yaw": 77,
+      "scale": 1.1
+    },
+    {
+      "type": "butte",
+      "at": 611,
+      "d": -436,
+      "yaw": 153,
+      "scale": 1.5
+    },
+    {
+      "type": "butte_b",
+      "at": 181,
+      "d": -949,
+      "yaw": 210,
+      "scale": 1.1
+    },
+    {
+      "type": "mesa",
+      "at": 855,
+      "d": -1277,
+      "yaw": 17,
+      "scale": 1.5
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1450,
+      "near": 9,
+      "far": 90,
+      "count": 81
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1450,
+      "near": 8,
+      "far": 60,
+      "count": 104
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 125,
+    "score": 2600
+  }
+}

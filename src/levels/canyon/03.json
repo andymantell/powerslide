@@ -1,0 +1,180 @@
+{
+  "id": "canyon-03",
+  "name": "Last Gas",
+  "biome": "canyon",
+  "seed": 5103,
+  "hint": "Last gas for a hundred miles, but it closed long ago! Roll past the old pumps and the diner, then hold on for the steep drop.",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "straight": 220,
+      "grade": 0.02,
+      "ramp": 40
+    },
+    {
+      "straight": 220,
+      "grade": 0.1,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.07
+    },
+    {
+      "straight": 160
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 380,
+      "to": 640,
+      "width": 70
+    }
+  ],
+  "props": [
+    {
+      "type": "gas_station",
+      "at": 480,
+      "d": 22
+    },
+    {
+      "type": "diner",
+      "at": 550,
+      "d": 20
+    },
+    {
+      "type": "carpark",
+      "at": 515,
+      "d": 13,
+      "yaw": "along"
+    },
+    {
+      "type": "pickup",
+      "at": 450,
+      "d": 16,
+      "yaw": 30
+    },
+    {
+      "type": "rusty_pump",
+      "at": 585,
+      "d": 12
+    },
+    {
+      "type": "rusty_pump",
+      "at": 590,
+      "d": 12.5
+    },
+    {
+      "type": "tumbleweed",
+      "at": 510,
+      "d": -8
+    },
+    {
+      "type": "sand_fence",
+      "at": 610,
+      "d": -9,
+      "yaw": "along"
+    },
+    {
+      "type": "mesa",
+      "at": 326,
+      "d": -701,
+      "yaw": 217,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa_b",
+      "at": 90,
+      "d": -1213,
+      "yaw": 169,
+      "scale": 1.4
+    },
+    {
+      "type": "butte",
+      "at": 263,
+      "d": 864,
+      "yaw": 198,
+      "scale": 1.3
+    },
+    {
+      "type": "butte_b",
+      "at": 1180,
+      "d": -953,
+      "yaw": 312,
+      "scale": 1.4
+    },
+    {
+      "type": "mesa",
+      "at": 1016,
+      "d": -501,
+      "yaw": 345,
+      "scale": 1.1
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1360,
+      "near": 9,
+      "far": 90,
+      "count": 76
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1360,
+      "near": 8,
+      "far": 60,
+      "count": 97
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 125,
+    "score": 2100
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "id": "canyon-05",
+  "name": "Slot Canyon",
+  "biome": "canyon",
+  "seed": 5105,
+  "hint": "The canyon walls close in until there's only just room for the road. It's shady and twisty in here, so don't touch the walls!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 70,
+      "grade": 0.07
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 60
+    },
+    {
+      "straight": 60
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 55
+    },
+    {
+      "straight": 80
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 60
+    },
+    {
+      "straight": 120,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 110,
+      "length": 90
+    },
+    {
+      "straight": 180
+    }
+  ],
+  "features": [
+    {
+      "type": "slot",
+      "from": 410,
+      "to": 915,
+      "height": 45
+    }
+  ],
+  "props": [
+    {
+      "scatter": [
+        "boulder_red",
+        "boulder_red_b"
+      ],
+      "from": 430,
+      "to": 895,
+      "near": 7,
+      "far": 9,
+      "count": 10
+    },
+    {
+      "type": "mesa",
+      "at": 800,
+      "d": 1105,
+      "yaw": 339,
+      "scale": 1.5
+    },
+    {
+      "type": "mesa_b",
+      "at": 1185,
+      "d": -1148,
+      "yaw": 279,
+      "scale": 1.2
+    },
+    {
+      "type": "butte",
+      "at": 67,
+      "d": -458,
+      "yaw": 169,
+      "scale": 1.2
+    },
+    {
+      "scatter": [
+        "saguaro",
+        "saguaro_b",
+        "saguaro_c",
+        "barrel_cactus",
+        "prickly_pear",
+        "joshua"
+      ],
+      "from": 20,
+      "to": 1275,
+      "near": 9,
+      "far": 90,
+      "count": 71
+    },
+    {
+      "scatter": [
+        "sagebrush",
+        "sagebrush_b",
+        "sagebrush",
+        "tumbleweed",
+        "boulder_red"
+      ],
+      "from": 20,
+      "to": 1275,
+      "near": 8,
+      "far": 60,
+      "count": 91
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 105,
+    "score": 2200
+  }
+}

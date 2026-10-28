@@ -632,7 +632,39 @@ def sand(name='sand', seed=101):
     save(name, col, h, normal_from_height(blur(h, 1), 3.0), quality=75)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig)
+def sandstone():
+    """Desert Canyon: red and orange sandstone in thick beds."""
+    rock('sandstone', dict(a='#a2573a', b='#cf9165', c='#5a2a1a', stain='#7a3420', lichen='#c49a6c', speck='#ecd2ae'), seed=19, speckle=0.004)
+
+
+def desert():
+    """Desert Canyon: red sand and grit with pebbles, dry wisps of grass
+    and the odd crust of cracked clay."""
+    t = np.arange(N) / N
+    broad = norm01(fbm(N, 3, 4, 111))
+    grain = fbm(N, 256, 2, 112)
+    ripple = 0.5 + 0.5 * np.sin(2 * np.pi * (np.meshgrid(t, t)[0] * 20 + fbm(N, 4, 3, 113) * 2.5))
+    col = lerp(hexcol('#9a5434'), hexcol('#c98552'), smoothstep(0.2, 0.85, broad)[..., None])
+    col = col * (0.95 + grain[..., None] * 0.2) * (0.97 + ripple[..., None] * 0.05)
+    h = norm01(broad * 0.4 + grain * 0.15 + ripple * 0.1)
+    # Cracked clay crust in the low patches.
+    f1, f2, _ = worley(N, 30, 114)
+    crust = smoothstep(0.62, 0.78, norm01(fbm(N, 5, 4, 115)))
+    cracks = (1 - smoothstep(0.0, 0.05, f2 - f1)) * crust
+    col = lerp(col, hexcol('#d9b08a'), crust[..., None] * 0.45)
+    col = lerp(col, hexcol('#5a2c1a'), cracks[..., None] * 0.7)
+    h = h * (1 - cracks * 0.5)
+    # Pebbles.
+    p1, _, pid = worley(N, 120, 116)
+    peb = smoothstep(0.16, 0.08, p1) * (pid > 0.6)
+    pc = lerp(hexcol('#6a3a28'), hexcol('#b89a80'), pid[..., None])
+    col = lerp(col, pc, peb[..., None] * 0.9)
+    h = np.maximum(h, peb * 0.9)
+    save('desert', col, h, normal_from_height(blur(h, 1), 3.5), quality=75)
+    tuft('desert_tuft', dict(dark='#6a5a32', mid='#93804a', light='#c4ae72', dry='#b08a58', flowers=['#e8c22a', '#d86a2a']), seed=89)
+
+
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:
