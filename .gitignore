@@ -2,3 +2,5 @@ node_modules
 dist
 __pycache__/
 sounds/
+tools/props/audition/dl/
+tools/props/audition/out/

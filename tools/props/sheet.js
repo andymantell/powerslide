@@ -108,6 +108,20 @@ for (const [file, url] of Object.entries(PACK_FILES)) {
   });
 }
 
+// Audition candidates (tools/props/audition.mjs): converted library models,
+// drawn with the prop material like our own props. Not part of the sheet.
+if (new URLSearchParams(location.search).has('audition')) {
+  const gltf = await loader.loadAsync(new URL('./audition/out/audition.glb', import.meta.url).href);
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    makers.set(o.name, () => {
+      const m = new THREE.Mesh(o.geometry, propMat);
+      m.castShadow = m.receiveShadow = true;
+      return m;
+    });
+  });
+}
+
 const forests = ['spruce', 'pine'].map((sp) => new Forest(new THREE.Scene(), renderer, {}, sp));
 const boulders = new Boulders(new THREE.Scene(), renderer);
 await texturesReady();

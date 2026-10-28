@@ -1,0 +1,912 @@
+[
+ {
+  "id": "q_cow",
+  "file": "x/Farm_Animals_Animated__by_Quaternius/OBJ/Cow.obj",
+  "lib": "Quaternius",
+  "title": "Cow (Farm Animals)",
+  "url": "https://quaternius.itch.io/lowpoly-animated-animals",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 1.45,
+  "kind": 0,
+  "for": [
+   "cow",
+   "cow_pied",
+   "cow_dun"
+  ],
+  "group": "Animals"
+ },
+ {
+  "id": "q_sheep",
+  "file": "x/Farm_Animals_Animated__by_Quaternius/OBJ/Sheep.obj",
+  "lib": "Quaternius",
+  "title": "Sheep (Farm Animals)",
+  "url": "https://quaternius.itch.io/lowpoly-animated-animals",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 1.0,
+  "kind": 0,
+  "for": [
+   "sheep",
+   "sheep_dark"
+  ],
+  "group": "Animals"
+ },
+ {
+  "id": "q_horse",
+  "file": "x/Farm_Animals_Animated__by_Quaternius/OBJ/Horse.obj",
+  "lib": "Quaternius",
+  "title": "Horse (Farm Animals), scaled to pony size",
+  "url": "https://quaternius.itch.io/lowpoly-animated-animals",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 1.4,
+  "kind": 0,
+  "for": [
+   "pony",
+   "pony_dark",
+   "pony_grey"
+  ],
+  "group": "Animals"
+ },
+ {
+  "id": "q_llama",
+  "file": "x/Farm_Animals_Animated__by_Quaternius/OBJ/Llama.obj",
+  "lib": "Quaternius",
+  "title": "Llama (Farm Animals), as an ibex stand-in",
+  "url": "https://quaternius.itch.io/lowpoly-animated-animals",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 1.3,
+  "kind": 0,
+  "for": [
+   "ibex"
+  ],
+  "group": "Animals"
+ },
+ {
+  "id": "k_pine",
+  "file": "x/Nature_20Kit_20_282.1_29/Models/GLTF format/tree_pineTallA.glb",
+  "lib": "Kenney",
+  "title": "tree_pineTallA (Nature Kit)",
+  "url": "https://kenney.nl/assets/nature-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 4000,
+  "height": 14,
+  "kinds": {
+   "leaf|green": 8,
+   "*": 1
+  },
+  "for": [
+   "spruce0",
+   "pine0"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "k_oak",
+  "file": "x/Nature_20Kit_20_282.1_29/Models/GLTF format/tree_oak.glb",
+  "lib": "Kenney",
+  "title": "tree_oak (Nature Kit)",
+  "url": "https://kenney.nl/assets/nature-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 4000,
+  "height": 10.5,
+  "kinds": {
+   "leaf|green": 8,
+   "*": 1
+  },
+  "for": [
+   "oak"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "q_dead2",
+  "file": "x/Textured_Stylized_Trees_-_May_2020/Textured Stylized Trees - May 2020/OBJ/DeadTree_2.obj",
+  "lib": "Quaternius",
+  "title": "Dead Tree 2 (Textured Trees)",
+  "url": "https://quaternius.itch.io/textured-lowpoly-trees",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 2000,
+  "height": 10.8,
+  "kind": 1,
+  "for": [
+   "snag"
+  ],
+  "group": "Trees and rocks",
+  "textures": {
+   "bark": "x/Textured_Stylized_Trees_-_May_2020/Textured Stylized Trees - May 2020/Textures/Tree_Bark.jpg"
+  }
+ },
+ {
+  "id": "ph_rock07",
+  "file": "ph/rock_07/rock_07.gltf",
+  "lib": "Poly Haven",
+  "title": "rock_07",
+  "url": "https://polyhaven.com/a/rock_07",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "rock0",
+   "rock1",
+   "rock2",
+   "rock3"
+  ],
+  "height": 1.4,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_rock09",
+  "file": "ph/rock_09/rock_09.gltf",
+  "lib": "Poly Haven",
+  "title": "rock_09",
+  "url": "https://polyhaven.com/a/rock_09",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "rock0",
+   "rock1",
+   "rock2",
+   "rock3"
+  ],
+  "height": 1.4,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_stone01",
+  "file": "ph/stone_01/stone_01.gltf",
+  "lib": "Poly Haven",
+  "title": "stone_01",
+  "url": "https://polyhaven.com/a/stone_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "rock0",
+   "rock1",
+   "rock2",
+   "rock3"
+  ],
+  "height": 1.4,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_mossrocks01",
+  "file": "ph/rock_moss_set_01/rock_moss_set_01.gltf",
+  "lib": "Poly Haven",
+  "title": "rock_moss_set_01",
+  "url": "https://polyhaven.com/a/rock_moss_set_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "rock0",
+   "rock1",
+   "rock2",
+   "rock3"
+  ],
+  "height": 1.4,
+  "pick": "rock04$",
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_nboulder02",
+  "file": "ph/namaqualand_boulder_02/namaqualand_boulder_02.gltf",
+  "lib": "Poly Haven",
+  "title": "namaqualand_boulder_02",
+  "url": "https://polyhaven.com/a/namaqualand_boulder_02",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "boulder_red",
+   "boulder_red_b"
+  ],
+  "height": 3.0,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_nboulder04",
+  "file": "ph/namaqualand_boulder_04/namaqualand_boulder_04.gltf",
+  "lib": "Poly Haven",
+  "title": "namaqualand_boulder_04",
+  "url": "https://polyhaven.com/a/namaqualand_boulder_04",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "boulder_red",
+   "boulder_red_b"
+  ],
+  "height": 3.0,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_nboulder05",
+  "file": "ph/namaqualand_boulder_05/namaqualand_boulder_05.gltf",
+  "lib": "Poly Haven",
+  "title": "namaqualand_boulder_05",
+  "url": "https://polyhaven.com/a/namaqualand_boulder_05",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "boulder_red",
+   "boulder_red_b"
+  ],
+  "height": 3.0,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "k_rock",
+  "file": "x/Nature_20Kit_20_282.1_29/Models/GLTF format/rock_largeE.glb",
+  "lib": "Kenney",
+  "title": "rock_largeE (Nature Kit)",
+  "url": "https://kenney.nl/assets/nature-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "height": 1.6,
+  "kind": 12,
+  "for": [
+   "rock0",
+   "rock1",
+   "rock2",
+   "rock3"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_stump01",
+  "file": "ph/tree_stump_01/tree_stump_01.gltf",
+  "lib": "Poly Haven",
+  "title": "tree_stump_01",
+  "url": "https://polyhaven.com/a/tree_stump_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1200,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "stump"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_stump02",
+  "file": "ph/tree_stump_02/tree_stump_02.gltf",
+  "lib": "Poly Haven",
+  "title": "tree_stump_02",
+  "url": "https://polyhaven.com/a/tree_stump_02",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1200,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "stump"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_trunk01",
+  "file": "ph/dead_tree_trunk/dead_tree_trunk.gltf",
+  "lib": "Poly Haven",
+  "title": "dead_tree_trunk",
+  "url": "https://polyhaven.com/a/dead_tree_trunk",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "fallen_log",
+   "fallen_log_b"
+  ],
+  "length": 9,
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "ph_trunk02",
+  "file": "ph/dead_tree_trunk_02/dead_tree_trunk_02.gltf",
+  "lib": "Poly Haven",
+  "title": "dead_tree_trunk_02",
+  "url": "https://polyhaven.com/a/dead_tree_trunk_02",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "kind": 4,
+  "smooth": true,
+  "for": [
+   "fallen_log",
+   "fallen_log_b"
+  ],
+  "group": "Trees and rocks"
+ },
+ {
+  "id": "q_car1",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/NormalCar1.obj",
+  "lib": "Quaternius",
+  "title": "NormalCar1 (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.6,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_saloon",
+   "traffic_hatch",
+   "car_red"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_car2",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/NormalCar2.obj",
+  "lib": "Quaternius",
+  "title": "NormalCar2 (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.4,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_saloon",
+   "traffic_hatch",
+   "car_red"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_suv",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/SUV.obj",
+  "lib": "Quaternius",
+  "title": "SUV (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.8,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_suv"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_taxi",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/Taxi.obj",
+  "lib": "Quaternius",
+  "title": "Taxi (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.7,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_taxi"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_cop",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/Cop.obj",
+  "lib": "Quaternius",
+  "title": "Cop (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.8,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_police"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_sports",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/SportsCar.obj",
+  "lib": "Quaternius",
+  "title": "SportsCar (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.5,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_supercar",
+   "traffic_coupe"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "q_sports2",
+  "file": "x/Realistic_Car_Pack_-_Nov_2018/Realistic Car Pack - Nov 2018/OBJ/SportsCar2.obj",
+  "lib": "Quaternius",
+  "title": "SportsCar2 (Realistic Car Pack)",
+  "url": "https://quaternius.itch.io/lowpoly-cars",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.5,
+  "kinds": {
+   "glass|window": 5,
+   "tire|wheel|black": 6,
+   "*": 0
+  },
+  "for": [
+   "traffic_gt",
+   "traffic_coupe"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_sedan",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/sedan.glb",
+  "lib": "Kenney",
+  "title": "sedan (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.6,
+  "kind": 0,
+  "for": [
+   "traffic_saloon"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_suv",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/suv.glb",
+  "lib": "Kenney",
+  "title": "suv (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.8,
+  "kind": 0,
+  "for": [
+   "traffic_suv"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_taxi",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/taxi.glb",
+  "lib": "Kenney",
+  "title": "taxi (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.7,
+  "kind": 0,
+  "for": [
+   "traffic_taxi"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_police",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/police.glb",
+  "lib": "Kenney",
+  "title": "police (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 4.8,
+  "kind": 0,
+  "for": [
+   "traffic_police"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_van",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/van.glb",
+  "lib": "Kenney",
+  "title": "van (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 5.2,
+  "kind": 0,
+  "for": [
+   "traffic_van"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_fire",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/firetruck.glb",
+  "lib": "Kenney",
+  "title": "firetruck (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 8,
+  "kind": 0,
+  "for": [
+   "traffic_fire"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_amb",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/ambulance.glb",
+  "lib": "Kenney",
+  "title": "ambulance (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 6,
+  "kind": 0,
+  "for": [
+   "traffic_ambulance"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_truck",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/truck.glb",
+  "lib": "Kenney",
+  "title": "truck (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 7.5,
+  "kind": 0,
+  "for": [
+   "traffic_lorry"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "k_tractor",
+  "file": "x/kenney_car-kit_3.1/Models/GLB format/tractor.glb",
+  "lib": "Kenney",
+  "title": "tractor (Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 6000,
+  "length": 3.6,
+  "kind": 0,
+  "for": [
+   "tractor",
+   "traffic_tractor"
+  ],
+  "group": "Vehicles"
+ },
+ {
+  "id": "ph_bench",
+  "file": "ph/painted_wooden_bench/painted_wooden_bench.gltf",
+  "lib": "Poly Haven",
+  "title": "painted_wooden_bench",
+  "url": "https://polyhaven.com/a/painted_wooden_bench",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 800,
+  "kind": 1,
+  "smooth": true,
+  "for": [
+   "bench",
+   "bench_sea"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_picnic",
+  "file": "ph/wooden_picnic_table/wooden_picnic_table.gltf",
+  "lib": "Poly Haven",
+  "title": "wooden_picnic_table",
+  "url": "https://polyhaven.com/a/wooden_picnic_table",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "kind": 1,
+  "smooth": true,
+  "for": [
+   "picnic",
+   "picnic_table"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_lamp1",
+  "file": "ph/street_lamp_01/street_lamp_01.gltf",
+  "lib": "Poly Haven",
+  "title": "street_lamp_01",
+  "url": "https://polyhaven.com/a/street_lamp_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "kind": 6,
+  "smooth": true,
+  "for": [
+   "lamppost"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_lamp",
+  "file": "x/Modular_Street_Pack_by_Quaternius/OBJ/Streetlight_Single.obj",
+  "lib": "Quaternius",
+  "title": "Streetlight_Single (Modular Street)",
+  "url": "https://quaternius.itch.io/lowpoly-modular-street",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "height": 6,
+  "kind": 6,
+  "for": [
+   "lamppost"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_hydrant",
+  "file": "ph/fire_hydrant/fire_hydrant.gltf",
+  "lib": "Poly Haven",
+  "title": "fire_hydrant",
+  "url": "https://polyhaven.com/a/fire_hydrant",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1200,
+  "kind": 6,
+  "smooth": true,
+  "for": [
+   "hydrant"
+  ],
+  "pick": "^fire_hydrant(_cap_0\\d|_chain)?$",
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_trash",
+  "file": "ph/metal_trash_can/metal_trash_can.gltf",
+  "lib": "Poly Haven",
+  "title": "metal_trash_can",
+  "url": "https://polyhaven.com/a/metal_trash_can",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1200,
+  "kind": 6,
+  "smooth": true,
+  "for": [
+   "bin_black",
+   "bin_blue",
+   "bin_green"
+  ],
+  "pick": "^metal_trash_can(_handle_left|_handle_right|_lid)?$",
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_crate1",
+  "file": "ph/wooden_crate_01/wooden_crate_01.gltf",
+  "lib": "Poly Haven",
+  "title": "wooden_crate_01",
+  "url": "https://polyhaven.com/a/wooden_crate_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 600,
+  "kind": 1,
+  "smooth": true,
+  "for": [
+   "crates"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_crate2",
+  "file": "ph/wooden_crate_02/wooden_crate_02.gltf",
+  "lib": "Poly Haven",
+  "title": "wooden_crate_02",
+  "url": "https://polyhaven.com/a/wooden_crate_02",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 600,
+  "kind": 1,
+  "smooth": true,
+  "for": [
+   "crates"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "ph_barrels",
+  "file": "ph/wooden_barrels_01/wooden_barrels_01.gltf",
+  "lib": "Poly Haven",
+  "title": "wooden_barrels_01",
+  "url": "https://polyhaven.com/a/wooden_barrels_01",
+  "author": "Poly Haven",
+  "licence": "CC0-1.0",
+  "budget": 1000,
+  "kind": 1,
+  "smooth": true,
+  "for": [
+   "crates"
+  ],
+  "pick": "barrel01$",
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_fence",
+  "file": "x/Farm_Buildings_by_Quaternius/OBJ/Fence.obj",
+  "lib": "Quaternius",
+  "title": "Fence (Farm Buildings)",
+  "url": "https://quaternius.itch.io/lowpoly-farm-buildings",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 800,
+  "length": 3.1,
+  "kind": 1,
+  "for": [
+   "fence"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_fence2",
+  "file": "x/Farm_Buildings_by_Quaternius/OBJ/Fence2.obj",
+  "lib": "Quaternius",
+  "title": "Fence2 (Farm Buildings)",
+  "url": "https://quaternius.itch.io/lowpoly-farm-buildings",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 800,
+  "length": 3.1,
+  "kind": 1,
+  "for": [
+   "fence"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "k_fence",
+  "file": "x/Nature_20Kit_20_282.1_29/Models/GLTF format/fence_simple.glb",
+  "lib": "Kenney",
+  "title": "fence_simple (Nature Kit)",
+  "url": "https://kenney.nl/assets/nature-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 800,
+  "length": 3.1,
+  "kind": 1,
+  "for": [
+   "fence"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "k_logs",
+  "file": "x/Nature_20Kit_20_282.1_29/Models/GLTF format/log_stackLarge.glb",
+  "lib": "Kenney",
+  "title": "log_stackLarge (Nature Kit)",
+  "url": "https://kenney.nl/assets/nature-kit",
+  "author": "Kenney",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "length": 3,
+  "kind": 1,
+  "for": [
+   "woodpile",
+   "log_pile"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_watertower",
+  "file": "x/Farm_Buildings_by_Quaternius/OBJ/WaterTower.obj",
+  "lib": "Quaternius",
+  "title": "WaterTower (Farm Buildings)",
+  "url": "https://quaternius.itch.io/lowpoly-farm-buildings",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 12.7,
+  "kinds": {
+   "*": 1
+  },
+  "for": [
+   "water_tower",
+   "water_tank"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_windmill",
+  "file": "x/Farm_Buildings_by_Quaternius/OBJ/TowerWindmill.obj",
+  "lib": "Quaternius",
+  "title": "TowerWindmill (Farm Buildings)",
+  "url": "https://quaternius.itch.io/lowpoly-farm-buildings",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 3000,
+  "height": 12.8,
+  "kinds": {
+   "*": 6
+  },
+  "for": [
+   "windmill"
+  ],
+  "group": "Street and farm furniture"
+ },
+ {
+  "id": "q_well",
+  "file": "x/Farm_Buildings_by_Quaternius/OBJ/Well.obj",
+  "lib": "Quaternius",
+  "title": "Well (Farm Buildings)",
+  "url": "https://quaternius.itch.io/lowpoly-farm-buildings",
+  "author": "Quaternius",
+  "licence": "CC0-1.0",
+  "budget": 1500,
+  "height": 2.2,
+  "kinds": {
+   "*": 3
+  },
+  "for": [
+   "trough"
+  ],
+  "group": "Street and farm furniture"
+ }
+]
