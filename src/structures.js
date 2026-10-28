@@ -12,6 +12,7 @@ import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
 import { mulberry32, clamp } from './noise.js';
 import { Props } from './props.js';
+import { ENV } from './sky.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
 // Structure half width: the parapet's inner face sits at the guardrail line
@@ -647,7 +648,7 @@ export const PLANS = {
     // Sets with a shore texture (sand in the suburbs) lay it on the low
     // ground round the water: 1 on the beach, fading out up the bank.
     if (this.terrain.groundSet?.shore) {
-      this.terrain.mods.at(-1).shore = (x, z, fd, h, out) => {
+      this.terrain.mods.at(-1).cover = (x, z, fd, h, out) => {
         const s = fd.index;
         if (s < s0 - 80 || s > s1 + 80 || fd.side !== side || fd.dist < near - 14 || fd.dist > far + 80) return;
         // From just past the prom railing down to the water, but not up the
@@ -969,6 +970,15 @@ export const PLANS = {
   // through: no living trees out to `far` m (dress it with snags).
   burnt(job) {
     const far = job.f.far ?? 220;
+    const { s0, s1 } = job;
+    // Scorched ground (see ground.js), fading out at the ends and edges.
+    const mark = (x, z, f, h) => h;
+    mark.cover = (x, z, fd, h, out) => {
+      const s = fd.index;
+      if (s < s0 - 60 || s > s1 + 60 || fd.dist > far + 40) return;
+      out.burn = Math.max(out.burn, smooth(s0 - 60, s0 + 20, s) * (1 - smooth(s1 - 20, s1 + 60, s)) * (1 - smooth(far - 40, far + 40, fd.dist)));
+    };
+    this.terrain.mods.push(mark);
     const fr = {};
     for (let s = job.s0; s <= job.s1; s += 14) {
       this.road.sample(s, fr);
@@ -1334,27 +1344,40 @@ const BUILDS = {
     const y = this.terrain.heightAt(p.x, p.z) + (f.h ?? 8);
     const tex = smokeTexture();
     const puffs = [];
-    const N = 14;
+    const N = 22;
+    // Unlit sprites, so dim them to suit the light: grey wisps by day, faint
+    // at night.
+    const col = new THREE.Color(f.color ?? '#d8d4cc').multiplyScalar(1 - Math.max(0, ENV.night - 0.5) * 1.5);
+    const rnd = mulberry32(Math.round(s * 7));
     for (let i = 0; i < N; i++) {
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: f.color ?? '#d8d4cc', transparent: true, depthWrite: false, opacity: 0 }));
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: col, transparent: true, depthWrite: false, opacity: 0 }));
+      sp.userData.smoke = true;
+      sp.userData.base = p;
+      sp.userData.j = [rnd(), rnd(), rnd()];
       this.group.add(sp);
       puffs.push(sp);
     }
-    const rate = 0.09, drift = new THREE.Vector3(1, 0, 0.4).normalize();
+    const rate = 0.06, drift = new THREE.Vector3(1, 0, 0.4).normalize();
     this.gondolas.push({
       update: (time) => {
         for (let i = 0; i < N; i++) {
           const ph = (time * rate + i / N) % 1;
           const sp = puffs[i];
-          const r = 1.2 + ph * 6;
-          sp.position.set(p.x + drift.x * ph * 14 + Math.sin(i * 7.1 + ph * 3) * ph * 1.5, y + ph * 18, p.z + drift.z * ph * 14);
+          const [j0, j1, j2] = sp.userData.j;
+          // Rises straight out of the chimney, then leans over in the wind
+          // and spreads as it thins.
+          const up = ph * 22, lean = ph * ph * 18;
+          const wob = Math.sin(time * 0.4 + j0 * 9) * ph * 2.2;
+          const r = (1.1 + ph * 8.5) * (0.85 + j1 * 0.3);
+          sp.position.set(p.x + drift.x * lean - drift.z * wob, y + 0.4 + up, p.z + drift.z * lean + drift.x * wob);
           sp.scale.set(r, r, 1);
-          sp.material.opacity = Math.min(1, ph * 6) * (1 - ph) * 0.55;
-          sp.material.rotation = i * 1.3 + ph * 0.8;
+          sp.material.opacity = Math.min(1, ph * 7) * (1 - ph) * (0.85 + j2 * 0.15);
+          sp.material.rotation = j0 * 6.3 + ph * (j1 - 0.5) * 1.6;
         }
       },
     });
   },
+
   bridge(job) {
     const { s0, s1 } = job;
     const geo = new Geo();
@@ -2226,18 +2249,30 @@ function logSection(d, h, r) {
 let smokeTex = null;
 function smokeTexture() {
   if (smokeTex) return smokeTex;
+  // Billowy lumps lit from above: each lump is brighter on top and shaded
+  // underneath, and the whole puff fades softly to its edge.
+  const S = 128;
   const c = document.createElement('canvas');
-  c.width = c.height = 64;
+  c.width = c.height = S;
   const g = c.getContext('2d');
   const rnd = mulberry32(5);
-  for (let i = 0; i < 7; i++) {
-    const x = 20 + rnd() * 24, y = 20 + rnd() * 24, r = 12 + rnd() * 10;
-    const gr = g.createRadialGradient(x, y, 0, x, y, r);
-    gr.addColorStop(0, 'rgba(255,255,255,0.55)');
-    gr.addColorStop(1, 'rgba(255,255,255,0)');
+  for (let i = 0; i < 16; i++) {
+    const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * S * 0.2;
+    const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d, r = S * (0.13 + rnd() * 0.12);
+    const gr = g.createRadialGradient(x, y - r * 0.35, r * 0.1, x, y, r);
+    gr.addColorStop(0, 'rgba(255,255,255,0.8)');
+    gr.addColorStop(0.55, 'rgba(190,190,196,0.6)');
+    gr.addColorStop(1, 'rgba(150,150,158,0)');
     g.fillStyle = gr;
-    g.fillRect(0, 0, 64, 64);
+    g.fillRect(0, 0, S, S);
   }
+  // Soft overall edge.
+  g.globalCompositeOperation = 'destination-in';
+  const edge = g.createRadialGradient(S / 2, S / 2, S * 0.2, S / 2, S / 2, S * 0.5);
+  edge.addColorStop(0, 'rgba(0,0,0,1)');
+  edge.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = edge;
+  g.fillRect(0, 0, S, S);
   smokeTex = new THREE.CanvasTexture(c);
   smokeTex.colorSpace = THREE.SRGBColorSpace;
   return smokeTex;

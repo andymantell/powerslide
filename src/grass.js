@@ -150,7 +150,8 @@ export class Grass {
         const h = t.heightFromField(x, z, f, false);
         H[j * n + i] = h;
         R[j * n + i] = h - f.roadY;
-        S[j * n + i] = t.shoreAt(x, z, f, h, so).sand;
+        t.coverAt(x, z, f, h, so);
+        S[j * n + i] = Math.max(so.sand, so.burn);
         D[j * n + i] = f.dist;
       }
     }

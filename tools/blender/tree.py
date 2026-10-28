@@ -36,6 +36,10 @@ SPECIES = {
         height=(17.0, 23.0), trunk_r=0.34, crown_base=0.0, crown_frac=(0.45, 0.6), whorl_gap=0.42, per_whorl=(5, 7),
         max_len=3.6, len_pow=0.28, droop=(0.4, -0.1), tip_up=0.45, card_w=2.6, segs=3,
         twig='pine_twig.png', bark='bark_albedo.webp',
+        # A rounded, open crown rather than a spruce cone: branch length
+        # peaks partway down, some whorls are missing, and the needles bunch
+        # in tufts at the branch ends.
+        round=True, skip=0.25, tufts=True,
     ),
 }
 
@@ -110,15 +114,27 @@ def foliage(rng, sp, H, mat):
         rot = rng.random() * math.tau
         for k in range(n):
             az = rot + k / n * math.tau + rng.uniform(-0.25, 0.25)
-            L = (sp['max_len'] * (1 - t) ** sp['len_pow'] + 0.35) * rng.uniform(0.8, 1.1)
+            if sp.get('round'):
+                u = 1 - t
+                L = (sp['max_len'] * math.sqrt(max(0.0, 1 - ((u - 0.55) / 0.62) ** 2)) + 0.4) * rng.uniform(0.7, 1.15)
+            else:
+                L = (sp['max_len'] * (1 - t) ** sp['len_pow'] + 0.35) * rng.uniform(0.8, 1.1)
             droop = sp['droop'][0] + (sp['droop'][1] - sp['droop'][0]) * (1 - t) + rng.uniform(-0.1, 0.1)
             card(bm, uv, rng, sp, Vector((0, y, 0)), az, L, droop)
+            if sp.get('tufts') and L > 1.6:
+                # A tuft splayed off to one side of the branch end.
+                end = Vector((math.cos(az) * L * 0.6, y + math.sin(droop) * L * 0.6, math.sin(az) * L * 0.6))
+                da = rng.choice((-0.6, 0.6)) + rng.uniform(-0.2, 0.2)
+                card(bm, uv, rng, sp, end, az + da, L * 0.45, droop + 0.35, width=sp['card_w'] * 0.7)
         # Short inner cards fill the gaps between whorls near the trunk.
         if whorl % 2 == 0:
             az = rng.random() * math.tau
             L = (sp['max_len'] * (1 - t) ** sp['len_pow'] + 0.3) * 0.5
             card(bm, uv, rng, sp, Vector((0, y - sp['whorl_gap'] * 0.5, 0)), az, L, -0.2)
         whorl += 1
+        # Open crowns: now and then a whorl is missing, leaving a gap.
+        if rng.random() < sp.get('skip', 0):
+            y -= sp['whorl_gap']
         y -= sp['whorl_gap'] * (0.85 + 0.3 * rng.random()) * (0.75 + 0.5 * (1 - t))
     # Leader: two crossed vertical cards at the very top.
     for az in (0.0, math.pi / 2):

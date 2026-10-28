@@ -170,7 +170,8 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         varying vec3 vGWorld;
         varying vec3 vGNormal;
         varying vec4 vSplat;
-        ${shore ? 'attribute vec2 shore;\nvarying vec2 vShore;' : ''}`,
+        attribute vec3 cover;
+        varying vec3 vCover;`,
       )
       .replace(
         '#include <worldpos_vertex>',
@@ -178,10 +179,10 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         vGWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
         vGNormal = normalize(mat3(modelMatrix) * objectNormal);
         vSplat = splat;
-        ${shore ? 'vShore = shore;' : ''}`,
+        vCover = cover;`,
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${SHARED}\n${shore ? 'uniform sampler2D tShoreA, tShoreN;\nvarying vec2 vShore;' : ''}`)
+      .replace('#include <common>', `#include <common>\n${SHARED}\nvarying vec3 vCover;\n${shore ? 'uniform sampler2D tShoreA, tShoreN;' : ''}`)
       .replace(
         '#include <map_fragment>',
         `
@@ -237,14 +238,28 @@ export function createGroundMaterial(renderer, { far = false, simple = false, se
         // darker and smoother where the water has wetted it.
         float sandW = 0.0;
         vec4 aShore = vec4(0.5);
-        if (vShore.x > 0.01) {
+        if (vCover.x > 0.01) {
           aShore = texture2D(tShoreA, gp.xz * ${far ? '0.05' : '0.2'});
-          sandW = smoothstep(0.3, 0.6, vShore.x + (aShore.a - aBase.a) * 0.35) * (1.0 - bw.w);
-          aShore.rgb *= mix(1.0, 0.62, vShore.y);
+          sandW = smoothstep(0.3, 0.6, vCover.x + (aShore.a - aBase.a) * 0.35) * (1.0 - bw.w);
+          aShore.rgb *= mix(1.0, 0.62, vCover.y);
           gcol = mix(gcol, aShore.rgb, sandW);
-          gRough = mix(gRough, mix(0.95, 0.55, vShore.y), sandW);
+          gRough = mix(gRough, mix(0.95, 0.55, vCover.y), sandW);
         }
         ` : ''}
+        // Scorched ground where a fire went through: charcoal with drifts of
+        // grey ash, a singed brown fringe, and sooty rock.
+        if (vCover.z > 0.01) {
+          float bN = texture2D(tSnowA, gp.xz * 0.043 + 0.13).a;
+          float bN2 = texture2D(tSnowA, gp.zx * 0.21 + 0.7).a;
+          float bEdge = vCover.z + (bN - 0.5) * 0.7;
+          float burnW = smoothstep(0.3, 0.6, bEdge) * (1.0 - bw.w);
+          vec3 burnt = mix(vec3(0.032, 0.029, 0.026) * (0.6 + aBase.a * 0.9), vec3(0.2, 0.195, 0.185) * (0.85 + aBase.a * 0.3), smoothstep(0.4, 0.9, bN2) * 0.65);
+          burnt = mix(burnt, gcol * 0.4, bw.y);
+          burnt = mix(burnt, gcol * 0.6, bw.z * 0.7);
+          gcol = mix(gcol, gcol * vec3(0.55, 0.42, 0.3), smoothstep(0.0, 0.35, bEdge) * (1.0 - burnW) * (1.0 - bw.w));
+          gcol = mix(gcol, burnt, burnW);
+          gRough = mix(gRough, 0.97, burnW);
+        }
         diffuseColor.rgb *= gcol;
         `,
       )

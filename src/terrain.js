@@ -113,12 +113,14 @@ export class Terrain {
     return h;
   }
 
-  // Shore cover at a point from the lake mods (see structures.js): sand and
-  // wet sand weights, 0..1. f is the road field at (x, z), h the height.
-  shoreAt(x, z, f, h, out = {}) {
+  // Extra ground cover at a point from the level's mods (see structures.js):
+  // sand and wet sand round lakes, and scorched ground where a fire went
+  // through, each 0..1. f is the road field at (x, z), h the height.
+  coverAt(x, z, f, h, out = {}) {
     out.sand = 0;
     out.wet = 0;
-    for (const m of this.mods) m.shore?.(x, z, f, h, out);
+    out.burn = 0;
+    for (const m of this.mods) m.cover?.(x, z, f, h, out);
     return out;
   }
 
@@ -148,7 +150,7 @@ export class Terrain {
     const pos = geo.attributes.position;
     const rel = new Float32Array(n * n);
     const dist = new Float32Array(n * n);
-    const shore = new Float32Array(n * n * 2);
+    const cover = new Float32Array(n * n * 3);
     const so = {};
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + cx;
@@ -158,9 +160,10 @@ export class Terrain {
       pos.setXYZ(i, x, h, z);
       rel[i] = h - f.roadY;
       dist[i] = f.dist;
-      this.shoreAt(x, z, f, h, so);
-      shore[i * 2] = so.sand;
-      shore[i * 2 + 1] = so.wet;
+      this.coverAt(x, z, f, h, so);
+      cover[i * 3] = so.sand;
+      cover[i * 3 + 1] = so.wet;
+      cover[i * 3 + 2] = so.burn;
     }
     // Skirts are unnecessary: near/far are split by the shader cut.
     geo.computeVertexNormals();
@@ -185,7 +188,7 @@ export class Terrain {
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('splat', new THREE.BufferAttribute(splat, 4));
-    geo.setAttribute('shore', new THREE.BufferAttribute(shore, 2));
+    geo.setAttribute('cover', new THREE.BufferAttribute(cover, 3));
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
     const mesh = new THREE.Mesh(geo, coarse ? this.farMat : this.nearMat);
