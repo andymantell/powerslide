@@ -1,0 +1,230 @@
+{
+  "id": "pass-05",
+  "name": "Hospice",
+  "biome": "pass",
+  "seed": 8105,
+  "hint": "At dawn you reach the old stone hospice by the dark lake. Wave to the big St Bernard dogs! Then it's steep and twisty all the way down.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 80,
+      "grade": 0.05,
+      "ramp": 40
+    },
+    {
+      "straight": 320,
+      "grade": 0.015,
+      "ramp": 40
+    },
+    {
+      "straight": 80,
+      "grade": 0.06,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 140,
+      "grade": 0.08
+    }
+  ],
+  "features": [
+    {
+      "type": "lake",
+      "from": 790,
+      "to": 1150,
+      "side": "left",
+      "near": 14,
+      "far": 260,
+      "below": 2.5,
+      "color": "#1d2e36"
+    },
+    {
+      "type": "flat",
+      "from": 870,
+      "to": 1070,
+      "width": 50,
+      "keep": 0.15
+    }
+  ],
+  "props": [
+    {
+      "type": "hospice",
+      "at": 970,
+      "d": 26,
+      "yaw": 0
+    },
+    {
+      "type": "chapel",
+      "at": 922,
+      "d": 19,
+      "yaw": 0
+    },
+    {
+      "type": "kennel",
+      "at": 1010,
+      "d": 15,
+      "yaw": 0
+    },
+    {
+      "type": "stbernard",
+      "at": 1006,
+      "d": 10.5,
+      "yaw": 70
+    },
+    {
+      "type": "stbernard_sit",
+      "at": 1014,
+      "d": 9.8,
+      "yaw": -20
+    },
+    {
+      "type": "stbernard",
+      "at": 960,
+      "d": 9.5,
+      "yaw": 160
+    },
+    {
+      "type": "banner",
+      "at": 945,
+      "d": 11
+    },
+    {
+      "type": "banner",
+      "at": 995,
+      "d": 11
+    },
+    {
+      "type": "car:any",
+      "at": 1035,
+      "d": 9,
+      "yaw": "along"
+    },
+    {
+      "type": "summitcross",
+      "at": 1110,
+      "d": 70,
+      "yaw": 0
+    },
+    {
+      "type": "bench",
+      "at": 890,
+      "d": -8,
+      "yaw": 180
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 760,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1180,
+      "to": 1580,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1608,
+      "to": 1920,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1880,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 13
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1880,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 7
+    }
+  ],
+  "sky": {
+    "time": "dawn",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 175,
+    "score": 3000
+  }
+}

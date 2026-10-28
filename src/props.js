@@ -25,6 +25,7 @@ const PACKS = {
     new URL('./assets/models/props_suburbs.glb', import.meta.url).href,
     new URL('./assets/models/props_coast.glb', import.meta.url).href,
   ],
+  pass: new URL('./assets/models/props_pass.glb', import.meta.url).href,
 };
 
 // r: keep-out radius for trees, rocks and grass (m). pad: buildings get a level
@@ -357,6 +358,27 @@ export const PROP_TYPES = {
   fish_boxes: { r: 1, ...SMALL },
   bench_sea: { r: 1, ...SMALL },
   viaduct_bay: { r: 0, ...BIG, far: 3000 },
+  // High Alpine Pass
+  hospice: { r: 16, pad: 16, ...BIG },
+  kennel: { r: 5, pad: 5, ...MID },
+  stbernard: { r: 0.6, ...SMALL },
+  stbernard_sit: { r: 0.6, ...SMALL },
+  hotel: { r: 19, pad: 19, ...BIG },
+  terrace: { r: 11, pad: 11, ...MID },
+  powerhouse: { r: 15, pad: 15, ...BIG },
+  souvenir_a: { r: 3, pad: 3, ...MID },
+  souvenir_b: { r: 3, pad: 3, ...MID },
+  pass_sign: { r: 2.5, ...MID },
+  ...Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`sign_hp_${i + 1}`, { r: 0.4, ...SMALL }])),
+  sign_rockfall: { r: 0.5, ...SMALL },
+  telescope: { r: 0.4, ...SMALL },
+  panorama: { r: 1.2, ...SMALL },
+  culvert: { r: 2, ...SMALL },
+  rocknet: { r: 0.6, ...MID },
+  snowplough: { r: 4, ...MID },
+  ibex: { r: 0.8, ...MID },
+  ibex_b: { r: 0.8, ...MID },
+  marmot: { r: 0.3, ...SMALL },
 };
 
 const DEG = Math.PI / 180;

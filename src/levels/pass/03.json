@@ -1,0 +1,138 @@
+{
+  "id": "pass-03",
+  "name": "Snow Walls",
+  "biome": "pass",
+  "seed": 8103,
+  "hint": "It's snowing! The road is cut through snow piled higher than your head. You can't run wide in there, so pick your line before you go in.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 100
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 250,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 180,
+      "length": 110,
+      "grade": 0.09
+    },
+    {
+      "straight": 220,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 140,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "snowwalls",
+      "from": 550,
+      "to": 1090,
+      "height": 5.5
+    },
+    {
+      "type": "snowwalls",
+      "from": 1470,
+      "to": 1650,
+      "height": 3.6
+    }
+  ],
+  "props": [
+    {
+      "type": "snowplough",
+      "at": 320,
+      "d": 9.1,
+      "yaw": "along"
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 14,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 444,
+      "to": 510,
+      "d": 5.8,
+      "every": 14,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1130,
+      "to": 1430,
+      "d": 5.8,
+      "every": 14,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1690,
+      "to": 1850,
+      "d": 5.8,
+      "every": 14,
+      "both": true
+    }
+  ],
+  "terrain": {
+    "snowLine": 4
+  },
+  "sky": {
+    "time": "day",
+    "weather": "snow"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 150,
+    "score": 2700
+  }
+}

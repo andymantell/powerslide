@@ -1,0 +1,185 @@
+{
+  "id": "pass-01",
+  "name": "Meltwater",
+  "biome": "pass",
+  "seed": 8101,
+  "hint": "Welcome to the high mountains! Snow is melting and the water runs right across the road. Wet tarmac is slippery, so don't lean hard on the wet bits.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 140,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "melt",
+      "at": 330,
+      "width": 3
+    },
+    {
+      "type": "melt",
+      "at": 560,
+      "width": 2.5
+    },
+    {
+      "type": "melt",
+      "at": 780,
+      "width": 3.5
+    },
+    {
+      "type": "melt",
+      "at": 990,
+      "width": 2.5
+    },
+    {
+      "type": "melt",
+      "at": 1070,
+      "width": 4
+    },
+    {
+      "type": "melt",
+      "at": 1270,
+      "width": 4
+    }
+  ],
+  "props": [
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 858,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 886,
+      "to": 1286,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1314,
+      "to": 1530,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1490,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 11
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1490,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 5
+    },
+    {
+      "type": "hut",
+      "at": 890,
+      "d": 28,
+      "side": "mountain",
+      "yaw": 0
+    },
+    {
+      "type": "shrine",
+      "at": 410,
+      "d": 6,
+      "side": "mountain",
+      "yaw": 0
+    }
+  ],
+  "terrain": {
+    "snowLine": 16
+  },
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 125,
+    "score": 2100
+  }
+}

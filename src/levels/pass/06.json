@@ -1,0 +1,167 @@
+{
+  "id": "pass-06",
+  "name": "Rock Galleries",
+  "biome": "pass",
+  "seed": 8106,
+  "hint": "Into the mountain! Three tunnels are blasted through the rock, with windows looking out over the valley. Water drips from the roof, so mind the wet.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 220,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 150,
+      "length": 110,
+      "grade": 0.09
+    },
+    {
+      "straight": 140,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 250,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "gallery",
+      "from": 260,
+      "to": 440,
+      "style": "rock"
+    },
+    {
+      "type": "gallery",
+      "from": 690,
+      "to": 825,
+      "style": "rock"
+    },
+    {
+      "type": "gallery",
+      "from": 1045,
+      "to": 1255,
+      "style": "rock"
+    },
+    {
+      "type": "melt",
+      "at": 600,
+      "width": 2.5
+    },
+    {
+      "type": "melt",
+      "at": 1430,
+      "width": 4
+    }
+  ],
+  "props": [
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 240,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 460,
+      "to": 670,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 845,
+      "to": 1025,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1275,
+      "to": 1675,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1660,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 12
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1660,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 6
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "cloudy"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 130,
+    "score": 2800
+  }
+}

@@ -1,0 +1,268 @@
+{
+  "id": "pass-08",
+  "name": "Ibex Crags",
+  "biome": "pass",
+  "seed": 8108,
+  "hint": "Look up! Wild ibex with huge curly horns stand on the crags. Rocks fall from up there too, so watch for stones on the road and ride round them.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 110,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 160,
+      "grade": 0.12
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 110,
+      "length": 90
+    },
+    {
+      "straight": 150,
+      "grade": 0.08
+    }
+  ],
+  "features": [
+    {
+      "type": "debris",
+      "from": 240,
+      "to": 490,
+      "nets": true
+    },
+    {
+      "type": "debris",
+      "from": 730,
+      "to": 970,
+      "nets": true
+    },
+    {
+      "type": "debris",
+      "from": 990,
+      "to": 1230,
+      "nets": true
+    },
+    {
+      "type": "grit",
+      "at": 302,
+      "d": 2.3,
+      "len": 5,
+      "width": 1.7
+    },
+    {
+      "type": "grit",
+      "at": 270,
+      "d": -1.3,
+      "len": 8,
+      "width": 1.2
+    },
+    {
+      "type": "grit",
+      "at": 881,
+      "d": -0.2,
+      "len": 6,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 782,
+      "d": 1.7,
+      "len": 4,
+      "width": 1.2
+    },
+    {
+      "type": "grit",
+      "at": 1004,
+      "d": -1.2,
+      "len": 6,
+      "width": 1.9
+    },
+    {
+      "type": "grit",
+      "at": 1083,
+      "d": -1.9,
+      "len": 5,
+      "width": 2.0
+    }
+  ],
+  "props": [
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 858,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 886,
+      "to": 1286,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1314,
+      "to": 1660,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1620,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 7
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1620,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 3
+    },
+    {
+      "type": "ibex",
+      "at": 221,
+      "d": 40,
+      "side": "mountain",
+      "yaw": 136
+    },
+    {
+      "type": "ibex_b",
+      "at": 901,
+      "d": 29,
+      "side": "mountain",
+      "yaw": 249
+    },
+    {
+      "type": "ibex_b",
+      "at": 1109,
+      "d": 41,
+      "side": "mountain",
+      "yaw": 324
+    },
+    {
+      "type": "ibex",
+      "at": 392,
+      "d": 22,
+      "side": "mountain",
+      "yaw": 23
+    },
+    {
+      "type": "ibex_b",
+      "at": 993,
+      "d": 35,
+      "side": "mountain",
+      "yaw": 70
+    },
+    {
+      "type": "ibex_b",
+      "at": 1253,
+      "d": 39,
+      "side": "mountain",
+      "yaw": 262
+    },
+    {
+      "type": "ibex",
+      "at": 491,
+      "d": 27,
+      "side": "mountain",
+      "yaw": 128
+    },
+    {
+      "type": "ibex_b",
+      "at": 971,
+      "d": 21,
+      "side": "mountain",
+      "yaw": 275
+    },
+    {
+      "type": "ibex_b",
+      "at": 981,
+      "d": 43,
+      "side": "mountain",
+      "yaw": 253
+    },
+    {
+      "type": "ibex",
+      "at": 513,
+      "d": 49,
+      "side": "mountain",
+      "yaw": 181
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "wet"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 130,
+    "score": 3000
+  }
+}

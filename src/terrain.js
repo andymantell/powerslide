@@ -114,13 +114,14 @@ export class Terrain {
   }
 
   // Extra ground cover at a point from the level's mods (see structures.js):
-  // sand and wet sand round lakes, and scorched ground where a fire went
-  // through, each 0..1. f is the road field at (x, z), h the height.
+  // sand and wet sand round lakes, scorched ground where a fire went
+  // through, surf and lying snow, each 0..1. f is the road field at (x, z), h the height.
   coverAt(x, z, f, h, out = {}) {
     out.sand = 0;
     out.wet = 0;
     out.burn = 0;
     out.foam = 0;
+    out.snow = 0;
     for (const m of this.mods) m.cover?.(x, z, f, h, out);
     return out;
   }
@@ -152,6 +153,7 @@ export class Terrain {
     const rel = new Float32Array(n * n);
     const dist = new Float32Array(n * n);
     const cover = new Float32Array(n * n * 4);
+    const lying = new Float32Array(n * n);
     const so = {};
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + cx;
@@ -166,6 +168,7 @@ export class Terrain {
       cover[i * 4 + 1] = so.wet;
       cover[i * 4 + 2] = so.burn;
       cover[i * 4 + 3] = so.foam;
+      lying[i] = so.snow;
     }
     // Skirts are unnecessary: near/far are split by the shader cut.
     geo.computeVertexNormals();
@@ -185,7 +188,7 @@ export class Terrain {
       colors[i * 3 + 2] = b * (1.0 - (v2 - 0.5) * 0.1);
       splat[i * 4] = rock * (1 - gravel);
       splat[i * 4 + 1] = gravel;
-      splat[i * 4 + 2] = snow * (1 - gravel);
+      splat[i * 4 + 2] = Math.max(snow, lying[i]) * (1 - gravel);
       splat[i * 4 + 3] = smoothstep(0.35, 0.8, v2);
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));

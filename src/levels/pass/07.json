@@ -1,0 +1,192 @@
+{
+  "id": "pass-07",
+  "name": "Dam Lake",
+  "biome": "pass",
+  "seed": 8107,
+  "hint": "Ride along the top of a giant dam! The lake is deep blue on one side, and on the other it's a long, long way down. Keep your eyes on the road!",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 100,
+      "grade": 0.06,
+      "ramp": 40
+    },
+    {
+      "straight": 360,
+      "grade": 0.005,
+      "ramp": 40
+    },
+    {
+      "straight": 80,
+      "grade": 0.06,
+      "ramp": 40
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 130,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "lake",
+      "from": 780,
+      "to": 1260,
+      "side": "left",
+      "near": 10,
+      "far": 500,
+      "below": 3.0,
+      "color": "#2a6e92"
+    },
+    {
+      "type": "dam",
+      "from": 870,
+      "to": 1170,
+      "side": "left",
+      "depth": 85,
+      "spill": 40
+    },
+    {
+      "type": "smoke",
+      "at": 915,
+      "d": 66,
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "powerhouse",
+      "at": 1050,
+      "d": 95,
+      "yaw": 0
+    },
+    {
+      "type": "pylon",
+      "at": 1100,
+      "d": 110
+    },
+    {
+      "type": "telescope",
+      "at": 845,
+      "d": 5.6,
+      "yaw": 180
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 760,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1280,
+      "to": 1680,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1708,
+      "to": 1980,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1940,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 14
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1940,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 7
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 180,
+    "score": 3300
+  }
+}

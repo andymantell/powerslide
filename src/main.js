@@ -1277,6 +1277,7 @@ function frame(now) {
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') {
     const wasCrashed = player.crashed;
     player.water = structures.waterAt(player.s);
+    player.slick = structures.slickAt(player.s);
     // Coast levels' side-wind gusts: they push the rider, bend the grass
     // and roar in the wind noise.
     const cross = structures.windAt(player.s, time);

@@ -104,6 +104,22 @@ export const ATMOSPHERE = {
     envIntensity: 0.6,
     fogScale: 1.1,
   },
+  // Thin, clear air high up: a deep blue overhead, a bright sun, crisp
+  // distant peaks and a few clouds on the summits.
+  pass: {
+    sunAzimuth: -2.1,
+    sunElevation: 0.5,
+    zenith: '#123f9e',
+    horizon: '#b6cbe4',
+    haze: '#b0c0d2',
+    sunHaze: '#f2dcb4',
+    sunColor: '#fff6e8',
+    sunIntensity: 3.5,
+    cloudCover: 0.36,
+    cloudColor: '#ffffff',
+    envIntensity: 0.55,
+    fogScale: 0.75,
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,

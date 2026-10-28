@@ -178,7 +178,21 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   `"style": "fishing"` (a stone quay with fishing boats, pots and harbour
   arms `arm` m long, each with a light, on the sea's water). A prop or a
   `smoke` with `"y": "sea"` stands at sea level (boats, stacks, the wreck),
-  and `smoke` with `"style": "spray"` is waves bursting white on the rocks.
+  and `smoke` with `"style": "spray"` is waves bursting white on the rocks. High Alpine Pass adds `melt` (meltwater from the snow running across
+  the road at `at` in a sheet `width` m wide, down a gully and past a
+  culvert; it takes a third of your grip), `snowwalls` (a cutting through
+  old snow, walls `height` m tall either side, from/to; the walls are what
+  you crash into), `retain` (a stone retaining wall `height` m tall holding
+  the road up on `side`, with a parapet), `face` (the mountain stands uphill
+  on every leg of a zigzag from/to, so each hairpin's drop is on its
+  outside; list it first), `glacier` (a glacier tongue in a side valley, its
+  snout `d` m out and `drop` m below the road at `at`, `length` and `width`
+  m, turned `angle` degrees, between moraines; it puts the drop on its side)
+  and `debris` (fallen rocks along the mountain-side verge from/to, with
+  rockfall `nets` and a warning sign). `gallery` with `"style": "rock"` is
+  blasted through the rock with windows, lamps and dripping water, `lake`
+  takes a `color`, and `dam` a `spill` (m from its start) where the overflow
+  pours down the face.
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.

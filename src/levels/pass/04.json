@@ -1,0 +1,285 @@
+{
+  "id": "pass-04",
+  "name": "Switchback Stack",
+  "biome": "pass",
+  "seed": 8104,
+  "hint": "Six hairpins stacked down the mountain! The signs count them down to 1. Brake before every hairpin, slide round if you dare, and push off again.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.09
+    },
+    {
+      "straight": 30,
+      "grade": 0.08
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 24
+    },
+    {
+      "straight": 95,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "right",
+      "length": 33
+    },
+    {
+      "straight": 95,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 33
+    },
+    {
+      "straight": 95,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "right",
+      "length": 33
+    },
+    {
+      "straight": 95,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 33
+    },
+    {
+      "straight": 95,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "right",
+      "length": 33
+    },
+    {
+      "straight": 150,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "face",
+      "from": 410,
+      "to": 1221
+    },
+    {
+      "type": "retain",
+      "from": 472,
+      "to": 492,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 592,
+      "to": 619,
+      "side": "left",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 720,
+      "to": 747,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 848,
+      "to": 875,
+      "side": "left",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 976,
+      "to": 1003,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 1104,
+      "to": 1131,
+      "side": "left",
+      "height": 5
+    },
+    {
+      "type": "melt",
+      "at": 310,
+      "width": 3
+    },
+    {
+      "type": "melt",
+      "at": 800,
+      "width": 3.5
+    }
+  ],
+  "props": [
+    {
+      "type": "sign_hp_6",
+      "at": 440,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_5",
+      "at": 559,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_4",
+      "at": 687,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_3",
+      "at": 815,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_2",
+      "at": 943,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_1",
+      "at": 1071,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 858,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 886,
+      "to": 1286,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1314,
+      "to": 1474,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1434,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 10
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1434,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 5
+    },
+    {
+      "type": "ibex",
+      "at": 233,
+      "d": 35,
+      "side": "mountain",
+      "yaw": 56
+    },
+    {
+      "type": "ibex_b",
+      "at": 186,
+      "d": 35,
+      "side": "mountain",
+      "yaw": 330
+    },
+    {
+      "type": "summitcross",
+      "at": 619,
+      "d": 45,
+      "side": "mountain"
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.75
+  },
+  "targets": {
+    "time": 145,
+    "score": 2300
+  }
+}

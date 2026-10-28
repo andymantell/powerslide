@@ -86,6 +86,14 @@ export const GROUND_SETS = {
     // Dark, weathered cliffs with patches of yellow lichen.
     lichen: [1.6, 1.3, 0.5, 1.0],
   },
+  // High Alpine Pass: thin, tawny turf above the tree line, grey rock
+  // everywhere it steepens, old snow lying on the banks above the road.
+  pass: {
+    base: 'grass', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'grass_tuft', tuftDensity: 0.4,
+    patchLo: [0.9, 0.8, 0.6], patchHi: [1.12, 0.98, 0.7], patchC: [1.15, 0.9, 0.6, 0.6],
+    // cliffs: the road keeps to a steep mountainside, rarely a valley floor.
+    relief: 1.45, maxRelief: 340, snowLine: 26, treeDensity: 0.02, cliffs: 2.2,
+  },
 };
 
 // Paving for pavements and other flat hard surfaces built as geometry: 600 mm

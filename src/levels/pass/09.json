@@ -1,0 +1,234 @@
+{
+  "id": "pass-09",
+  "name": "Hotel Belvedere",
+  "biome": "pass",
+  "seed": 8109,
+  "hint": "The road wraps right round the old Hotel Belvedere on its rock! The hairpin is tight, so slow down early. The lights are coming on as the sun sets.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 17,
+      "grade": 0.05,
+      "bend": "right",
+      "length": 31
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 32
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 110,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 690,
+      "to": 801,
+      "width": 45,
+      "keep": 0.1
+    }
+  ],
+  "props": [
+    {
+      "type": "hotel",
+      "at": 746,
+      "d": 30,
+      "yaw": 0
+    },
+    {
+      "type": "terrace",
+      "at": 720,
+      "d": 14,
+      "yaw": 0
+    },
+    {
+      "type": "banner",
+      "at": 728,
+      "d": 7.0
+    },
+    {
+      "type": "banner",
+      "at": 736,
+      "d": 7.0
+    },
+    {
+      "type": "banner",
+      "at": 746,
+      "d": 7.0
+    },
+    {
+      "type": "banner",
+      "at": 754,
+      "d": 7.0
+    },
+    {
+      "type": "banner",
+      "at": 764,
+      "d": 7.0
+    },
+    {
+      "type": "car:any",
+      "at": 773,
+      "d": 7.3,
+      "yaw": "across"
+    },
+    {
+      "type": "car:any",
+      "at": 780,
+      "d": 7.3,
+      "yaw": "across"
+    },
+    {
+      "type": "car:any",
+      "at": 787,
+      "d": 7.3,
+      "yaw": "across"
+    },
+    {
+      "type": "sign_hp_2",
+      "at": 700,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_1",
+      "at": 1231,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 670,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 821,
+      "to": 1221,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1249,
+      "to": 1643,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1603,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 11
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1603,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 6
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 150,
+    "score": 3100
+  }
+}

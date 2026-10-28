@@ -1,0 +1,607 @@
+{
+  "id": "pass-10",
+  "name": "The Pass",
+  "biome": "pass",
+  "seed": 8110,
+  "hint": "The big one! Five kilometres from the top of the pass all the way down: past the hospice, through the rock gallery, over the meltwater and down five hairpins to the village.",
+  "pieces": [
+    {
+      "straight": 120,
+      "grade": 0.03
+    },
+    {
+      "straight": 150,
+      "grade": 0.07,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 80,
+      "grade": 0.04,
+      "ramp": 40
+    },
+    {
+      "straight": 300,
+      "grade": 0.015,
+      "ramp": 40
+    },
+    {
+      "straight": 100,
+      "grade": 0.08,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 220,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 240,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 220,
+      "grade": 0.11
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.09
+    },
+    {
+      "straight": 30,
+      "grade": 0.08
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 26
+    },
+    {
+      "straight": 100,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "right",
+      "length": 34
+    },
+    {
+      "straight": 100,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 33
+    },
+    {
+      "straight": 100,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "right",
+      "length": 33
+    },
+    {
+      "straight": 100,
+      "grade": 0.12
+    },
+    {
+      "radius": 16,
+      "grade": 0.07,
+      "bend": "left",
+      "length": 33
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 240,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 150,
+      "length": 100
+    },
+    {
+      "straight": 260,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 100
+    },
+    {
+      "straight": 240,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 100
+    },
+    {
+      "straight": 200,
+      "grade": 0.06
+    },
+    {
+      "straight": 120,
+      "grade": 0.03,
+      "ramp": 40
+    }
+  ],
+  "features": [
+    {
+      "type": "face",
+      "from": 3170,
+      "to": 3876
+    },
+    {
+      "type": "flat",
+      "from": 0,
+      "to": 110,
+      "width": 45,
+      "keep": 0.15
+    },
+    {
+      "type": "lake",
+      "from": 710,
+      "to": 1030,
+      "side": "left",
+      "near": 14,
+      "far": 220,
+      "below": 2.5,
+      "color": "#1d2e36"
+    },
+    {
+      "type": "flat",
+      "from": 800,
+      "to": 960,
+      "width": 45,
+      "keep": 0.15
+    },
+    {
+      "type": "gallery",
+      "from": 1510,
+      "to": 1700,
+      "style": "rock"
+    },
+    {
+      "type": "retain",
+      "from": 3233,
+      "to": 3253,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 3359,
+      "to": 3387,
+      "side": "left",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 3493,
+      "to": 3520,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 3626,
+      "to": 3653,
+      "side": "left",
+      "height": 5
+    },
+    {
+      "type": "retain",
+      "from": 3759,
+      "to": 3786,
+      "side": "right",
+      "height": 5
+    },
+    {
+      "type": "melt",
+      "at": 450,
+      "width": 2.5
+    },
+    {
+      "type": "melt",
+      "at": 1320,
+      "width": 4
+    },
+    {
+      "type": "melt",
+      "at": 1870,
+      "width": 4
+    },
+    {
+      "type": "melt",
+      "at": 2450,
+      "width": 2.5
+    },
+    {
+      "type": "melt",
+      "at": 2730,
+      "width": 3
+    },
+    {
+      "type": "flat",
+      "from": 5239,
+      "to": 5397,
+      "width": 60,
+      "keep": 0.1
+    }
+  ],
+  "props": [
+    {
+      "type": "pass_sign",
+      "at": 25,
+      "d": 8.4,
+      "yaw": 0
+    },
+    {
+      "type": "souvenir_a",
+      "at": 45,
+      "d": -10.9,
+      "yaw": 0
+    },
+    {
+      "type": "souvenir_b",
+      "at": 58,
+      "d": -10.9,
+      "yaw": 0
+    },
+    {
+      "type": "summitcross",
+      "at": 80,
+      "d": 45
+    },
+    {
+      "type": "car:any",
+      "at": 70,
+      "d": 8.0,
+      "yaw": "across"
+    },
+    {
+      "type": "car:any",
+      "at": 76,
+      "d": 8.0,
+      "yaw": "across"
+    },
+    {
+      "type": "banner",
+      "at": 15,
+      "d": -7.0
+    },
+    {
+      "type": "banner",
+      "at": 15,
+      "d": 7.0
+    },
+    {
+      "type": "hospice",
+      "at": 870,
+      "d": 26,
+      "yaw": 0
+    },
+    {
+      "type": "chapel",
+      "at": 825,
+      "d": 19,
+      "yaw": 0
+    },
+    {
+      "type": "kennel",
+      "at": 910,
+      "d": 15,
+      "yaw": 0
+    },
+    {
+      "type": "stbernard",
+      "at": 906,
+      "d": 10.5,
+      "yaw": 70
+    },
+    {
+      "type": "stbernard_sit",
+      "at": 860,
+      "d": 9.8,
+      "yaw": -20
+    },
+    {
+      "type": "chalet",
+      "at": 5279,
+      "d": 26,
+      "yaw": 0
+    },
+    {
+      "type": "chalet_small",
+      "at": 5309,
+      "d": -26,
+      "yaw": 0
+    },
+    {
+      "type": "church",
+      "at": 5339,
+      "d": 26,
+      "yaw": 0
+    },
+    {
+      "type": "chalet_tall",
+      "at": 5369,
+      "d": -26,
+      "yaw": 0
+    },
+    {
+      "type": "fountain",
+      "at": 5349,
+      "d": -12,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_5",
+      "at": 3200,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_4",
+      "at": 3326,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_3",
+      "at": 3460,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_2",
+      "at": 3593,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "type": "sign_hp_1",
+      "at": 3726,
+      "d": 5.3,
+      "yaw": 0
+    },
+    {
+      "row": "snowpole",
+      "from": 140,
+      "to": 540,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 568,
+      "to": 680,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1060,
+      "to": 1460,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1720,
+      "to": 2120,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 2148,
+      "to": 2548,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 2576,
+      "to": 2976,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 3004,
+      "to": 3404,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 3432,
+      "to": 3832,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 3860,
+      "to": 4260,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 4288,
+      "to": 4688,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 4716,
+      "to": 5116,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 5144,
+      "to": 5209,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 5339,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 38
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 5339,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 20
+    },
+    {
+      "type": "ibex",
+      "at": 2505,
+      "d": 39,
+      "side": "mountain",
+      "yaw": 100
+    },
+    {
+      "type": "ibex_b",
+      "at": 4314,
+      "d": 19,
+      "side": "mountain",
+      "yaw": 176
+    },
+    {
+      "type": "ibex_b",
+      "at": 496,
+      "d": 58,
+      "side": "mountain",
+      "yaw": 268
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [
+    1200,
+    3356
+  ],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 405,
+    "score": 8000
+  }
+}

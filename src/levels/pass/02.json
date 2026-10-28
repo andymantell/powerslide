@@ -1,0 +1,212 @@
+{
+  "id": "pass-02",
+  "name": "Glacier View",
+  "biome": "pass",
+  "seed": 8102,
+  "hint": "Look out for the giant glacier! It fills the whole valley beside the road. Stop at the viewpoint halfway down if you like, then carry on carving.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 140,
+      "length": 100
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 100,
+      "grade": 0.06
+    },
+    {
+      "straight": 140,
+      "grade": 0.02,
+      "ramp": 30
+    },
+    {
+      "straight": 100,
+      "grade": 0.08,
+      "ramp": 40
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 100
+    },
+    {
+      "straight": 120,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "glacier",
+      "at": 950,
+      "d": -330,
+      "length": 2000,
+      "width": 300,
+      "drop": 45,
+      "angle": -30
+    },
+    {
+      "type": "flat",
+      "from": 870,
+      "to": 1020,
+      "width": 26,
+      "keep": 0.0
+    }
+  ],
+  "props": [
+    {
+      "type": "telescope",
+      "at": 944,
+      "d": -5.6,
+      "yaw": 180
+    },
+    {
+      "type": "telescope",
+      "at": 958,
+      "d": -5.6,
+      "yaw": 180
+    },
+    {
+      "type": "panorama",
+      "at": 951,
+      "d": -6.0,
+      "yaw": 180
+    },
+    {
+      "type": "bench",
+      "at": 970,
+      "d": -5.8,
+      "yaw": 180
+    },
+    {
+      "type": "car:any",
+      "at": 916,
+      "d": 7.3,
+      "yaw": "along"
+    },
+    {
+      "type": "car:any",
+      "at": 932,
+      "d": 7.3,
+      "yaw": "along"
+    },
+    {
+      "type": "car:any",
+      "at": 955,
+      "d": 7.3,
+      "yaw": "along"
+    },
+    {
+      "type": "car:any",
+      "at": 981,
+      "d": 7.3,
+      "yaw": "along"
+    },
+    {
+      "row": "snowpole",
+      "from": 30,
+      "to": 430,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 458,
+      "to": 840,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1050,
+      "to": 1450,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "row": "snowpole",
+      "from": 1478,
+      "to": 1820,
+      "d": 5.8,
+      "every": 28,
+      "both": true
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1780,
+      "side": "mountain",
+      "near": 9,
+      "far": 40,
+      "count": 13
+    },
+    {
+      "scatter": [
+        "marmot"
+      ],
+      "from": 60,
+      "to": 1780,
+      "side": "valley",
+      "near": 9,
+      "far": 30,
+      "count": 7
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 145,
+    "score": 2600
+  }
+}

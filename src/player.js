@@ -350,7 +350,9 @@ export class Player {
     // ---- Wheels: grip impulses at each truck, solved iteratively.
     const N = MASS * g * cosGrade;
     const share = 0.3 * this.weight;
-    const gripScale = (onGravel ? 0.75 : 1) * lerp(1, d.dirtGrip, this.dirt);
+    // Meltwater over the road (this.slick, set by main.js from
+    // structures.slickAt) takes a third of the grip.
+    const gripScale = (onGravel ? 0.75 : 1) * lerp(1, d.dirtGrip, this.dirt) * (1 - 0.35 * (this.slick || 0));
     let r = this.yawRate;
     for (let i = 0; i < 2; i++) {
       const a = _axles[i];

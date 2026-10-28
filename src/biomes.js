@@ -85,7 +85,16 @@ export const BIOMES = [
     drive: 'left',
     look: { markings: 'uk', lane: 3.0 },
   },
-  { id: 'pass', name: 'High Alpine Pass', blurb: 'Switchbacks, meltwater and everything at once.' },
+  {
+    id: 'pass',
+    name: 'High Alpine Pass',
+    blurb: 'Switchbacks, meltwater and everything at once.',
+    // Above the tree line: bare rock, old snow and meltwater across the
+    // road, the steepest grades, switchbacks stacked up the face, galleries,
+    // a dam and the hospice at the top. Guardrails on the drops.
+    rules: { minRadius: 14, maxGrade: 0.15, minGrade: -0.04 },
+    look: { markings: 'alpine', lane: 3.2 },
+  },
 ];
 
 // A biome's look, with the alpine defaults filled in.

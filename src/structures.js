@@ -286,6 +286,10 @@ export class Structures {
     this.todo = [];
     W = RAIL_OFFSET + 0.55;
     if (!level) return;
+    // Biomes on a steep mountainside (GROUND_SETS cliffs): the road's cliff
+    // side, scaled up, so it is nearly always a slope above and a drop below.
+    const cliffs = this.terrain.groundSet?.cliffs;
+    if (cliffs) for (let i = 0; i < this.road.count; i++) this.road.c[i] = clamp(this.road.c[i] * cliffs, -1, 1);
     const start = this.road.start;
     for (const f of level.features || []) {
       const plan = PLANS[f.type];
@@ -356,6 +360,15 @@ export class Structures {
       const g = smooth(0.15, 0.35, u) * (1 - smooth(0.55, 0.85, u)) * (0.6 + 0.4 * r);
       const side = f.side === 'left' ? -1 : 1;
       return side * fade * (top * 0.18 + top * 0.82 * g);
+    }
+    return 0;
+  }
+
+  // How slippery the road is at s from meltwater running over it, 0..1.
+  slickAt(s) {
+    for (const j of this.todo || []) {
+      if (j.f.type !== 'melt' || s < j.s0 - 3 || s > j.s1 + 3) continue;
+      return smooth(j.s0 - 3, j.s0 - 1, s) * (1 - smooth(j.s1 + 1, j.s1 + 3, s));
     }
     return 0;
   }
@@ -642,16 +655,23 @@ export const PLANS = {
     // Backfill over the roof so it reads as cut into the slope.
     this.terrain.mods.push((x, z, f, h) => {
       const s = f.index;
-      if (s < s0 - 30 || s > s1 + 30 || f.dist > 40) return h;
+      if (s < s0 - 30 || s > s1 + 30 || f.dist > (job.f.style === 'rock' ? 80 : 40)) return h;
       if (f.side !== up) return h;
       // It starts rising behind the back wall, under the roof, so no slope
       // of the terrain mesh can poke through the wall.
+      if (job.f.style === 'rock') {
+        // Up to the crag over the gallery, rising on into the mountainside.
+        const m = smooth(s0 - 30, s0 + 1, s) * (1 - smooth(s1 - 1, s1 + 30, s)) * smooth(7.0, 8.0, f.dist) * (1 - smooth(40, 80, f.dist));
+        const [dE, hE] = GALLERY_ROOF.at(-1);
+        const want = f.dist < dE ? f.roadY + 7.0 + (f.dist - 7) * ((hE - 8.5) / (dE - 7)) : f.roadY + hE + (f.dist - dE) * 0.9;
+        return Math.max(h, h + (want - h) * m);
+      }
       const m = smooth(s0 - 25, s0 + 4, s) * (1 - smooth(s1 - 4, s1 + 25, s)) * smooth(7.5, 9.5, f.dist) * (1 - smooth(14, 40, f.dist));
       return Math.max(h, h + (f.roadY + 7.4 - h) * m);
     });
   },
 
-  // { type: 'lake', from, to, side, near, far } A lake beside the road.
+  // { type: 'lake', from, to, side, near, far, below, color } A lake beside the road.
   lake(job) {
     const { f } = job;
     const side = f.side === 'left' ? -1 : f.side === 'right' ? 1 : -mountainSide(this.road, job.s0, job.s1);
@@ -1220,7 +1240,7 @@ export const PLANS = {
     }
   },
 
-  // { type: 'dam', from, to, side, depth } The road runs along the crest of a
+  // { type: 'dam', from, to, side, depth, spill } The road runs along the crest of a
   // concrete dam: the reservoir on `side` (add a lake there), and a drop of
   // `depth` m (70) on the other.
   dam(job) {
@@ -1459,6 +1479,179 @@ export const PLANS = {
       this.props.add('crane', c.x, c.z, c.yaw);
     }
   },
+  // { type: 'face', from, to } The road zigzags down a mountain face: the
+  // mountain stands uphill on every leg, so on switchbacks the drop is
+  // always on the outside of each hairpin. List it before the other features.
+  face(job) {
+    const road = this.road;
+    const { s0, s1 } = job;
+    for (let i = Math.max(0, Math.floor(s0 - 60)); i < Math.min(road.count, s1 + 60); i++) {
+      const w = smooth(s0 - 60, s0, i) * (1 - smooth(s1, s1 + 60, i));
+      road.c[i] += (clamp(Math.sin(road.h[i]) * 2.4, -1, 1) - road.c[i]) * w;
+    }
+  },
+
+  // { type: 'melt', at, width } Meltwater from the snow above running across
+  // the road in a thin, slippery sheet `width` m (3) wide
+  // (structures.slickAt), down a rocky gully above the road and on below it
+  // past a culvert.
+  melt(job) {
+    const road = this.road;
+    const w = job.f.width ?? 3;
+    job.mid = job.s0;
+    job.s0 = job.mid - w / 2;
+    job.s1 = job.mid + w / 2;
+    job.up = mountainSide(road, job.mid - 20, job.mid + 20);
+    const top = clearRun(road, job.mid, job.up, 150);
+    const bottom = clearRun(road, job.mid, -job.up, 160);
+    // A shallow gully either side, but none across the road and its verges.
+    const edge = RAIL_OFFSET + 1.5;
+    const above = acrossLine(road, job.mid, job.up * top, job.up * edge, 4);
+    const below = acrossLine(road, job.mid, -job.up * (edge + 1), -job.up * bottom, 4);
+    this.terrain.mods.push(channel(above, 2.5, (t) => 0.9 * smooth(0, 6, top - edge - t)));
+    this.terrain.mods.push(channel(below, 2.5, (t) => 0.9 * smooth(0, 6, t)));
+    job.above = settle(this.terrain, above, 2.5);
+    job.below = settle(this.terrain, below, 2.5);
+    for (const line of [job.above, job.below]) for (let i = 0; i < line.length; i += 2) this.terrain.block(line[i], line[i + 1], 3);
+    // The culvert's headwall just below the road, facing down the slope.
+    const c = Props.at(road, job.mid, -job.up * (RAIL_OFFSET + 2.6), 180);
+    this.props.add('culvert', c.x, c.z, c.yaw);
+  },
+
+  // { type: 'snowwalls', from, to, height } A cutting through old snow:
+  // walls `height` m (4.5) tall either side, cut sheer by the rotary
+  // ploughs, with the snowfield running back from their tops.
+  snowwalls(job) {
+    const { s0, s1 } = job;
+    const H = (job.H = job.f.height ?? 4.5);
+    const mod = (x, z, f, h) => {
+      const s = f.index;
+      if (s < s0 - 40 || s > s1 + 40 || f.dist > 70) return h;
+      const along = smooth(s0 - 30, s0 + 12, s) * (1 - smooth(s1 - 12, s1 + 30, s));
+      // Up to the walls' tops behind them, easing back to the old slope.
+      const want = f.roadY + H * along - 0.4 - Math.max(0, f.dist - W - 6) * 0.08;
+      // Only from behind the walls' faces: in front, the verge stays flat.
+      const m = smooth(W + 1, W + 2.5, f.dist) * (1 - smooth(35, 70, f.dist));
+      return Math.max(h, h + (want - h) * m);
+    };
+    mod.cover = (x, z, f, h, out) => {
+      const s = f.index;
+      if (s < s0 - 60 || s > s1 + 60 || f.dist < W - 0.5 || f.dist > 90) return;
+      out.snow = Math.max(out.snow, smooth(s0 - 60, s0 - 10, s) * (1 - smooth(s1 + 10, s1 + 60, s)) * (1 - smooth(60, 90, f.dist)));
+    };
+    this.terrain.mods.push(mod);
+  },
+
+  // { type: 'retain', from, to, side, height } A stone retaining wall
+  // holding the road up over the drop on `side` (the valley side), `height`
+  // m (6) tall, with a parapet along its top.
+  retain(job) {
+    const { s0, s1, f } = job;
+    const side = (job.side = f.side === 'left' ? -1 : f.side === 'right' ? 1 : -mountainSide(this.road, s0, s1));
+    const H = (job.H = f.height ?? 6);
+    this.terrain.mods.push((x, z, fd, h) => {
+      const s = fd.index;
+      if (s < s0 - 20 || s > s1 + 20 || fd.side !== side || fd.dist > W + 40) return h;
+      const along = smooth(s0 - 15, s0 + 6, s) * (1 - smooth(s1 - 6, s1 + 15, s));
+      // Sheer below the wall's face, then the slope carries on down.
+      const foot = W + 0.6 + H * 0.12;
+      const want = fd.roadY - H * along - 0.3 - Math.max(0, fd.dist - foot) * 0.55;
+      return Math.min(h, h + (want - h) * smooth(W - 0.3, W + 0.4, fd.dist));
+    });
+  },
+
+  // { type: 'glacier', at, d, length, width, angle, drop } A glacier tongue
+  // filling a side valley: its snout `d` m out (+ right) from the road at
+  // `at`, `drop` m (60) below the road, reaching `length` m (1600) back up
+  // into the mountains `angle` degrees (0) off square to the road, `width` m
+  // (300) across, between moraine ridges.
+  glacier(job) {
+    const { f } = job;
+    const road = this.road;
+    const fr = road.sample(job.s0, {});
+    const side = Math.sign(f.d ?? 400) || 1;
+    const a = ((f.angle ?? 0) * Math.PI) / 180;
+    // Up the glacier: away from the road, turned by angle.
+    const ux = fr.rightX * side * Math.cos(a) + fr.dirX * Math.sin(a), uz = fr.rightZ * side * Math.cos(a) + fr.dirZ * Math.sin(a);
+    const L = f.length ?? 1600, Wd = (f.width ?? 300) / 2;
+    const x0 = fr.x + fr.rightX * (f.d ?? 400), z0 = fr.z + fr.rightZ * (f.d ?? 400);
+    const y0 = fr.y - (f.drop ?? 60), y1 = y0 + (f.rise ?? L * 0.2);
+    const g = (job.g = { x0, z0, ux, uz, L, Wd, y0, y1 });
+    // The valley (the drop, and the guardrail) on the glacier's side.
+    for (let i = Math.max(0, Math.floor(job.s0 - 400)); i < Math.min(road.count, job.s0 + 400); i++) {
+      const w = smooth(job.s0 - 400, job.s0 - 200, i) * (1 - smooth(job.s0 + 200, job.s0 + 400, i));
+      road.c[i] += (-side - road.c[i]) * w;
+    }
+    // The tongue swings to one side and back as it comes down the valley.
+    const swing = (f.swing ?? 0.6) * Wd;
+    g.bend = (u) => swing * Math.sin(Math.min(1.2, Math.max(0, u)) * Math.PI * 0.85);
+    // Where (x, z) sits: u along (0 snout, 1 top), v across (m from the
+    // middle line, + to the left looking up it).
+    g.at = (x, z) => {
+      const dx = x - x0, dz = z - z0;
+      const u = (dx * ux + dz * uz) / L;
+      return [u, dx * -uz + dz * ux - g.bend(u)];
+    };
+    g.point = (u, v) => {
+      const w = v + g.bend(u);
+      return [x0 + ux * u * L - uz * w, z0 + uz * u * L + ux * w];
+    };
+    // Below the snout the valley floor runs on down gently.
+    g.floor = (u) => (u >= 0 ? y0 + (y1 - y0) * u ** 1.1 : y0 + u * L * 0.08);
+    g.half = (u) => Wd * (0.55 + 0.45 * smooth(-0.05, 0.45, u));
+    // Thin and sunk between its moraines down at the snout, fuller up top.
+    g.thick = (u) => (6 + 16 * smooth(0.2, 0.9, u)) * smooth(0, 0.05, u);
+    const R = Wd * 4.5 + swing;
+    const minX = Math.min(x0, x0 + ux * L * 1.3) - R, maxX = Math.max(x0, x0 + ux * L * 1.3) + R;
+    const minZ = Math.min(z0, z0 + uz * L * 1.3) - R, maxZ = Math.max(z0, z0 + uz * L * 1.3) + R;
+    this.terrain.mods.push((x, z, fd, h) => {
+      if (x < minX || x > maxX || z < minZ || z > maxZ) return h;
+      const [u, sv] = g.at(x, z);
+      if (u < -0.45 || u > 1.3) return h;
+      const v = Math.abs(sv);
+      const hw = g.half(u);
+      if (v > hw * 4.5) return h;
+      const fl = g.floor(Math.min(u, 1.15));
+      // A U-shaped trough with steep walls, lateral moraine ridges along its
+      // flanks and a terminal moraine looping round below the snout.
+      let t = fl + (Math.min(v, hw) / hw) ** 2 * hw * 0.12 + Math.max(0, v - hw) * 0.85;
+      const rib = Math.exp(-(((v / hw - 1.08) / 0.08) ** 2)) * 22 * smooth(-0.3, -0.05, u) * (1 - smooth(0.6, 0.9, u));
+      const loop = Math.exp(-(((u + 0.09) / 0.03) ** 2)) * 10 * (1 - smooth(0.6, 1.0, v / hw));
+      t += rib + loop;
+      const m = smooth(-0.45, -0.25, u) * (1 - smooth(1.15, 1.3, u)) * (1 - smooth(hw * 3, hw * 4.5, v)) * smooth(40, 120, fd.dist);
+      // In the trough the shape is the glacier's; beside the ice the
+      // mountains may rise higher, but not out in front of the snout.
+      const flank = h + (Math.max(h, t) - h) * smooth(0, 0.15, u);
+      const k = smooth(hw * 1.25, hw * 1.7, v);
+      return h + (t + (flank - t) * k - h) * m;
+    });
+    // No trees on the ice, and moraine boulders on the ridges.
+    for (let u = 0; u < 1.1; u += 0.05) {
+      const hw = g.half(u);
+      for (let v = -hw; v <= hw; v += 40) this.terrain.block(...g.point(u, v), 40);
+    }
+  },
+
+  // { type: 'debris', from, to, side, nets } Rocks fallen from the crags
+  // above: boulders strewn along the verge on the mountain side (`side`),
+  // with rockfall nets up the slope when `nets`, and a warning sign before.
+  debris(job) {
+    const { s0, s1, f } = job;
+    const road = this.road;
+    const up = (job.up = f.side === 'left' ? -1 : f.side === 'right' ? 1 : mountainSide(road, s0, s1));
+    if (f.nets) {
+      for (let s = s0 + 4; s < s1 - 4; s += 8) {
+        const p = Props.at(road, s, up * (RAIL_OFFSET + 6), 0);
+        this.props.add('rocknet', p.x, p.z, p.yaw);
+      }
+    }
+    const ws = s0 - 50;
+    if (ws > road.start + 20) {
+      const w = road.sample(ws, {});
+      const d = (road.drive || 1) * (HALF_WIDTH + 1.3);
+      this.props.add('sign_rockfall', w.x + w.rightX * d, w.z + w.rightZ * d, Math.atan2(-w.dirX, -w.dirZ));
+    }
+  },
 };
 
 // ---------------------------------------------------------------- builds
@@ -1532,6 +1725,31 @@ const BUILDS = {
       }
     }
     this.mesh(geo);
+    // `spill`: m from the start of the dam where the overflow pours down
+    // the face in a white sheet, 10 m wide.
+    if (job.f.spill !== undefined) {
+      const pos = [], col = [], uv = [], idx = [];
+      const a = s0 + job.f.spill;
+      for (let i = 0; i <= 8; i++) {
+        for (const s of [a, a + 10]) {
+          const { f } = frame(road, s);
+          const [d, h] = face[i];
+          const dd = d + dry * 0.15;
+          pos.push(f.x + f.rightX * dd, f.y + h + 0.05, f.z + f.rightZ * dd);
+          col.push(1, 0, 0);
+          uv.push((s - a) / 4, i * 2);
+        }
+        if (i < 8) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      this.streamMat.side = THREE.DoubleSide;
+      this.group.add(new THREE.Mesh(g, this.streamMat));
+    }
   },
 
   railway(job) {
@@ -1835,6 +2053,7 @@ const BUILDS = {
   },
 
   gallery(job) {
+    if (job.f.style === 'rock') return rockGallery.call(this, job);
     const { s0, s1, up } = job;
     const road = this.road;
     const geo = new Geo();
@@ -1900,8 +2119,14 @@ const BUILDS = {
     }
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     // Winding: make sure the top faces up.
-    const m = new THREE.Mesh(g, this.lakeMat);
     this.lakeMat.side = THREE.DoubleSide;
+    // A lake of its own colour (`color`): a dark tarn, a milky blue reservoir.
+    let mat = this.lakeMat;
+    if (job.f.color) {
+      mat = this.lakeMat.clone();
+      mat.color.set(job.f.color);
+    }
+    const m = new THREE.Mesh(g, mat);
     m.receiveShadow = true;
     this.group.add(m);
   },
@@ -2732,6 +2957,196 @@ const BUILDS = {
     Object.assign(job, { side, near: near + 0.5, far: near + 400 });
     BUILDS.lake.call(this, job);
   },
+  melt(job) {
+    const road = this.road;
+    // A thin sheet of water wandering across the road and verges, just over
+    // the tarmac, see-through with streaks of foam.
+    const pos = [], col = [], uv = [], idx = [];
+    const f = {};
+    const e = RAIL_OFFSET + 1.8;
+    const n = Math.ceil((2 * e) / 0.5);
+    const half = (job.s1 - job.s0) / 2;
+    const ph = job.mid * 0.37;
+    for (let i = 0; i <= n; i++) {
+      const d = -e + (2 * e * i) / n;
+      // Downhill across the road, the water fans out a little.
+      const t = (d * -job.up + e) / (2 * e);
+      const c = job.mid + Math.sin(d * 0.45 + ph) * 0.8 + Math.sin(d * 1.3 + ph * 2) * 0.25;
+      const w = half * (0.7 + 0.6 * t);
+      for (const k of [-1, -0.4, 0.4, 1]) {
+        const s = c + k * w;
+        road.sample(s, f);
+        pos.push(f.x + f.rightX * d, f.y + crownAt(d) + 0.02, f.z + f.rightZ * d);
+        col.push(0.2, 1, 0);
+        uv.push(d / 3, s / 3);
+      }
+      if (i < n) {
+        for (let k = 0; k < 3; k++) {
+          const a = i * 4 + k, b = a + 4;
+          idx.push(a, b, a + 1, a + 1, b, b + 1);
+        }
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, this.streamMat);
+    this.streamMat.side = THREE.DoubleSide;
+    m.receiveShadow = true;
+    this.group.add(m);
+    river.call(this, job.above, 1.6);
+    river.call(this, job.below, 1.6);
+  },
+
+  snowwalls(job) {
+    const { s0, s1, H } = job;
+    const road = this.road;
+    const geo = new Geo();
+    const along = (s) => smooth(s0 - 30, s0 + 12, s) * (1 - smooth(s1 - 12, s1 + 30, s));
+    const f = {};
+    for (const side of [-1, 1]) {
+      let prev = null;
+      for (let s = s0 - 20; s <= s1 + 20; s += 0.35) {
+        const ht = H * along(s) * (0.9 + 0.1 * Math.sin(s * 0.13 + side) * Math.sin(s * 0.041));
+        if (ht < 0.45) {
+          prev = null;
+          continue;
+        }
+        road.sample(s, f);
+        // Sheer faces fluted by the rotary blower's passes, leaning back a
+        // touch, with a rounded, overhanging lip at the top and the
+        // snowfield sinking into the raised ground behind.
+        const flute = 0.12 * (1 - Math.cos((s / 1.15) * Math.PI * 2)) * 0.5;
+        const face = W + 0.08 + flute;
+        const prof = [];
+        for (const z of [-0.3, 0.12, 0.27, 0.42, 0.57, 0.72, 0.86, 0.96]) {
+          const h = z < 0 ? z : z * ht;
+          prof.push([face + 0.035 * Math.max(0, h), h]);
+        }
+        prof.push([face + ht * 0.035 - 0.12, ht + 0.12], [face + 0.3, ht + 0.3], [face + 1.4, ht + 0.42], [face + 3.4, ht + 0.25], [face + 6.5, ht - 0.4], [face + 9, ht - 1.6]);
+        const ring = prof.map(([d, h]) => new THREE.Vector3(f.x + f.rightX * d * side, f.y + h, f.z + f.rightZ * d * side));
+        const inside = new THREE.Vector3(f.x + f.rightX * (W + 2.5) * side, f.y - 3, f.z + f.rightZ * (W + 2.5) * side);
+        if (prev) {
+          // Each season's layer a slightly different white, a dusty grey
+          // band here and there.
+          const chunk = Math.floor(s / 9);
+          for (let k = 0; k < ring.length - 1; k++) {
+            const r = Math.abs(Math.sin((chunk * 31 + k * 17 + side * 7) * 12.9898) * 43758.5453) % 1;
+            const col = k >= 8 ? '#f6f8fb' : k === 0 ? '#c8cdd2' : r < 0.12 ? '#c9c6bd' : r < 0.45 ? '#e3e9ef' : r < 0.7 ? '#eef2f6' : '#dce4ec';
+            geo.quad(prev[k], ring[k], ring[k + 1], prev[k + 1], PLASTER, col, inside);
+          }
+        }
+        prev = ring;
+      }
+    }
+    this.mesh(geo);
+  },
+
+  retain(job) {
+    const { s0, s1, side: v, H } = job;
+    const road = this.road;
+    const geo = new Geo();
+    const foot = W + 0.6 + H * 0.12;
+    // Battered face from the parapet down past the foot, filled back under
+    // the verge.
+    sweep(geo, road, s0, s1, [[v * W, 1.0], [v * (W + 0.55), 1.0], [v * (W + 0.55), 0], [v * (foot + 0.3), -H - 2.5], [v * (HALF_WIDTH + 0.5), -H - 2.5], [v * (HALF_WIDTH + 0.5), -0.07], [v * W, -0.07]], MASONRY, STONE, { step: 2 });
+    sweep(geo, road, s0 - 0.1, s1 + 0.1, [[v * (W - 0.07), 1.0], [v * (W + 0.62), 1.0], [v * (W + 0.62), 1.16], [v * (W - 0.07), 1.16]], PLASTER, COPING);
+    // Weep holes along the face.
+    for (let s = s0 + 3; s < s1 - 2; s += 4) {
+      const { f, along, across } = frame(road, s);
+      const h = -H * 0.55;
+      const d = v * (W + 0.55 + (-h / (H + 2.5)) * (foot + 0.3 - W - 0.55) + 0.02);
+      geo.box(f.x + across.x * d, f.z + across.z * d, f.y + h, f.y + h + 0.18, along, 0.09, across, 0.04, PAINT, '#24221f');
+    }
+    this.mesh(geo);
+  },
+
+  glacier(job) {
+    const { g } = job;
+    const NU = 360, NV = 30;
+    const pos = [], col = [], idx = [];
+    const c = new THREE.Color(), tmp = new THREE.Color();
+    const ICE = new THREE.Color('#c6d0d6'), ICE2 = new THREE.Color('#aebcc4'), BLUE = new THREE.Color('#3f6f96');
+    const DIRT = new THREE.Color('#8a8278'), MORAINE = new THREE.Color('#6a665f'), SNOW = new THREE.Color('#f5f7fa');
+    const hash = (a, b) => Math.abs(Math.sin(a * 127.1 + b * 311.7) * 43758.5453) % 1;
+    for (let i = 0; i <= NU; i++) {
+      const u = (1.12 * i) / NU;
+      const hw = g.half(u), wi = hw * 0.97;
+      const fl = g.floor(u), th = g.thick(u);
+      const um = u * g.L;
+      for (let j = 0; j <= NV; j++) {
+        const q = -1 + (2 * j) / NV;
+        const v = q * wi;
+        const bulge = Math.sqrt(Math.max(0, 1 - q * q));
+        // Crevasses: furrows across the icefalls, and broad hummocks.
+        const fall = smooth(0.24, 0.28, u) * (1 - smooth(0.42, 0.46, u)) + smooth(0.66, 0.7, u) * (1 - smooth(0.82, 0.86, u));
+        const crev = i % 3 === 0 && Math.abs(q) < 0.92 ? fall * (1.2 + hash(i, j >> 1) * 1.6) : 0;
+        const hum = (hash(i >> 2, j >> 1) - 0.5) * 1.2 * smooth(0.05, 0.2, u) * bulge;
+        const y = fl + (v / hw) ** 2 * hw * 0.12 + th * bulge ** 0.6 - 1.5 * q ** 8 - 1.5 * (1 - smooth(0, 0.02, u)) - crev + hum;
+        const [px, pz] = g.point(u, v);
+        pos.push(px, y, pz);
+        // Clean ice in the middle, grey and dusty at the edges and the
+        // snout, a dark stripe of moraine down the middle, blue crevasses
+        // across the icefalls and bands of ogives below them, and snow up top.
+        c.copy(ICE).lerp(ICE2, hash(i >> 3, j >> 2) * 0.8);
+        const og = (um % 70) / 70;
+        if (u > 0.08 && u < 0.6) c.lerp(tmp.set('#b9c2c6'), 0.35 * smooth(0.0, 0.1, og) * (1 - smooth(0.25, 0.4, og)));
+        if (crev > 0) c.lerp(BLUE, 0.85 * fall);
+        c.lerp(tmp.set('#a9b2b6'), 0.25 * smooth(0.2, 0.9, hash(i >> 4, j >> 3)) * (1 - smooth(0.75, 0.9, u)));
+        c.lerp(SNOW, smooth(0.78, 0.98, u));
+        c.lerp(MORAINE, (1 - smooth(0.03, 0.07, Math.abs(q))) * (1 - smooth(0.7, 0.85, u)) * 0.9);
+        c.lerp(DIRT, smooth(0.7, 0.95, Math.abs(q)) * 0.75 * (1 - smooth(0.85, 1.0, u)));
+        c.lerp(DIRT, (1 - smooth(0.02, 0.09, u)) * 0.6);
+        col.push(c.r, c.g, c.b);
+        if (i < NU && j < NV) {
+          const a = i * (NV + 1) + j, b = a + NV + 1;
+          idx.push(a, a + 1, b, a + 1, b + 1, b);
+        }
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    // Whichever way the grid winds, the ice faces up.
+    let up = 0;
+    const nrm = geo.attributes.normal;
+    for (let i = 0; i < nrm.count; i += 50) up += nrm.getY(i);
+    if (up < 0) {
+      for (let i = 0; i < idx.length; i += 3) [idx[i + 1], idx[i + 2]] = [idx[i + 2], idx[i + 1]];
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+    }
+    this.iceMat ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0 });
+    const m = new THREE.Mesh(geo, this.iceMat);
+    m.receiveShadow = true;
+    m.castShadow = false;
+    this.group.add(m);
+    // Boulders along the moraine ridges and dumped below the snout.
+    for (let u = -0.25; u < 0.7; u += 0.012) {
+      const hw = g.half(u);
+      for (const k of [-1, 1]) {
+        if (this.rand() < 0.45) continue;
+        const v = k * hw * (1.0 + this.rand() * 0.16);
+        this.rock(...g.point(u, v), 1.5 + this.rand() * this.rand() * 6);
+      }
+    }
+  },
+
+  debris(job) {
+    const { s0, s1, up } = job;
+    const f = {};
+    for (let s = s0; s < s1; s += 2.5) {
+      if (this.rand() < 0.35) continue;
+      this.road.sample(s, f);
+      const d = up * (RAIL_OFFSET + 0.6 + this.rand() * this.rand() * 9);
+      this.rock(f.x + f.rightX * d, f.z + f.rightZ * d, 0.25 + this.rand() * this.rand() * 1.8);
+    }
+  },
 };
 
 // Walls and hedge banks: keep trees and rocks off the strip they stand on.
@@ -3048,6 +3463,220 @@ function river(pts, width, fall = false) {
   this.streamMat.side = THREE.DoubleSide;
   m.receiveShadow = true;
   this.group.add(m);
+}
+
+// The rock over a rock gallery, [d, h] from the top of the windows' wall
+// back into the mountain (d towards it, h above the road).
+const GALLERY_ROOF = [[-8.2, 8.1], [-7.4, 10.4], [-2, 13.4], [4, 16.4], [9.5, 19.3]];
+
+// A gallery blasted through the rock (gallery "style": "rock"): a rough vault
+// with window openings through the valley-side wall every 16 m, lamps down
+// the middle of the roof and water dripping from it.
+function rockGallery(job) {
+  const { s0, s1, up } = job;
+  const road = this.road;
+  const geo = new Geo();
+  const A = 5.6, B = 6.3, T = 2.6, LO = 1.1, HI = 4.2;
+  const ROCK = ['#98938a', '#a39d93', '#8d8981', '#aca59a', '#86827b', '#9e988e', '#b3aca0'];
+  const hash = (a, b) => Math.abs(Math.sin(a * 127.1 + b * 311.7) * 43758.5453) % 1;
+  // Window openings, [sa, sb].
+  const wins = [];
+  for (let s = s0 + 9; s + 7 < s1 - 5; s += 16) wins.push([s, s + 7]);
+  const inWin = (s) => wins.some(([a, b]) => s > a + 1e-3 && s < b - 1e-3);
+  // Ring positions along the road: every 1.5 m, plus each window's edges.
+  const ss = new Set();
+  for (let s = s0; s < s1; s += 1.5) ss.add(+s.toFixed(3));
+  ss.add(s1);
+  for (const [a, b] of wins) ss.add(+a.toFixed(3)).add(+b.toFixed(3));
+  const S = [...ss].sort((a, b) => a - b);
+  // The vault: a squared-off arch from the valley side (phi 0) over to the
+  // mountain side (phi pi), with the window band's heights hit exactly.
+  const vault = (phi) => [-Math.sign(Math.cos(phi)) * A * Math.abs(Math.cos(phi)) ** 0.5, B * Math.abs(Math.sin(phi)) ** 0.75];
+  const phiAt = (h) => Math.asin(Math.min(1, (h / B) ** (1 / 0.75)));
+  const BAND = [LO, 2.1, 3.2, HI];
+  const PHI = [0, phiAt(0.5), ...BAND.map(phiAt), 0.85, 1.1, 1.35, 1.57, 1.8, 2.05, 2.3, 2.6, 2.85, Math.PI - phiAt(0.5), Math.PI];
+  const f = {};
+  const at = (s, d, h, jit) => {
+    road.sample(s, f);
+    const k = Math.round(s * 10);
+    const dd = d + (hash(k, Math.round(h * 10) + d) - 0.5) * jit;
+    const hh = h + (hash(k + 7, Math.round(d * 10)) - 0.5) * jit * 0.6;
+    return new THREE.Vector3(f.x + f.rightX * dd * up, f.y + hh, f.z + f.rightZ * dd * up);
+  };
+  const col = (a, b) => ROCK[Math.floor(hash(a, b) * ROCK.length)];
+  const mid = (s) => {
+    road.sample(s, f);
+    return new THREE.Vector3(f.x, f.y + 2.5, f.z);
+  };
+  // d here is towards the mountain (+), so the valley side is -d.
+  const inner = (s, i) => {
+    const [d, h] = vault(PHI[i]);
+    const edge = i === 0 || i === PHI.length - 1;
+    return at(s, d, h, edge ? 0 : 0.45);
+  };
+  const OUT = [-14, -6, -2, 0, ...BAND, 5.4, B + 1.8];
+  const outer = (s, i) => at(s, -(A + T), OUT[i], 0.7);
+  for (let n = 0; n < S.length - 1; n++) {
+    const a = S[n], b = S[n + 1], sm = (a + b) / 2;
+    const win = inWin(sm);
+    const c = mid(sm);
+    for (let i = 0; i < PHI.length - 1; i++) {
+      const h = vault((PHI[i] + PHI[i + 1]) / 2)[1];
+      if (win && PHI[i] < 1.5 && h > LO && h < HI) continue;
+      // The vault faces in, towards the middle of the road.
+      const q = [inner(a, i), inner(b, i), inner(b, i + 1), inner(a, i + 1)];
+      fixFacing(geo, q, c, true, col(n, i));
+    }
+    // The outside of the valley-side wall, facing out over the drop.
+    for (let i = 0; i < OUT.length - 1; i++) {
+      const h = (OUT[i] + OUT[i + 1]) / 2;
+      if (win && h > LO && h < HI) continue;
+      const q = [outer(a, i), outer(b, i), outer(b, i + 1), outer(a, i + 1)];
+      fixFacing(geo, q, c, false, col(n + 3, i));
+    }
+    // The rock above: a crag rising from the windows' wall back into the
+    // mountainside (GALLERY_ROOF, which the terrain carries on from).
+    road.sample(sm, f);
+    for (let i = 0; i < GALLERY_ROOF.length - 1; i++) {
+      const [d0, h0] = GALLERY_ROOF[i], [d1, h1] = GALLERY_ROOF[i + 1];
+      const j = i === GALLERY_ROOF.length - 2 ? 0 : 1.8;
+      const q = [at(a, d0, h0, i ? 1.8 : 0.7), at(b, d0, h0, i ? 1.8 : 0.7), at(b, d1, h1, j), at(a, d1, h1, j)];
+      fixFacing(geo, q, new THREE.Vector3(f.x - f.rightX * up * 30, f.y + 40, f.z - f.rightZ * up * 30), true, col(n, 99 + i));
+    }
+    // Gravel ledges between the road's verge and the walls.
+    for (const k of [-1, 1]) {
+      const e = k < 0 ? -A : A;
+      const q = [at(a, k * 4.6, -0.06, 0), at(b, k * 4.6, -0.06, 0), at(b, e, -0.06, 0), at(a, e, -0.06, 0)];
+      fixFacing(geo, q, new THREE.Vector3(f.x, f.y - 5, f.z), false, '#77736a');
+    }
+    if (win) {
+      // Sill and lintel through the wall's thickness.
+      const iLo = PHI.indexOf(phiAt(LO)), iHi = PHI.indexOf(phiAt(HI));
+      const oLo = OUT.indexOf(LO), oHi = OUT.indexOf(HI);
+      fixFacing(geo, [inner(a, iLo), inner(b, iLo), outer(b, oLo), outer(a, oLo)], new THREE.Vector3(c.x, c.y - 8, c.z), false, col(n, 50));
+      fixFacing(geo, [inner(a, iHi), inner(b, iHi), outer(b, oHi), outer(a, oHi)], new THREE.Vector3(c.x, c.y + 8, c.z), false, col(n, 51));
+    }
+  }
+  // Jambs at each window's ends, facing into the opening.
+  for (const [sa, sb] of wins) {
+    for (const [s, dir] of [[sa, 1], [sb, -1]]) {
+      road.sample(s + dir * 3, f);
+      const c = new THREE.Vector3(f.x - f.rightX * up * (A + T / 2), f.y + 2.6, f.z - f.rightZ * up * (A + T / 2));
+      for (let k = 0; k < BAND.length - 1; k++) {
+        const i0 = PHI.indexOf(phiAt(BAND[k])), o0 = OUT.indexOf(BAND[k]);
+        fixFacing(geo, [inner(s, i0), inner(s, i0 + 1), outer(s, o0 + 1), outer(s, o0)], c, true, col(s, k));
+      }
+    }
+  }
+  // Portal faces: the rock face the road disappears into, from the vault
+  // out to the crag's outline (the windows' wall, the rock above, the
+  // mountainside), each vault point joined to where a ray from the middle
+  // of the tunnel through it meets the outline.
+  const outline = [[-(A + T), -14], [-(A + T), B + 1.8], ...GALLERY_ROOF.slice(1), [GALLERY_ROOF.at(-1)[0], -3]];
+  const cast = (d, h) => {
+    const cx = 0, cy = 3, dx = d - cx, dy = h - cy;
+    let best = null;
+    for (let k = 0; k < outline.length - 1; k++) {
+      const [x0, y0] = outline[k], [x1, y1] = outline[k + 1];
+      const ex = x1 - x0, ey = y1 - y0;
+      const den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((x0 - cx) * ey - (y0 - cy) * ex) / den;
+      const u = ((x0 - cx) * dy - (y0 - cy) * dx) / den;
+      if (t > 1 && u >= 0 && u <= 1 && (!best || t > best)) best = t;
+    }
+    return best ? [cx + dx * best, cy + dy * best] : [d, h];
+  };
+  for (const [s, dir] of [[s0, -1], [s1, 1]]) {
+    road.sample(s, f);
+    const out = new THREE.Vector3(f.x + f.dirX * dir * 10, f.y + 3, f.z + f.dirZ * dir * 10);
+    for (let i = 0; i < PHI.length - 1; i++) {
+      const [d0, h0] = vault(PHI[i]), [d1, h1] = vault(PHI[i + 1]);
+      const [e0, k0] = cast(d0, h0), [e1, k1] = cast(d1, h1);
+      craggy(geo, [inner(s, i), inner(s, i + 1), at(s, e1, k1, 2.2), at(s, e0, k0, 2.2)], out, (u, v) => col(s + u, i * 7 + v), 4);
+    }
+    const [e0, k0] = cast(...vault(0)), [e1, k1] = cast(...vault(Math.PI));
+    craggy(geo, [at(s, -A, -14, 0), at(s, -A, 0, 0), at(s, e0, k0, 2.2), at(s, -(A + T), -14, 0.7)], out, (u, v) => col(s + u, 40 + v), 4);
+    craggy(geo, [at(s, A, -0.06, 0), at(s, A, -6, 0), at(s, e1, -6, 0), at(s, e1, k1, 2.2)], out, (u, v) => col(s + u, 60 + v), 4);
+  }
+  this.mesh(geo);
+  // Lamps down the middle of the roof.
+  const lamps = new Geo();
+  for (let s = s0 + 5; s < s1 - 3; s += 11) {
+    const { f: g, along, across } = frame(road, s);
+    lamps.box(g.x, g.z, g.y + B - 0.55, g.y + B - 0.4, along, 0.7, across, 0.14, EMISSIVE, '#ffd9a0');
+  }
+  this.mesh(lamps, false);
+  // Water dripping from the roof here and there.
+  const N = 36;
+  const drop = new THREE.CylinderGeometry(0.012, 0.012, 0.16, 4);
+  this.dripMat ||= new THREE.MeshBasicMaterial({ color: '#cfe0ea', transparent: true, opacity: 0.75 });
+  const im = new THREE.InstancedMesh(drop, this.dripMat, N);
+  im.frustumCulled = false;
+  this.group.add(im);
+  const spots = [];
+  for (let i = 0; i < N; i++) {
+    const s = s0 + 3 + this.rand() * (s1 - s0 - 6);
+    const d = (this.rand() * 2 - 1) * 4.5;
+    road.sample(s, f);
+    const h = vault(Math.acos(Math.max(-1, Math.min(1, -Math.sign(d) * (Math.abs(d) / A) ** 2))))[1] - 0.3;
+    spots.push({ x: f.x + f.rightX * d * up, z: f.z + f.rightZ * d * up, y0: f.y, h, ph: this.rand(), rate: 0.5 + this.rand() * 0.5 });
+  }
+  const m4 = new THREE.Matrix4();
+  this.gondolas.push({
+    update: (time) => {
+      for (let i = 0; i < N; i++) {
+        const p = spots[i];
+        const t = (time * p.rate + p.ph) % 1;
+        // Gathering on the roof for most of the cycle, then falling.
+        const fall = Math.max(0, (t - 0.6) / 0.4);
+        const y = p.y0 + p.h - 4.9 * (fall * Math.sqrt((2 * p.h) / 9.8)) ** 2;
+        m4.makeTranslation(p.x, Math.max(p.y0, y), p.z);
+        im.setMatrixAt(i, m4);
+      }
+      im.instanceMatrix.needsUpdate = true;
+    },
+  });
+}
+
+// Adds a quad facing towards `toward` (or away from it with towards false).
+function fixFacing(geo, q, toward, towards, col = '#6c6964', both = false) {
+  const n = new THREE.Vector3().subVectors(q[1], q[0]).cross(new THREE.Vector3().subVectors(q[2], q[0]));
+  const m = new THREE.Vector3().addVectors(q[0], q[2]).multiplyScalar(0.5);
+  const to = new THREE.Vector3().subVectors(toward, m);
+  let [a, b, c, d] = q;
+  if ((n.dot(to) > 0) !== towards) [b, d] = [d, b];
+  geo.tri(a, b, c, PLASTER, col);
+  geo.tri(a, c, d, PLASTER, col);
+  if (both) {
+    geo.tri(a, c, b, PLASTER, col);
+    geo.tri(a, d, c, PLASTER, col);
+  }
+}
+
+// A big rock face as an n by n grid of facets, the inner corners pushed
+// about at random so it reads as broken rock rather than one flat slab.
+// Edges stay put so it still meets its neighbours. Both sides drawn.
+function craggy(geo, q, toward, colAt, n = 4, amp = 0.8) {
+  const [a, b, c, d] = q;
+  const P = [];
+  for (let v = 0; v <= n; v++) {
+    const row = [];
+    for (let u = 0; u <= n; u++) {
+      const x = u / n, y = v / n;
+      const p = a.clone().multiplyScalar((1 - x) * (1 - y))
+        .addScaledVector(b, (1 - x) * y).addScaledVector(c, x * y).addScaledVector(d, x * (1 - y));
+      if (u > 0 && u < n && v > 0 && v < n) {
+        const r = (k) => (Math.abs(Math.sin(p.x * 12.9898 + p.z * 78.233 + p.y * 37.719 + k) * 43758.5453) % 1) - 0.5;
+        p.x += r(1) * amp * 2; p.y += r(2) * amp * 2; p.z += r(3) * amp * 2;
+      }
+      row.push(p);
+    }
+    P.push(row);
+  }
+  for (let v = 0; v < n; v++) {
+    for (let u = 0; u < n; u++) fixFacing(geo, [P[v][u], P[v + 1][u], P[v + 1][u + 1], P[v][u + 1]], toward, true, colAt(u, v), true);
+  }
 }
 
 // A square beam of half width r between two points.
