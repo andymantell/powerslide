@@ -52,6 +52,8 @@ export class Grass {
     map.anisotropy = 4;
     this.uniforms = {
       uTime: { value: 0 },
+      // A level's side-wind gust (m/s, world xz), set by main.js.
+      uGust: { value: new THREE.Vector3() },
       uFade: { value: new THREE.Vector2(this.radius * 0.3, this.radius) },
       tPatch: { value: groundTexture('snow', 'albedo', renderer) },
       uPatchLo: { value: new THREE.Vector3(...(terrain.groundSet?.patchLo ?? [0.74, 0.84, 0.68])) },
@@ -73,6 +75,7 @@ export class Grass {
           `#include <common>
           attribute vec2 aTuft; // variant (0 or 1), dryness
           uniform float uTime;
+          uniform vec3 uGust;
           uniform vec2 uFade;
           varying vec3 vTuft;`,
         )
@@ -93,6 +96,7 @@ export class Grass {
           float gust = sin(uTime * 1.3 + tBase.x * 0.21 + tBase.z * 0.13) * 0.5 + 0.5;
           float flutter = sin(uTime * 4.1 + tBase.x * 1.7 + tBase.z * 1.3);
           vec3 wind = vec3(0.09 * gust + 0.025 * flutter, 0.0, 0.05 * gust) * tH;
+          wind += uGust * (0.016 + 0.006 * flutter) * tH;
           transformed += (inverse(mat3(instanceMatrix)) * wind);
           vTuft = vec3(tBase.xz, aTuft.y);`,
         )

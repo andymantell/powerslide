@@ -18,6 +18,13 @@ const PACKS = {
   canyon: new URL('./assets/models/props_canyon.glb', import.meta.url).href,
   // The city shares the suburbs' street furniture.
   city: [new URL('./assets/models/props_suburbs.glb', import.meta.url).href, new URL('./assets/models/props_city.glb', import.meta.url).href],
+  // The coast borrows Dartmoor's cottages, gorse and signs and the suburbs'
+  // beach huts, lampposts and train.
+  coast: [
+    new URL('./assets/models/props_dartmoor.glb', import.meta.url).href,
+    new URL('./assets/models/props_suburbs.glb', import.meta.url).href,
+    new URL('./assets/models/props_coast.glb', import.meta.url).href,
+  ],
 };
 
 // r: keep-out radius for trees, rocks and grass (m). pad: buildings get a level
@@ -303,6 +310,53 @@ export const PROP_TYPES = {
   riverboat_b: { r: 0, ...MID },
   hydrant: { r: 0.3, ...SMALL },
   street_tree: { r: 2, ...MID },
+  // Coastal Cliffs. Stacks, the arch, boats and the wreck stand at sea level
+  // ("y": "sea" in a level's props).
+  stack_a: { r: 0, ...BIG, far: 4000 },
+  stack_b: { r: 0, ...BIG, far: 4000 },
+  stack_c: { r: 0, ...BIG, far: 4000 },
+  sea_arch: { r: 0, ...BIG, far: 4000 },
+  reef: { r: 0, ...MID },
+  lighthouse: { r: 6, pad: 6, ...BIG, far: 4000 },
+  keepers: { r: 12, pad: 13, ...BIG },
+  fisher_a: { r: 5, pad: 5, ...BIG },
+  fisher_b: { r: 5, pad: 5, ...BIG },
+  fisher_c: { r: 5, pad: 5, ...BIG },
+  fisher_d: { r: 5, pad: 5, ...BIG },
+  fisher_e: { r: 5, pad: 5, ...BIG },
+  fisher_f: { r: 5, pad: 5, ...BIG },
+  fisher_g: { r: 5, pad: 5, ...BIG },
+  fisher_h: { r: 5, pad: 5, ...BIG },
+  harbour_light: { r: 2, ...BIG },
+  lifeboat_station: { r: 10, pad: 10, ...BIG },
+  castle_keep: { r: 10, pad: 10, ...BIG, far: 3000 },
+  castle_tower: { r: 5, pad: 5, ...BIG, far: 3000 },
+  castle_wall: { r: 8, ...BIG },
+  castle_gate: { r: 0, ...BIG, far: 3000 },
+  flag: { r: 1, ...MID },
+  boat_a: { r: 0, ...MID },
+  boat_b: { r: 0, ...MID },
+  boat_c: { r: 0, ...MID },
+  boat_d: { r: 0, ...MID },
+  dinghy: { r: 2, ...SMALL },
+  dinghy_b: { r: 2, ...SMALL },
+  wreck: { r: 0, ...BIG },
+  turbine: { r: 5, ...BIG, far: 4000 },
+  turbine_rotor: { r: 0, ...BIG, far: 4000 },
+  windsock: { r: 1, ...MID },
+  sign_wind: { r: 1, ...SMALL },
+  sign_cliff: { r: 1, ...SMALL },
+  cafe: { r: 14, pad: 14, ...BIG },
+  camper: { r: 3, ...MID },
+  camper_b: { r: 3, ...MID },
+  camper_c: { r: 3, ...MID },
+  ice_cream_van: { r: 3, ...MID },
+  surf_school: { r: 5, ...MID },
+  surfboard_rack: { r: 2, ...SMALL },
+  lobster_pots: { r: 2, ...SMALL },
+  fish_boxes: { r: 1, ...SMALL },
+  bench_sea: { r: 1, ...SMALL },
+  viaduct_bay: { r: 0, ...BIG, far: 3000 },
 };
 
 const DEG = Math.PI / 180;

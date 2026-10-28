@@ -89,6 +89,8 @@ function checkLevel(file, biome) {
     errors.push(`the road turns ${(road.headingOver * 57.3).toFixed(0)}° past the limit and gets forced back; add a bend the other way`);
   }
   for (const f of level.features || []) {
+    // The sea runs the whole level.
+    if (f.type === 'sea') continue;
     const [a, b] = f.from !== undefined ? [f.from, f.to] : [f.at, f.at];
     if (!(a >= -300 && b <= length && a <= b)) errors.push(`feature ${f.type} at ${a}${b !== a ? `-${b}` : ''} m is off the level (0 to ${length.toFixed(0)} m)`);
   }

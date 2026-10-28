@@ -7,6 +7,7 @@
 //       One prop. It faces the road unless yaw is "along" or "across"; a
 //       number turns it that many degrees from facing the road. "side":
 //       "valley" or "mountain" puts it on that side whatever the sign of d.
+//       "y": "sea" stands it at sea level (the `sea` feature) instead.
 //   { "row": "fence", "from": 100, "to": 400, "d": -8, "every": 3 }
 //       Props along the road, turned to run with it ("both": true mirrors it;
 //       "face": "road" turns each to face the road instead, as houses do).
@@ -43,7 +44,8 @@ function dressEntries(entries, road, props, rand, terrain) {
   for (const e of entries) {
     if (e.type) {
       const p = Props.at(road, S + e.at, onSide(road, S + e.at, e.d ?? 0, e.side), e.yaw);
-      props.add(e.type, p.x, p.z, p.yaw, e.scale ?? 1);
+      // "y": "sea" floats it at the level's sea level (boats, sea stacks).
+      props.add(e.type, p.x, p.z, p.yaw, e.scale ?? 1, e.y === 'sea' ? props.seaLevel ?? null : null);
     } else if (e.row) {
       const every = e.every ?? 3;
       const types = [].concat(e.row);

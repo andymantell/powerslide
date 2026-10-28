@@ -164,7 +164,21 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   (a tiled, orange-lit tunnel under the city with cuttings either end),
   `fair` (a turning ferris wheel and a merry-go-round at `at`/`d`) and
   `harbour` (a quay `near` m out on `side`, with a container ship and
-  `cranes`).
+  `cranes`). Coastal Cliffs adds `sea` (the sea along `side` of the whole
+  road, `below` m under its lowest point, past a cliff edge `near` m out
+  that wanders in and out; `heads` are `[at, d, width]` headlands reaching
+  out to `d`, `coves` are `[at, width, sand]` bays that come up to the road,
+  sandy when `sand` is 1, and `beach` (true or `[from, to]`) lays a shelf of
+  sand down to the water instead of the cliff; it also puts the guardrail on
+  the sea side), `gusts` (side-wind gusts that push the rider towards
+  `side`, up to `strength` m/s every `every` s: steer into them),
+  `turbines` (a row of turning wind turbines `d` m out on `side`, `every`
+  m), `viaduct` (a granite railway viaduct straight across a cove `d` m out,
+  `drop` m below the road, with a train every `every` s) and `harbour` with
+  `"style": "fishing"` (a stone quay with fishing boats, pots and harbour
+  arms `arm` m long, each with a light, on the sea's water). A prop or a
+  `smoke` with `"y": "sea"` stands at sea level (boats, stacks, the wreck),
+  and `smoke` with `"style": "spray"` is waves bursting white on the rocks.
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.

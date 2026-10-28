@@ -73,7 +73,18 @@ export const BIOMES = [
     rails: false,
     look: { lane: 3.3, time: 'night' },
   },
-  { id: 'coast', name: 'Coastal Cliffs', blurb: 'Hairpins, side winds and a long drop to the sea.' },
+  {
+    id: 'coast',
+    name: 'Coastal Cliffs',
+    blurb: 'Hairpins, side winds and a long drop to the sea.',
+    // A cliff road round a rocky coast: the sea on the drop side (the
+    // `sea` feature), guardrails along it, tight bends round the coves,
+    // side-wind gusts on the exposed headlands, and short climbs. Traffic
+    // keeps left.
+    rules: { minRadius: 16, maxGrade: 0.13, minGrade: -0.05 },
+    drive: 'left',
+    look: { markings: 'uk', lane: 3.0 },
+  },
   { id: 'pass', name: 'High Alpine Pass', blurb: 'Switchbacks, meltwater and everything at once.' },
 ];
 

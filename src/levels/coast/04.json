@@ -1,0 +1,243 @@
+{
+  "id": "coast-04",
+  "name": "Cliff Gallery",
+  "biome": "coast",
+  "seed": 7104,
+  "hint": "The road dives into a rock shelter cut into the cliff! Through its open arches you can see right out to sea. It curves all the way, so lean into it.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 140,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 120,
+      "grade": 0.08
+    },
+    {
+      "straight": 150,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "straight": 100,
+      "grade": 0.05
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "left",
+      "near": 14,
+      "below": 40,
+      "coves": [
+        [
+          670.0,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "gallery",
+      "from": 590,
+      "to": 750,
+      "side": "right"
+    },
+    {
+      "type": "smoke",
+      "at": 385,
+      "d": -138,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 280,
+      "d": -128,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1264,
+      "d": -326,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "stack_a",
+      "at": 385,
+      "d": -138,
+      "y": "sea",
+      "yaw": 143
+    },
+    {
+      "type": "stack_b",
+      "at": 280,
+      "d": -128,
+      "y": "sea",
+      "yaw": 145
+    },
+    {
+      "type": "stack_c",
+      "at": 1264,
+      "d": -326,
+      "y": "sea",
+      "yaw": 275
+    },
+    {
+      "type": "reef",
+      "at": 366,
+      "d": -255,
+      "y": "sea",
+      "yaw": 100
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1450,
+      "side": "right",
+      "near": 8,
+      "far": 70,
+      "count": 80
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1350,
+      "side": "right",
+      "near": 25,
+      "far": 120,
+      "count": 24
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 180,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 320,
+      "to": 440,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 940,
+      "to": 1060,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1200,
+      "to": 1360,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "type": "sign_cliff",
+      "at": 138,
+      "d": -7.1,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 398,
+      "d": -8.0,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 938,
+      "d": -7.7,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1078,
+      "d": -7.0,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1268,
+      "d": -8.2,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 550,
+      "d": -6.75,
+      "yaw": 0
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "cloudy"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 125,
+    "score": 2300
+  }
+}

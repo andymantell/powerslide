@@ -1,0 +1,645 @@
+{
+  "id": "coast-10",
+  "name": "Cliff Road",
+  "biome": "coast",
+  "seed": 7110,
+  "hint": "The big one! Four kilometres along the cliffs, with hairpins round the coves and gusts on the headlands. Finish at the cafe on the cliff top. Ice cream time!",
+  "pieces": [
+    {
+      "straight": 180,
+      "grade": 0.05
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 100
+    },
+    {
+      "straight": 220,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 19,
+      "grade": 0.06,
+      "bend": "right",
+      "length": 33
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 100
+    },
+    {
+      "straight": 240,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 18,
+      "grade": 0.06,
+      "bend": "right",
+      "length": 28
+    },
+    {
+      "straight": 200,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 90
+    },
+    {
+      "straight": 240,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 140,
+      "length": 110
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 60
+    },
+    {
+      "straight": 180,
+      "grade": 0.11
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 18,
+      "grade": 0.06,
+      "bend": "left",
+      "length": 28
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "straight": 100,
+      "grade": 0.03
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "left",
+      "near": 18,
+      "below": 40,
+      "heads": [
+        [
+          1153,
+          140,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "gusts",
+      "from": 1333,
+      "to": 1553,
+      "side": "right",
+      "strength": 13,
+      "every": 7
+    },
+    {
+      "type": "gusts",
+      "from": 2011,
+      "to": 2311,
+      "side": "right",
+      "strength": 15,
+      "every": 6,
+      "phase": 3
+    },
+    {
+      "type": "turbines",
+      "from": 1983,
+      "to": 2301,
+      "side": "right",
+      "d": 110,
+      "every": 140
+    },
+    {
+      "type": "flat",
+      "from": 3619,
+      "to": 3737,
+      "width": 50,
+      "keep": 0.1
+    },
+    {
+      "type": "smoke",
+      "at": 2125,
+      "d": -226,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 818,
+      "d": -330,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 2419,
+      "d": -153,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 3647,
+      "d": -122,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 2239,
+      "d": -213,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 2496,
+      "d": -233,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "lighthouse",
+      "at": 1153,
+      "d": -125,
+      "yaw": 0
+    },
+    {
+      "type": "keepers",
+      "at": 1123,
+      "d": -95,
+      "yaw": 0
+    },
+    {
+      "type": "sign_wind",
+      "at": 1283,
+      "d": -5.35,
+      "yaw": 0
+    },
+    {
+      "type": "windsock",
+      "at": 1363,
+      "d": -8,
+      "yaw": 0
+    },
+    {
+      "type": "sign_wind",
+      "at": 1961,
+      "d": -5.35,
+      "yaw": 0
+    },
+    {
+      "type": "windsock",
+      "at": 2041,
+      "d": -8,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 720,
+      "d": -6.75,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1703,
+      "d": -6.75,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 2811,
+      "d": -6.75,
+      "yaw": 0
+    },
+    {
+      "type": "cafe",
+      "at": 3727,
+      "d": 24,
+      "yaw": 0
+    },
+    {
+      "type": "camper",
+      "at": 3694,
+      "d": 12,
+      "yaw": "along"
+    },
+    {
+      "type": "car_red",
+      "at": 3709,
+      "d": 11,
+      "yaw": "across"
+    },
+    {
+      "type": "car_blue",
+      "at": 3713,
+      "d": 11,
+      "yaw": "across"
+    },
+    {
+      "type": "ice_cream_van",
+      "at": 3679,
+      "d": 9,
+      "yaw": "along"
+    },
+    {
+      "type": "bench_sea",
+      "at": 3731,
+      "d": -8,
+      "yaw": 180
+    },
+    {
+      "type": "flag",
+      "at": 3735,
+      "d": 15
+    },
+    {
+      "type": "stack_a",
+      "at": 2125,
+      "d": -226,
+      "y": "sea",
+      "yaw": 208
+    },
+    {
+      "type": "stack_b",
+      "at": 818,
+      "d": -330,
+      "y": "sea",
+      "yaw": 296
+    },
+    {
+      "type": "stack_c",
+      "at": 2419,
+      "d": -153,
+      "y": "sea",
+      "yaw": 187
+    },
+    {
+      "type": "reef",
+      "at": 1253,
+      "d": -177,
+      "y": "sea",
+      "yaw": 343
+    },
+    {
+      "type": "stack_a",
+      "at": 3647,
+      "d": -122,
+      "y": "sea",
+      "yaw": 310
+    },
+    {
+      "type": "stack_b",
+      "at": 2239,
+      "d": -213,
+      "y": "sea",
+      "yaw": 102
+    },
+    {
+      "type": "stack_c",
+      "at": 2496,
+      "d": -233,
+      "y": "sea",
+      "yaw": 247
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 3739,
+      "side": "right",
+      "near": 8,
+      "far": 70,
+      "count": 207
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 3639,
+      "side": "right",
+      "near": 25,
+      "far": 120,
+      "count": 62
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 280,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 360,
+      "to": 520,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 660,
+      "to": 880,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 960,
+      "to": 1180,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1260,
+      "to": 1380,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1520,
+      "to": 1740,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1820,
+      "to": 1980,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 2180,
+      "to": 2340,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 2480,
+      "to": 2600,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 2800,
+      "to": 2960,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 3040,
+      "to": 3160,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 3240,
+      "to": 3360,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "type": "bench_sea",
+      "at": 119,
+      "d": -7.2,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 379,
+      "d": -8.3,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 519,
+      "d": -8.4,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 659,
+      "d": -7.2,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 799,
+      "d": -7.6,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 989,
+      "d": -7.3,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 1319,
+      "d": -8.2,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 1509,
+      "d": -7.4,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 1769,
+      "d": -8.1,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1959,
+      "d": -7.4,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 2099,
+      "d": -7.8,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 2239,
+      "d": -8.3,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 2379,
+      "d": -7.3,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 2569,
+      "d": -7.5,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 2759,
+      "d": -8.1,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 2949,
+      "d": -7.9,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 3089,
+      "d": -7.7,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 3279,
+      "d": -7.2,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 3539,
+      "d": -7.8,
+      "yaw": 0
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [
+    1133,
+    2211
+  ],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 295,
+    "score": 5900
+  }
+}

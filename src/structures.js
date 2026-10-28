@@ -279,6 +279,7 @@ export class Structures {
   plan(level) {
     this.clear();
     this.level = level;
+    this.seaLevel = this.props.seaLevel = null;
     this.rand = mulberry32((level?.seed ?? 1) + 4242);
     this.rocks = [];
     this.todo = [];
@@ -336,6 +337,26 @@ export class Structures {
   bumpAt(s) {
     for (const j of this.todo || []) if (j.f.type === 'bump' && Math.abs(s - j.s0) < BUMP_LEN / 2) return j;
     return null;
+  }
+
+  // The side wind at s (m/s, + blowing to the road's right) from a level's
+  // `gusts`: a breeze with gusts every few seconds that build over a second
+  // or so, hold, and die away.
+  windAt(s, time) {
+    for (const j of this.todo || []) {
+      if (j.f.type !== 'gusts' || s < j.s0 - 30 || s > j.s1 + 30) continue;
+      const f = j.f, top = f.strength ?? 14;
+      const fade = smooth(j.s0 - 30, j.s0, s) * (1 - smooth(j.s1, j.s1 + 30, s));
+      const period = f.every ?? 7;
+      const ph = (time + (f.phase ?? 0)) / period;
+      const k = Math.floor(ph), u = ph - k;
+      // Each gust has its own strength, from the level's seed and its number.
+      const r = Math.abs(Math.sin(k * 12.9898 + j.s0 * 0.071) * 43758.5453) % 1;
+      const g = smooth(0.15, 0.35, u) * (1 - smooth(0.55, 0.85, u)) * (0.6 + 0.4 * r);
+      const side = f.side === 'left' ? -1 : 1;
+      return side * fade * (top * 0.18 + top * 0.82 * g);
+    }
+    return 0;
   }
 
   // How deep the water is over the road at s (a ford), 0 when dry.
@@ -549,6 +570,11 @@ function mountainSide(road, s0, s1) {
 
 // ---------------------------------------------------------------- plans
 export const PLANS = {
+  // { type: 'gusts', from, to, side, strength, every } Side-wind gusts
+  // across the road (structures.windAt), blowing towards `side` (right), up
+  // to `strength` m/s (14) every `every` s (7). Windsocks mark them.
+  gusts() {},
+
   // { type: 'bridge', from, to, depth } A stone viaduct over a gorge with a river.
   bridge(job) {
     const { f } = job;
@@ -616,7 +642,9 @@ export const PLANS = {
       const s = f.index;
       if (s < s0 - 30 || s > s1 + 30 || f.dist > 40) return h;
       if (f.side !== up) return h;
-      const m = smooth(s0 - 25, s0 + 4, s) * (1 - smooth(s1 - 4, s1 + 25, s)) * smooth(5.4, 7, f.dist) * (1 - smooth(14, 40, f.dist));
+      // It starts rising behind the back wall, under the roof, so no slope
+      // of the terrain mesh can poke through the wall.
+      const m = smooth(s0 - 25, s0 + 4, s) * (1 - smooth(s1 - 4, s1 + 25, s)) * smooth(7.5, 9.5, f.dist) * (1 - smooth(14, 40, f.dist));
       return Math.max(h, h + (f.roadY + 7.4 - h) * m);
     });
   },
@@ -666,6 +694,157 @@ export const PLANS = {
     for (let s = s0; s <= s1; s += 15) {
       road.sample(s, fr);
       for (let d = near + 6; d < far; d += 15) this.terrain.block(fr.x + fr.rightX * d * side, fr.z + fr.rightZ * d * side, 14);
+    }
+  },
+
+  // { type: 'sea', side, near, below, beach, heads, coves } The sea along one side of the
+  // whole road, `below` m (40) under the road's lowest point: past `near` m
+  // (16, wandering in and out in coves and headlands) the land falls away
+  // in a cliff to rocks and the odd strip of sand. `beach` lays a gentle
+  // shelf of sand down to the water instead, all along or over [from, to]. The land rises on the other
+  // side, and the sea side gets the guardrail.
+  sea(job) {
+    const { f } = job;
+    const road = this.road;
+    const side = (job.side = f.side === 'left' ? -1 : 1);
+    let lo = Infinity;
+    const end = Math.min(road.count, Math.round((road.finish ?? road.count) + 40));
+    for (let i = Math.round(road.start); i < end; i++) lo = Math.min(lo, road.y[i]);
+    const level = (job.level = this.seaLevel = this.props.seaLevel = lo - (f.below ?? 40));
+    const near = f.near ?? 16;
+    for (let i = 0; i < road.count; i++) road.c[i] = -side;
+    // Coves and headlands: how far the cliff edge is from the road at s.
+    const ph = (this.level?.seed ?? 1) * 0.37;
+    // `heads`: [at, d, width] headlands reaching d m out at `at`, for a
+    // lighthouse or a castle to stand on; `coves`: [at, width] bays where
+    // the cliff edge comes right up to the road.
+    const S = road.start;
+    const heads = (f.heads || []).map(([at, d, w = 60]) => [S + at, d, w]);
+    const coves = (f.coves || []).map(([at, w = 60, sand = 0]) => [S + at, w, sand]);
+    // How much of a sandy cove's beach is at s, 0..1.
+    const sandAt = (s) => {
+      let k = 0;
+      for (const [at, w, sand] of coves) if (sand) k = Math.max(k, Math.exp(-(((s - at) / (w * 0.8)) ** 2)));
+      return k;
+    };
+    const beach = f.beach === true ? true : f.beach ? [S + f.beach[0], S + f.beach[1]] : null;
+    const beachAt = (s) => (beach ? (beach === true ? 1 : smooth(beach[0] - 60, beach[0], s) * (1 - smooth(beach[1], beach[1] + 60, s))) : 0);
+    job.beachAt = beachAt;
+    const edge = (job.edge = (s) => {
+      let e = Math.max(0, 9 * Math.sin(s * 0.0071 + ph) + 6 * Math.sin(s * 0.019 + ph * 2.3) + 3 * Math.sin(s * 0.047 + ph * 1.7));
+      // Small bays and buttresses so the edge is never a smooth line.
+      e += 2.5 + 2.5 * Math.sin(s * 0.11 + ph * 3.1) + 1.5 * Math.sin(s * 0.27 + ph * 5.3);
+      // A beach runs straight along the prom.
+      e = near + e * (1 - beachAt(s));
+      for (const [at, w] of coves) e += (near - 2 - e) * Math.exp(-(((s - at) / w) ** 2));
+      for (const [at, d, w] of heads) e = Math.max(e, d * Math.exp(-(((s - at) / w) ** 2)));
+      return e;
+    });
+    const n2 = this.terrain.noise2;
+    this.terrain.mods.push((x, z, fd, h) => {
+      if (fd.side !== side) return h;
+      const e = edge(fd.index);
+      if (fd.dist < e - 4) return h;
+      // A beach (all along, or [from, to]): a gentle shelf of sand from
+      // just past the road down into the water.
+      const wb = beachAt(fd.index);
+      let yb = h;
+      if (wb > 0) {
+        const b = Math.max(level - 3 - Math.max(0, fd.dist - e - 40) * 0.08, fd.roadY - 0.35 - Math.max(0, fd.dist - e + 4) * 0.06);
+        yb = h + (Math.min(h, b) - h) * smooth(e - 4, e + 2, fd.dist);
+        if (wb >= 1) return yb;
+      }
+      // The cliff: a steep, broken rock face about half as wide as it is
+      // high, down to boulders at the foot and the sea bed beyond.
+      const top = Math.min(h, fd.roadY - 0.6);
+      const H = top - level + 2;
+      // Sheer in places, steep broken slopes in others, with ribs and
+      // gullies running down the face and a ledge or two.
+      const steep = 0.5 + 0.5 * n2(fd.index / 70, 3.7);
+      const run = Math.max(6, H * (0.22 + 0.4 * steep));
+      const t = Math.min(1, Math.max(0, (fd.dist - e) / run));
+      const jag = n2(x / 13, z / 13) * 0.22 + n2(x / 4.5, z / 4.5) * 0.07;
+      const ledge = 0.06 * smooth(0.35, 0.45, t) * (1 - smooth(0.5, 0.6, t)) * (n2(fd.index / 40, 9.1) > 0 ? 1 : 0);
+      const face = top - H * Math.min(1, Math.max(0, Math.pow(t, 0.75) - ledge + jag * Math.sin(Math.PI * t) * 1.6));
+      let bed = level - 2 - Math.min(26, Math.max(0, fd.dist - e - run) * 0.18);
+      // A sandy cove: the beach shelves gently from the cliff foot into the sea.
+      const sand = sandAt(fd.index);
+      if (sand > 0) bed += (level + 1.2 - Math.max(0, fd.dist - e - run) * 0.045 - bed) * sand;
+      const y = t < 1 ? Math.max(face, bed) : bed;
+      const yc = Math.min(h, y + (h - y) * (1 - smooth(e - 4, e, fd.dist)));
+      return yc + (yb - yc) * wb;
+    });
+    // Sand on the beach, and wet rock and sand at the waterline.
+    const shore = !!this.terrain.groundSet?.shore;
+    this.terrain.mods.at(-1).cover = (x, z, fd, h, out) => {
+      if (fd.side !== side) return;
+      if (beach && shore && fd.dist > edge(fd.index) - 3) {
+        out.sand = Math.max(out.sand, beachAt(fd.index) * smooth(edge(fd.index) - 3, edge(fd.index) + 1, fd.dist));
+      }
+      if (h > level + 3) return;
+      if (shore) out.sand = Math.max(out.sand, 1 - smooth(level + 1.2, level + 2.6, h));
+      out.wet = Math.max(out.wet, 1 - smooth(level + 0.1, level + 0.8, h));
+    };
+    // Keep trees off the cliff face and out of the water.
+    const fr = {};
+    for (let s = 0; s < road.count; s += 15) {
+      road.sample(s, fr);
+      const e = edge(s);
+      for (let d = e - 2; d < e + 70; d += 14) this.terrain.block(fr.x + fr.rightX * d * side, fr.z + fr.rightZ * d * side, 12);
+    }
+  },
+
+  // { type: 'turbines', from, to, side, d, every } A row of wind turbines
+  // `d` m (70) off the road every `every` m (110), rotors turning.
+  turbines(job) {
+    const { f } = job;
+    const side = f.side === 'left' ? -1 : 1;
+    job.list = [];
+    for (let s = job.s0, k = 0; s <= job.s1; s += f.every ?? 110, k++) {
+      const p = Props.at(this.road, s, side * ((f.d ?? 70) + (k % 2) * 25 + this.rand() * 10), 0);
+      this.props.add('turbine', p.x, p.z, p.yaw);
+      job.list.push(p);
+    }
+  },
+
+  // { type: 'viaduct', from, to, side, d, drop, every } A granite railway
+  // viaduct striding straight across a cove `d` m (60) out on `side`, its
+  // deck `drop` m (14) below the road's lowest point along it, carried into
+  // the cliffs either end on embankments and cuttings; a train crosses every
+  // `every` s (30).
+  viaduct(job) {
+    const { f } = job;
+    const road = this.road;
+    const side = f.side === 'left' ? -1 : 1;
+    const d = side * (f.d ?? 60);
+    const a = road.sample(job.s0, {}), b = road.sample(job.s1, {});
+    const A = { x: a.x + a.rightX * d, z: a.z + a.rightZ * d }, B = { x: b.x + b.rightX * d, z: b.z + b.rightZ * d };
+    let lo = Infinity;
+    for (let s = job.s0; s <= job.s1; s += 4) lo = Math.min(lo, road.y[Math.round(s)]);
+    const top = (job.top = lo - (f.drop ?? 14));
+    const L = Math.hypot(B.x - A.x, B.z - A.z);
+    const ux = (B.x - A.x) / L, uz = (B.z - A.z) / L;
+    Object.assign(job, { A, ux, uz, L });
+    // Embankments and cuttings carry the line on beyond the ends.
+    const ext = 90;
+    this.terrain.mods.push((x, z, fd, h) => {
+      const t = (x - A.x) * ux + (z - A.z) * uz;
+      if (t > -ext && t < L + ext && (t < 0 || t > L)) {
+        const perp = Math.abs((x - A.x) * -uz + (z - A.z) * ux);
+        if (perp > 60) return h;
+        const want = top - 0.3;
+        const w = (1 - smooth(4.5, 4.5 + Math.abs(h - want) * 1.6 + 1, perp)) * (1 - smooth(ext - 30, ext, t < 0 ? -t : t - L));
+        return h + (want - h) * w;
+      }
+      return h;
+    });
+    const n = Math.round(L / 18);
+    const step = L / n;
+    const yaw = Math.atan2(-uz, ux);
+    for (let k = 0; k <= n; k++) {
+      const t = k * step;
+      this.props.add('viaduct_bay', A.x + ux * t, A.z + uz * t, yaw, 1, top);
+      this.terrain.block(A.x + ux * t, A.z + uz * t, 6);
     }
   },
 
@@ -1224,7 +1403,9 @@ export const PLANS = {
     const near = (job.near = f.near ?? 30);
     let lo = Infinity;
     for (let s = s0; s <= s1; s += 4) lo = Math.min(lo, this.road.y[Math.round(s)]);
-    const level = (job.level = lo - 3);
+    // On the coast it shares the sea's water.
+    const level = (job.level = this.seaLevel ?? lo - 3);
+    const fishing = (job.fishing = f.style === 'fishing');
     Object.assign(job, { far: near + 400 });
     this.terrain.mods.push((x, z, fd, h) => {
       const s = fd.index;
@@ -1246,6 +1427,26 @@ export const PLANS = {
       this.props.add('bollard_quay', fr.x + fr.rightX * d, fr.z + fr.rightZ * d, 0, 1, fr.y - 0.26);
     }
     const mid = (s0 + s1) / 2;
+    if (fishing) {
+      // Boats moored off the quay, a light on the end of each arm, and pots
+      // and fish boxes on the quay.
+      const arm = (job.arm = f.arm ?? 70);
+      const boats = ['boat_a', 'boat_b', 'boat_c', 'boat_d'];
+      let k = 0;
+      for (let s = s0 + 14; s < s1 - 10; s += 17, k++) {
+        const b = Props.at(this.road, s, side * (near + 6 + (k % 2) * 9 + this.rand() * 4), 'along');
+        this.props.add(boats[k % 4], b.x, b.z, b.yaw + (this.rand() - 0.5) * 0.5, 1, level);
+      }
+      for (const s of [s0, s1]) {
+        const l = Props.at(this.road, s, side * (near + arm - 3), 0);
+        this.props.add('harbour_light', l.x, l.z, l.yaw, 1, this.road.sample(s, fr).y - 0.25);
+      }
+      for (let s = s0 + 10; s < s1 - 6; s += 23) {
+        const p = Props.at(this.road, s, side * (near - 3 - this.rand() * 3), this.rand() * 360);
+        this.props.add(this.rand() < 0.6 ? 'lobster_pots' : 'fish_boxes', p.x, p.z, p.yaw, 1, this.road.sample(s, fr).y - 0.26);
+      }
+      return;
+    }
     const ship = Props.at(this.road, mid, side * (near + 18), 'along');
     this.props.add('ship', ship.x, ship.z, ship.yaw, 1, level);
     const cranes = f.cranes ?? 3;
@@ -1486,7 +1687,8 @@ const BUILDS = {
     let d = f.d ?? 0;
     if (f.side === 'valley' || f.side === 'mountain') d = Math.abs(d) * ((this.road.c[Math.round(s)] || 0) > 0 ? 1 : -1) * (f.side === 'valley' ? -1 : 1);
     const p = Props.at(this.road, s, d);
-    const y = this.terrain.heightAt(p.x, p.z) + (f.h ?? 8);
+    // "y": "sea": spray off the rocks at sea level.
+    const y = (f.y === 'sea' && this.seaLevel != null ? this.seaLevel : this.terrain.heightAt(p.x, p.z)) + (f.h ?? 8);
     const tex = smokeTexture();
     const puffs = [];
     const N = 22;
@@ -1503,6 +1705,28 @@ const BUILDS = {
       puffs.push(sp);
     }
     const rate = 0.06, drift = new THREE.Vector3(1, 0, 0.4).normalize();
+    if (f.style === 'spray') {
+      // Waves bursting on the rocks: white spray flung up in bursts every
+      // few seconds, here and there round the spot, falling back as it fades.
+      this.gondolas.push({
+        update: (time) => {
+          for (let i = 0; i < N; i++) {
+            const sp = puffs[i];
+            const [j0, j1, j2] = sp.userData.j;
+            const ph = (time * (0.16 + j2 * 0.05) + j0) % 1;
+            const k = Math.floor(time * (0.16 + j2 * 0.05) + j0);
+            const a = (j1 + k * 0.618) * 6.283, rr = 3 + ((j0 * 7 + k * 0.37) % 1) * 9;
+            const up = Math.max(0, ph * 16 - ph * ph * 14);
+            const r = (2 + ph * 7) * (0.8 + j1 * 0.4);
+            sp.position.set(p.x + Math.cos(a) * rr, y + up, p.z + Math.sin(a) * rr);
+            sp.scale.set(r, r * 0.8, 1);
+            sp.material.opacity = ph < 0.6 ? Math.min(1, ph * 12) * (1 - ph / 0.6) * 0.9 : 0;
+            sp.material.rotation = j0 * 6.3;
+          }
+        },
+      });
+      return;
+    }
     this.gondolas.push({
       update: (time) => {
         for (let i = 0; i < N; i++) {
@@ -1676,6 +1900,44 @@ const BUILDS = {
     this.lakeMat.side = THREE.DoubleSide;
     m.receiveShadow = true;
     this.group.add(m);
+  },
+
+  sea(job) {
+    // Boulders fallen from the cliff, along its foot at the waterline.
+    const road = this.road;
+    const fr = {};
+    for (let s = road.start - 200; s < Math.min(road.count, (road.finish ?? road.count) + 300); s += 9) {
+      if (job.beachAt(s) > 0.3) continue;
+      road.sample(s, fr);
+      const e = job.edge(s);
+      for (let d = e; d < e + 120; d += 3) {
+        const x = fr.x + fr.rightX * d * job.side, z = fr.z + fr.rightZ * d * job.side;
+        if (this.terrain.heightAt(x, z) > job.level + 1.2) continue;
+        const n = 1 + Math.floor(this.rand() * 3);
+        for (let k = 0; k < n; k++) {
+          const a = this.rand() * 6.28, r = this.rand() * 6;
+          this.rock(x + Math.cos(a) * r + fr.rightX * job.side * 3, z + Math.sin(a) * r + fr.rightZ * job.side * 3, 1.2 + this.rand() * this.rand() * 4);
+        }
+        break;
+      }
+    }
+    // One big sheet of water out to the horizon, centred on the road.
+    const m = road.sample(road.count / 2, {});
+    const g = new THREE.PlaneGeometry(24000, 24000, 1, 1);
+    g.rotateX(-Math.PI / 2);
+    g.translate(m.x, job.level, m.z);
+    const pos = g.attributes.position;
+    const uv = g.attributes.uv;
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / 22, pos.getZ(i) / 22);
+    // Choppier and less glassy than a lake, so it doesn't mirror the clouds.
+    this.seaMat ||= this.lakeMat.clone();
+    this.seaMat.color.set(job.f.color || '#1d4a5e');
+    this.seaMat.roughness = 0.24;
+    this.seaMat.envMapIntensity = 0.55;
+    this.seaMat.normalScale.set(0.9, 0.9);
+    const sea = new THREE.Mesh(g, this.seaMat);
+    sea.receiveShadow = true;
+    this.group.add(sea);
   },
 
   cableway(job) {
@@ -2378,9 +2640,60 @@ const BUILDS = {
     });
   },
 
+  turbines(job) {
+    const g = this.props.geos.get('turbine_rotor');
+    if (!g) return;
+    const N = job.list.length;
+    const im = new THREE.InstancedMesh(g, this.mat, N);
+    im.castShadow = true;
+    im.frustumCulled = false;
+    this.group.add(im);
+    const base = job.list.map((p) => {
+      const m = new THREE.Matrix4().makeRotationY(p.yaw);
+      m.setPosition(p.x, this.terrain.heightAt(p.x, p.z), p.z);
+      return m.multiply(new THREE.Matrix4().makeTranslation(0, 62.8, 5.9));
+    });
+    const spin = new THREE.Matrix4(), m4 = new THREE.Matrix4();
+    this.gondolas.push({
+      update: (time) => {
+        for (let i = 0; i < N; i++) {
+          spin.makeRotationZ(time * (1.4 + (i % 3) * 0.12) + i * 1.7);
+          im.setMatrixAt(i, m4.multiplyMatrices(base[i], spin));
+        }
+        im.instanceMatrix.needsUpdate = true;
+      },
+    });
+  },
+
+  viaduct(job) {
+    const car = this.props.geos.get('train_car');
+    if (!car) return;
+    const { A, ux, uz, L, top } = job;
+    const N = 5;
+    const im = new THREE.InstancedMesh(car, this.mat, N);
+    im.castShadow = true;
+    im.frustumCulled = false;
+    this.group.add(im);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-uz, ux)), one = new THREE.Vector3(1, 1, 1), P = new THREE.Vector3();
+    const period = job.f.every ?? 30, speed = 24, run = L + 160;
+    this.gondolas.push({
+      update: (time) => {
+        const t = ((time + (job.f.phase ?? 6)) % period) * speed - 80;
+        for (let k = 0; k < N; k++) {
+          const u = t - k * 20.5;
+          // Out of sight in the cuttings beyond the ends.
+          P.set(A.x + ux * u, u < -70 || u > run - 90 ? -1e4 : top + 0.25, A.z + uz * u);
+          im.setMatrixAt(k, m4.compose(P, q, one));
+        }
+        im.instanceMatrix.needsUpdate = true;
+      },
+    });
+  },
+
   harbour(job) {
     const { s0, s1, side, near, level } = job;
     const geo = new Geo();
+    const stone = job.fishing ? '#7f7b72' : '#6a665e';
     const fr = {};
     // The quay wall and its edge, mooring bollards along it.
     for (let s = s0; s < s1; s += 4) {
@@ -2388,10 +2701,25 @@ const BUILDS = {
       const fb = this.road.sample(Math.min(s1, s + 4), {});
       const P = (q, d, y) => new THREE.Vector3(q.x + q.rightX * side * d, y, q.z + q.rightZ * side * d);
       const c = P(fr, near - 5, fr.y);
-      geo.quad(P(fr, near, level - 8), P(fb, near, level - 8), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), MASONRY, '#6a665e', c);
-      geo.quad(P(fr, near - 0.6, fr.y - 0.25), P(fb, near - 0.6, fb.y - 0.25), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), PAINT, '#c8b83a', c.clone().setY(c.y - 50));
+      geo.quad(P(fr, near, level - 8), P(fb, near, level - 8), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), MASONRY, stone, c);
+      geo.quad(P(fr, near - 0.6, fr.y - 0.25), P(fb, near - 0.6, fb.y - 0.25), P(fb, near, fb.y - 0.25), P(fr, near, fr.y - 0.25), job.fishing ? MASONRY : PAINT, job.fishing ? '#8a867c' : '#c8b83a', c.clone().setY(c.y - 50));
       // The apron: concrete hardstanding from the road out to the edge.
       geo.quad(P(fr, HALF_WIDTH + 0.3, fr.y - 0.28), P(fb, HALF_WIDTH + 0.3, fb.y - 0.28), P(fb, near - 0.6, fb.y - 0.26), P(fr, near - 0.6, fr.y - 0.26), PAVING, '#8a867e', c.clone().setY(c.y - 50));
+    }
+    if (job.fishing) {
+      // The harbour arms: granite walls from each end of the quay out to
+      // sea, with a parapet on the seaward side.
+      for (const [s, k] of [[s0, 1], [s1, -1]]) {
+        this.road.sample(s, fr);
+        const along = new THREE.Vector3(fr.dirX, 0, fr.dirZ), across = new THREE.Vector3(fr.rightX, 0, fr.rightZ);
+        const mid = near + job.arm / 2 - 1;
+        const x = fr.x + fr.rightX * side * mid, z = fr.z + fr.rightZ * side * mid;
+        geo.box(x, z, level - 8, fr.y - 0.25, along, 3.5, across, job.arm / 2, MASONRY, stone);
+        geo.box(x - fr.dirX * k * 2.9, z - fr.dirZ * k * 2.9, fr.y - 0.25, fr.y + 1.0, along, 0.6, across, job.arm / 2, MASONRY, '#7a766c');
+      }
+      this.mesh(geo);
+      if (this.seaLevel == null) BUILDS.lake.call(this, Object.assign(job, { side, near: near + 0.5, far: near + job.arm }));
+      return;
     }
     // End walls where the dock meets the shore.
     for (const s of [s0, s1]) {
@@ -2401,6 +2729,7 @@ const BUILDS = {
       geo.box(fr.x + fr.rightX * side * mid, fr.z + fr.rightZ * side * mid, level - 8, fr.y - 0.25, along, 0.8, across, 200, MASONRY, '#6a665e');
     }
     this.mesh(geo);
+    if (this.seaLevel != null) return;
     Object.assign(job, { side, near: near + 0.5, far: near + 400 });
     BUILDS.lake.call(this, job);
   },

@@ -1,0 +1,287 @@
+{
+  "id": "coast-05",
+  "name": "Wind Farm",
+  "biome": "coast",
+  "seed": 7105,
+  "hint": "It's windy on the cliff tops! Big gusts blow in off the sea and push you sideways. Watch the windsocks, and steer into the wind to stay in your lane.",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 100
+    },
+    {
+      "straight": 240,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 90
+    },
+    {
+      "straight": 220,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 160,
+      "length": 100
+    },
+    {
+      "straight": 240,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.07
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "right",
+      "near": 18,
+      "below": 45
+    },
+    {
+      "type": "turbines",
+      "from": 150,
+      "to": 1560,
+      "side": "left",
+      "d": 80,
+      "every": 130
+    },
+    {
+      "type": "gusts",
+      "from": 280,
+      "to": 490,
+      "side": "left",
+      "strength": 10,
+      "every": 7,
+      "phase": 0
+    },
+    {
+      "type": "gusts",
+      "from": 600,
+      "to": 870,
+      "side": "left",
+      "strength": 13,
+      "every": 7,
+      "phase": 2
+    },
+    {
+      "type": "gusts",
+      "from": 1200,
+      "to": 1420,
+      "side": "left",
+      "strength": 15,
+      "every": 7,
+      "phase": 4
+    },
+    {
+      "type": "smoke",
+      "at": 270,
+      "d": 110,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 394,
+      "d": 168,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1389,
+      "d": 188,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "sign_wind",
+      "at": 230,
+      "d": -5.35,
+      "yaw": 0
+    },
+    {
+      "type": "windsock",
+      "at": 300,
+      "d": 8,
+      "yaw": 0
+    },
+    {
+      "type": "sign_wind",
+      "at": 550,
+      "d": -5.35,
+      "yaw": 0
+    },
+    {
+      "type": "windsock",
+      "at": 620,
+      "d": 8,
+      "yaw": 0
+    },
+    {
+      "type": "sign_wind",
+      "at": 1150,
+      "d": -5.35,
+      "yaw": 0
+    },
+    {
+      "type": "windsock",
+      "at": 1220,
+      "d": 8,
+      "yaw": 0
+    },
+    {
+      "row": "fence",
+      "from": 120,
+      "to": 1540,
+      "d": -12,
+      "every": 3
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1660,
+      "side": "left",
+      "near": 8,
+      "far": 70,
+      "count": 92
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1560,
+      "side": "left",
+      "near": 25,
+      "far": 120,
+      "count": 27
+    },
+    {
+      "type": "sign_cliff",
+      "at": 117,
+      "d": 8.1,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 377,
+      "d": 8.2,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 517,
+      "d": 8.3,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 657,
+      "d": 7.7,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 797,
+      "d": 7.8,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 1057,
+      "d": 7.0,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 1197,
+      "d": 7.4,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 1387,
+      "d": 8.1,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 1527,
+      "d": 7.9,
+      "yaw": 180
+    },
+    {
+      "type": "stack_a",
+      "at": 270,
+      "d": 110,
+      "y": "sea",
+      "yaw": 314
+    },
+    {
+      "type": "stack_b",
+      "at": 394,
+      "d": 168,
+      "y": "sea",
+      "yaw": 354
+    },
+    {
+      "type": "stack_c",
+      "at": 1389,
+      "d": 188,
+      "y": "sea",
+      "yaw": 346
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "cloudy"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 150,
+    "score": 2700
+  }
+}

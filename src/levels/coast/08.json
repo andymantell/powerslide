@@ -1,0 +1,354 @@
+{
+  "id": "coast-08",
+  "name": "Castle Rock",
+  "biome": "coast",
+  "seed": 7108,
+  "hint": "Ride through the gate of an old castle! The gateway is narrow, so line up in the middle of your lane. The ruins stand on the rocky point beyond.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 200,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 70
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "straight": 160,
+      "grade": 0.04,
+      "ramp": 40
+    },
+    {
+      "straight": 140,
+      "grade": 0.1,
+      "ramp": 40
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 60
+    },
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "straight": 100,
+      "grade": 0.05
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "left",
+      "near": 18,
+      "below": 40,
+      "heads": [
+        [
+          1030,
+          150,
+          120
+        ]
+      ]
+    },
+    {
+      "type": "flat",
+      "from": 860,
+      "to": 1120,
+      "width": 120,
+      "keep": 0.2
+    },
+    {
+      "type": "walls",
+      "from": 916,
+      "to": 924
+    },
+    {
+      "type": "smoke",
+      "at": 434,
+      "d": -370,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1180,
+      "d": -133,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1639,
+      "d": -167,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "castle_gate",
+      "at": 920,
+      "d": 0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": -16.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": 16.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": -36.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": 36.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": -56.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_wall",
+      "at": 920,
+      "d": 56.0,
+      "yaw": "across"
+    },
+    {
+      "type": "castle_tower",
+      "at": 920,
+      "d": -71
+    },
+    {
+      "type": "castle_tower",
+      "at": 920,
+      "d": 71
+    },
+    {
+      "type": "castle_keep",
+      "at": 1030,
+      "d": -95,
+      "yaw": 20
+    },
+    {
+      "type": "castle_tower",
+      "at": 990,
+      "d": -125
+    },
+    {
+      "type": "castle_tower",
+      "at": 1080,
+      "d": -120
+    },
+    {
+      "type": "castle_wall",
+      "at": 1020,
+      "d": -128,
+      "yaw": "along"
+    },
+    {
+      "type": "castle_wall",
+      "at": 1048,
+      "d": -128,
+      "yaw": "along"
+    },
+    {
+      "type": "flag",
+      "at": 1030,
+      "d": -88
+    },
+    {
+      "type": "flag",
+      "at": 926,
+      "d": 9
+    },
+    {
+      "type": "flag",
+      "at": 926,
+      "d": -9
+    },
+    {
+      "type": "stack_a",
+      "at": 434,
+      "d": -370,
+      "y": "sea",
+      "yaw": 45
+    },
+    {
+      "type": "stack_b",
+      "at": 1180,
+      "d": -133,
+      "y": "sea",
+      "yaw": 89
+    },
+    {
+      "type": "stack_c",
+      "at": 1639,
+      "d": -167,
+      "y": "sea",
+      "yaw": 231
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1720,
+      "side": "right",
+      "near": 8,
+      "far": 70,
+      "count": 95
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1620,
+      "side": "right",
+      "near": 25,
+      "far": 120,
+      "count": 28
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 220,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 360,
+      "to": 520,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 720,
+      "to": 840,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1160,
+      "to": 1280,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1420,
+      "to": 1640,
+      "d": 11,
+      "every": 4
+    },
+    {
+      "type": "fingerpost",
+      "at": 134,
+      "d": -8.0,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 394,
+      "d": -7.1,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 534,
+      "d": -7.9,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 724,
+      "d": -7.9,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 1314,
+      "d": -7.7,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 1574,
+      "d": -7.8,
+      "yaw": 180
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 145,
+    "score": 3000
+  }
+}

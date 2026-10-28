@@ -72,6 +72,15 @@ export const GROUND_SETS = {
     patchLo: [0.8, 0.86, 0.78], patchHi: [1.0, 1.0, 0.9],
     relief: 0.45, maxRelief: 70, snowLine: 1e5, treeDensity: 0.12,
   },
+  // Coastal Cliffs: short, wind-clipped turf and heather over grey granite,
+  // sand in the coves and almost no trees.
+  coast: {
+    base: 'grass', rock: 'granite', gravel: 'gravel', snow: 'snow', tuft: 'moor_tuft', tuftDensity: 0.35, shore: 'sand',
+    patchLo: [0.86, 0.86, 0.78], patchHi: [1.04, 1.02, 0.86],
+    // The granite only shows in the cliffs (and steep banks): top-down on
+    // gentler ground it reads as paving.
+    relief: 0.6, maxRelief: 80, snowLine: 1e5, treeDensity: 0.03, outcrops: 0, cuts: 0,
+  },
 };
 
 // Paving for pavements and other flat hard surfaces built as geometry: 600 mm

@@ -1,0 +1,290 @@
+{
+  "id": "coast-07",
+  "name": "Shipwreck",
+  "biome": "coast",
+  "seed": 7107,
+  "hint": "Spooky sea mist! An old ship lies wrecked on the rocks below the first hairpin. The hairpins are very tight, so slow right down before them.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.09
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 140,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 19,
+      "grade": 0.06,
+      "bend": "left",
+      "length": 33
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 50,
+      "grade": 0.08
+    },
+    {
+      "straight": 30,
+      "grade": 0.07
+    },
+    {
+      "radius": 18,
+      "grade": 0.06,
+      "bend": "left",
+      "length": 35
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "straight": 80,
+      "grade": 0.03
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "right",
+      "near": 16,
+      "below": 6,
+      "coves": [
+        [
+          1638,
+          80,
+          1
+        ]
+      ]
+    },
+    {
+      "type": "smoke",
+      "at": 1203,
+      "d": 75,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 191,
+      "d": 255,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "wreck",
+      "at": 1203,
+      "d": 75,
+      "y": "sea",
+      "yaw": 30,
+      "scale": 1.4
+    },
+    {
+      "type": "sign_cliff",
+      "at": 570,
+      "d": 7,
+      "yaw": 0
+    },
+    {
+      "type": "sign_cliff",
+      "at": 913,
+      "d": 7,
+      "yaw": 0
+    },
+    {
+      "type": "lifeboat_station",
+      "at": 1638,
+      "d": 30,
+      "yaw": 0
+    },
+    {
+      "type": "flag",
+      "at": 1623,
+      "d": 20
+    },
+    {
+      "type": "reef",
+      "at": 578,
+      "d": 151,
+      "y": "sea",
+      "yaw": 234
+    },
+    {
+      "type": "stack_b",
+      "at": 191,
+      "d": 255,
+      "y": "sea",
+      "yaw": 132
+    },
+    {
+      "type": "reef",
+      "at": 169,
+      "d": 247,
+      "y": "sea",
+      "yaw": 13
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1698,
+      "side": "left",
+      "near": 8,
+      "far": 70,
+      "count": 94
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1598,
+      "side": "left",
+      "near": 25,
+      "far": 120,
+      "count": 28
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 220,
+      "d": -11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 300,
+      "to": 420,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 620,
+      "to": 780,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 980,
+      "to": 1100,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1300,
+      "to": 1520,
+      "d": -14,
+      "every": 4
+    },
+    {
+      "type": "fingerpost",
+      "at": 115,
+      "d": 7.0,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 255,
+      "d": 7.8,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 395,
+      "d": 7.6,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 655,
+      "d": 7.8,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 915,
+      "d": 7.1,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 1435,
+      "d": 7.5,
+      "yaw": 180
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "mist"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 160,
+    "score": 2900
+  }
+}

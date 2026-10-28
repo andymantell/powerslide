@@ -1,0 +1,306 @@
+{
+  "id": "coast-03",
+  "name": "Sea Arch",
+  "biome": "coast",
+  "seed": 7103,
+  "hint": "Look down at the giant rock arch standing in the sea! The waves crash white around it. Then look back up, because the bends are coming.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 180,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 130,
+      "length": 90
+    },
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "straight": 60,
+      "grade": 0.03
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "right",
+      "near": 16,
+      "below": 27,
+      "coves": [
+        [
+          1130,
+          70
+        ]
+      ]
+    },
+    {
+      "type": "smoke",
+      "at": 1130,
+      "d": 100,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1130,
+      "d": 140,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1040,
+      "d": 150,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1200,
+      "d": 95,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 408,
+      "d": 257,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 98,
+      "d": 336,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "sea_arch",
+      "at": 1130,
+      "d": 120,
+      "y": "sea",
+      "yaw": 15,
+      "scale": 1.3
+    },
+    {
+      "type": "stack_a",
+      "at": 1040,
+      "d": 150,
+      "y": "sea"
+    },
+    {
+      "type": "stack_b",
+      "at": 1200,
+      "d": 95,
+      "y": "sea"
+    },
+    {
+      "type": "stack_c",
+      "at": 1270,
+      "d": 180,
+      "y": "sea"
+    },
+    {
+      "type": "reef",
+      "at": 1160,
+      "d": 70,
+      "y": "sea"
+    },
+    {
+      "type": "stack_b",
+      "at": 408,
+      "d": 257,
+      "y": "sea",
+      "yaw": 133
+    },
+    {
+      "type": "reef",
+      "at": 913,
+      "d": 279,
+      "y": "sea",
+      "yaw": 24
+    },
+    {
+      "type": "stack_c",
+      "at": 98,
+      "d": 336,
+      "y": "sea",
+      "yaw": 93
+    },
+    {
+      "type": "bench_sea",
+      "at": 1110,
+      "d": 7.5,
+      "yaw": 180
+    },
+    {
+      "type": "camper_b",
+      "at": 1090,
+      "d": -9,
+      "yaw": "along"
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1540,
+      "side": "left",
+      "near": 8,
+      "far": 70,
+      "count": 85
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1440,
+      "side": "left",
+      "near": 25,
+      "far": 120,
+      "count": 25
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 180,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 380,
+      "to": 540,
+      "d": -14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 740,
+      "to": 900,
+      "d": -11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1100,
+      "to": 1220,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "type": "fingerpost",
+      "at": 89,
+      "d": 8.1,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 349,
+      "d": 7.2,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 609,
+      "d": 7.4,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 749,
+      "d": 7.7,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 1009,
+      "d": 8.0,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 1199,
+      "d": 8.0,
+      "yaw": 0
+    },
+    {
+      "type": "fingerpost",
+      "at": 1459,
+      "d": 8.4,
+      "yaw": 0
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 140,
+    "score": 2300
+  }
+}

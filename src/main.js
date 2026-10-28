@@ -5,7 +5,7 @@ import { RoadMesh } from './roadmesh.js';
 import { Player } from './player.js';
 import { Traffic, carLights } from './traffic.js';
 import { Input } from './input.js';
-import { Audio, VOLUMES } from './audio.js';
+import { Audio, VOLUMES, weatherOf } from './audio.js';
 import { TILT_SENSITIVITIES } from './tilt.js';
 import { SlideMarks } from './marks.js';
 import { Sparks } from './sparks.js';
@@ -1213,6 +1213,7 @@ function updateResolution(dt) {
 
 // Past the finish: hold the lane and footbrake to a stop.
 const _f = {};
+const windFrame = {};
 function runOut() {
   const f = road.sample(player.s, _f);
   const travel = Math.atan2(player.vel.x, -player.vel.y) - f.heading;
@@ -1273,6 +1274,15 @@ function frame(now) {
   if (game.mode === 'play' || game.mode === 'crashed' || game.mode === 'finished') {
     const wasCrashed = player.crashed;
     player.water = structures.waterAt(player.s);
+    // Coast levels' side-wind gusts: they push the rider, bend the grass
+    // and roar in the wind noise.
+    const cross = structures.windAt(player.s, time);
+    if (cross || player.mods.cross) {
+      player.mods.cross = cross;
+      const fw = road.sample(player.s, windFrame);
+      grass.uniforms.uGust.value.set(fw.rightX * cross, 0, fw.rightZ * cross);
+      audio.setWeather({ wind: Math.max(weatherOf(ENV.weather)?.wind || 0, Math.min(1, Math.abs(cross) / 18)) });
+    }
     player.update(dt, game.mode === 'play' ? state : game.mode === 'finished' ? runOut() : { steer: 0 });
     if (structures.rattleAt(player.s) && !player.crashed) player.shake = Math.max(player.shake, 0.45);
     audio.onGrid = structures.rattleAt(player.s) && !player.crashed;

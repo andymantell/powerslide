@@ -100,7 +100,9 @@ export class Player {
     // gravity multiplies g, wind blows down the road (m/s, - = headwind),
     // rolling multiplies rolling resistance and boost is a thrust (m/s²)
     // that comes in with the tuck. These defaults leave the physics alone.
-    this.mods = { gravity: 1, wind: 0, rolling: 1, boost: 0 };
+    // cross is a side wind across the road (m/s, + blowing to the right),
+    // set each frame from a level's gusts (structures.windAt).
+    this.mods = { gravity: 1, wind: 0, rolling: 1, boost: 0, cross: 0 };
     this.road = road;
     this.terrain = terrain;
     this.model = new RiderModel();
@@ -270,10 +272,14 @@ export class Player {
     const cda = lerp(lerp(CDA_UPRIGHT, CDA_TUCK, this.tuck), CDA_AIRBRAKE, this.airbrake) + (this.slideMode ? CDA_SLIDE : 0);
     const dragK = (0.5 * RHO * cda) / MASS;
     // Drag acts on the speed through the air, which wind changes.
-    const airX = this.vel.x - f.dirX * mods.wind, airZ = this.vel.y - f.dirZ * mods.wind;
+    const cross = mods.cross || 0;
+    const airX = this.vel.x - f.dirX * mods.wind - f.rightX * cross, airZ = this.vel.y - f.dirZ * mods.wind - f.rightZ * cross;
     const air = Math.hypot(airX, airZ);
     ax -= dragK * air * airX;
     az -= dragK * air * airZ;
+    // A side wind pushes the body off the board's line: unless you lean into
+    // it (steer into the wind), the deck rolls and carves downwind.
+    const aWind = dragK * air * cross;
 
     // Along the deck: rolling resistance, footbrake, pushing.
     const onGravel = Math.abs(this.d) > HALF_WIDTH;
@@ -330,7 +336,8 @@ export class Player {
     this.lean += this.leanRate * dt;
     let k = kWant;
     if (rolling) {
-      k = clamp(k, (G * Math.tan(this.lean - BALANCE_WINDOW)) / v2, (G * Math.tan(this.lean + BALANCE_WINDOW)) / v2);
+      const wk = aWind / v2;
+      k = clamp(k + wk, (G * Math.tan(this.lean - BALANCE_WINDOW)) / v2 + wk, (G * Math.tan(this.lean + BALANCE_WINDOW)) / v2 + wk);
     }
     this.curvature = clamp(k, -MAX_CURVATURE, MAX_CURVATURE);
     this.roll = Math.atan((this.curvature * WHEELBASE) / (SIN_FRONT + SIN_REAR)) + this.updateWobble(dt, v);

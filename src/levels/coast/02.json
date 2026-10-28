@@ -1,0 +1,773 @@
+{
+  "id": "coast-02",
+  "name": "Harbour",
+  "biome": "coast",
+  "seed": 7102,
+  "hint": "Roll down through the fishing village to the harbour! It gets steep between the cottages, so brake early. Finish on the quay by the fishing boats.",
+  "pieces": [
+    {
+      "straight": 140,
+      "grade": 0.05
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 180,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 90,
+      "length": 80
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.09
+    },
+    {
+      "straight": 180,
+      "grade": 0.1
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "straight": 60,
+      "grade": 0.03,
+      "ramp": 30
+    },
+    {
+      "straight": 220,
+      "grade": 0.01,
+      "ramp": 30
+    },
+    {
+      "straight": 60,
+      "grade": 0.0
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "right",
+      "near": 20,
+      "below": 3.0
+    },
+    {
+      "type": "street",
+      "from": 970,
+      "to": 1156,
+      "side": "left"
+    },
+    {
+      "type": "harbour",
+      "from": 1160,
+      "to": 1360,
+      "side": "right",
+      "near": 14,
+      "style": "fishing",
+      "arm": 70
+    }
+  ],
+  "props": [
+    {
+      "type": "fisher_a",
+      "at": 976,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 982.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 988.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 994.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1000.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1006.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1012.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1018.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1024.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1030.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1036.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1050.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1056.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1062.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1068.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1082.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1088.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1094.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1100.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1106.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1112.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1118.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1124.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1130.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1136.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1142.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1148.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1154.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1160.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1166.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1172.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1178.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1184.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1190.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1196.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1202.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1208.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1214.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1220.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1226.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1232.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1246.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1252.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1258.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1272.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1278.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1284.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1290.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1296.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1302.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1308.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1314.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1320.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1326.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1332.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1338.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1344.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1350.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1364.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1370.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1376.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1382.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1388.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1394.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1400.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1406.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1412.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1418.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1424.0,
+      "d": -10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 980,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 987,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 994,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1001,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1008,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1015,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1022,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1029,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1036,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1043,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1050,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1057,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1064,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1071,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1078,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1085,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1092,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_f",
+      "at": 1099,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_g",
+      "at": 1106,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_h",
+      "at": 1113,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_a",
+      "at": 1120,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_b",
+      "at": 1127,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_c",
+      "at": 1134,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_d",
+      "at": 1141,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "fisher_e",
+      "at": 1148,
+      "d": 10.4,
+      "yaw": 0
+    },
+    {
+      "type": "inn",
+      "at": 1280,
+      "d": -18,
+      "yaw": 0
+    },
+    {
+      "type": "dinghy",
+      "at": 1140,
+      "d": 16,
+      "yaw": 30
+    },
+    {
+      "type": "lamppost",
+      "at": 1190,
+      "d": -4.35,
+      "yaw": 0
+    },
+    {
+      "type": "lamppost",
+      "at": 1270,
+      "d": -4.35,
+      "yaw": 0
+    },
+    {
+      "type": "lamppost",
+      "at": 1350,
+      "d": -4.35,
+      "yaw": 0
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 970,
+      "side": "left",
+      "near": 8,
+      "far": 70,
+      "count": 53
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 870,
+      "side": "left",
+      "near": 25,
+      "far": 120,
+      "count": 16
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 180,
+      "d": -14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 380,
+      "to": 540,
+      "d": -11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 740,
+      "to": 900,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "type": "fingerpost",
+      "at": 96,
+      "d": 7.9,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 356,
+      "d": 8.0,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 546,
+      "d": 7.1,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 686,
+      "d": 7.6,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 826,
+      "d": 8.4,
+      "yaw": 180
+    }
+  ],
+  "sky": {
+    "time": "dawn",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 135,
+    "score": 2100
+  }
+}

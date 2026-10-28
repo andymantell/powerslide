@@ -214,6 +214,17 @@ console.log('\n== A strong speed wobble at 85 km/h (flat, held for 1 s)');
   console.log(`yaw swing ±${(((maxYaw - minYaw) / 2) * 57.3).toFixed(1)}°, sliding frames ${slid}/60, lateral drift ${p.pos.x.toFixed(2)} m`);
 }
 
+console.log('\n== A side gust (coast levels): 3 s of wind from the left at 60 km/h, tucked on 6%')
+for (const wind of [8, 14, 20]) {
+  const p = make(0.06, 60 / 3.6);
+  let maxLat = 0;
+  const free = p => { p.mods.cross = wind; return { tuck: 1 }; };
+  run(p, 3, free);
+  const q = make(0.06, 60 / 3.6);
+  run(q, 3, (pp) => { pp.mods.cross = wind; return { tuck: 1, steer: keepLane(pp) }; }, (pp) => (maxLat = Math.max(maxLat, Math.abs(pp.d))));
+  console.log(`${String(wind).padStart(2)} m/s: hands off drifts ${p.pos.x.toFixed(2).padStart(5)} m, steering to hold the lane strays ${maxLat.toFixed(2)} m, ${q.crashed ? 'CRASH: ' + q.crashReason : 'rode on'}`);
+}
+
 console.log('\n== Speed wobbles: 40 s at a held speed (wobble 1 throws you; warning shows above 0.3)');
 for (const kmh of [80, 95, 110, 130, 160]) {
   const row = [];

@@ -1,0 +1,246 @@
+{
+  "id": "coast-09",
+  "name": "Viaduct Cove",
+  "biome": "coast",
+  "seed": 7109,
+  "hint": "Look down at the cove! A train rumbles across the tall stone viaduct below you. Then the road gets twisty, so keep your eyes on the bends.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 200,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 70
+    },
+    {
+      "straight": 140,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 160,
+      "grade": 0.1
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 60
+    },
+    {
+      "straight": 160,
+      "grade": 0.09
+    },
+    {
+      "bend": "right",
+      "radius": 150,
+      "length": 130,
+      "grade": 0.05
+    },
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "straight": 100,
+      "grade": 0.04
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "right",
+      "near": 16,
+      "below": 18,
+      "coves": [
+        [
+          1150.0,
+          100,
+          1
+        ]
+      ]
+    },
+    {
+      "type": "viaduct",
+      "from": 1020,
+      "to": 1280,
+      "side": "right",
+      "d": 80,
+      "drop": 14,
+      "every": 26
+    },
+    {
+      "type": "smoke",
+      "at": 691,
+      "d": 267,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1224,
+      "d": 201,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1266,
+      "d": 215,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "stack_a",
+      "at": 691,
+      "d": 267,
+      "y": "sea",
+      "yaw": 50
+    },
+    {
+      "type": "stack_b",
+      "at": 1224,
+      "d": 201,
+      "y": "sea",
+      "yaw": 181
+    },
+    {
+      "type": "stack_c",
+      "at": 1266,
+      "d": 215,
+      "y": "sea",
+      "yaw": 200
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1480,
+      "side": "left",
+      "near": 8,
+      "far": 70,
+      "count": 82
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1380,
+      "side": "left",
+      "near": 25,
+      "far": 120,
+      "count": 24
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 280,
+      "d": -14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 360,
+      "to": 580,
+      "d": -11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 660,
+      "to": 880,
+      "d": -11,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1080,
+      "to": 1240,
+      "d": -9,
+      "every": 4
+    },
+    {
+      "type": "bench_sea",
+      "at": 94,
+      "d": 7.1,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 354,
+      "d": 8.1,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 544,
+      "d": 8.3,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 684,
+      "d": 8.0,
+      "yaw": 180
+    },
+    {
+      "type": "bench_sea",
+      "at": 874,
+      "d": 8.1,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1394,
+      "d": 8.2,
+      "yaw": 0
+    },
+    {
+      "type": "dinghy",
+      "at": 1170,
+      "d": 70,
+      "yaw": 50
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.9
+  },
+  "targets": {
+    "time": 130,
+    "score": 2800
+  }
+}

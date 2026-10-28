@@ -1,0 +1,270 @@
+{
+  "id": "coast-01",
+  "name": "Lighthouse Point",
+  "biome": "coast",
+  "seed": 7101,
+  "hint": "Welcome to the seaside! Cruise along the cliff tops with the sea far below. Look out for the red and white lighthouse on the point.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.04
+    },
+    {
+      "bend": "left",
+      "radius": 160,
+      "length": 120
+    },
+    {
+      "straight": 200,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 140,
+      "length": 110
+    },
+    {
+      "straight": 180,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 180,
+      "length": 120
+    },
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 150,
+      "length": 110
+    },
+    {
+      "straight": 200,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 160,
+      "length": 100
+    },
+    {
+      "straight": 150,
+      "grade": 0.05
+    }
+  ],
+  "features": [
+    {
+      "type": "sea",
+      "side": "left",
+      "near": 18,
+      "below": 45,
+      "heads": [
+        [
+          960,
+          120,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "smoke",
+      "at": 273,
+      "d": -339,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 447,
+      "d": -244,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    },
+    {
+      "type": "smoke",
+      "at": 1018,
+      "d": -323,
+      "y": "sea",
+      "h": 0,
+      "style": "spray",
+      "color": "#ffffff"
+    }
+  ],
+  "props": [
+    {
+      "type": "lighthouse",
+      "at": 960,
+      "d": -108,
+      "yaw": 0
+    },
+    {
+      "type": "keepers",
+      "at": 930,
+      "d": -78,
+      "yaw": 0
+    },
+    {
+      "type": "flag",
+      "at": 948,
+      "d": -70
+    },
+    {
+      "type": "camper",
+      "at": 900,
+      "d": 9,
+      "yaw": "along"
+    },
+    {
+      "type": "stack_a",
+      "at": 273,
+      "d": -339,
+      "y": "sea",
+      "yaw": 275
+    },
+    {
+      "type": "stack_b",
+      "at": 447,
+      "d": -244,
+      "y": "sea",
+      "yaw": 162
+    },
+    {
+      "type": "stack_c",
+      "at": 1018,
+      "d": -323,
+      "y": "sea",
+      "yaw": 34
+    },
+    {
+      "type": "reef",
+      "at": 121,
+      "d": -336,
+      "y": "sea",
+      "yaw": 156
+    },
+    {
+      "scatter": [
+        "gorse",
+        "gorse_big",
+        "gorse"
+      ],
+      "from": 0,
+      "to": 1600,
+      "side": "right",
+      "near": 8,
+      "far": 70,
+      "count": 88
+    },
+    {
+      "scatter": [
+        "sheep",
+        "sheep",
+        "sheep_dark"
+      ],
+      "from": 100,
+      "to": 1500,
+      "side": "right",
+      "near": 25,
+      "far": 120,
+      "count": 26
+    },
+    {
+      "row": "fieldwall",
+      "from": 60,
+      "to": 180,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 320,
+      "to": 480,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 560,
+      "to": 780,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 920,
+      "to": 1040,
+      "d": 9,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1120,
+      "to": 1340,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "row": "fieldwall",
+      "from": 1420,
+      "to": 1580,
+      "d": 14,
+      "every": 4
+    },
+    {
+      "type": "bench_sea",
+      "at": 138,
+      "d": -7.7,
+      "yaw": 180
+    },
+    {
+      "type": "fingerpost",
+      "at": 328,
+      "d": -7.8,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 518,
+      "d": -8.0,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 708,
+      "d": -8.3,
+      "yaw": 0
+    },
+    {
+      "type": "bench_sea",
+      "at": 1158,
+      "d": -7.2,
+      "yaw": 180
+    },
+    {
+      "type": "sign_cliff",
+      "at": 1418,
+      "d": -7.1,
+      "yaw": 0
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 165,
+    "score": 2200
+  }
+}

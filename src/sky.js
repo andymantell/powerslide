@@ -88,6 +88,22 @@ export const ATMOSPHERE = {
       night: { horizon: '#4a3a3c', haze: '#2a2530', sunHaze: '#3e3440', cloudColor: '#4a3c42', zenith: '#070b1a', envIntensity: 2.0 },
     },
   },
+  // A fresh, breezy sea sky: deep blue overhead, big fast clouds and a
+  // bright, salty haze over the water.
+  coast: {
+    sunAzimuth: -2.3,
+    sunElevation: 0.55,
+    zenith: '#2458b0',
+    horizon: '#c8dceb',
+    haze: '#bccddb',
+    sunHaze: '#f2e4c8',
+    sunColor: '#fff4e0',
+    sunIntensity: 3.1,
+    cloudCover: 0.48,
+    cloudColor: '#ffffff',
+    envIntensity: 0.6,
+    fogScale: 1.1,
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,
