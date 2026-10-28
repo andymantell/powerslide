@@ -1831,7 +1831,7 @@ function gardenEdge(geo, road, s0, s1, g, side, style, rand) {
   } else if (style === 'hedge') {
     const col = greens[Math.floor(rand() * greens.length)];
     const h = 1.0 + rand() * 0.5;
-    sweep(geo, road, s0, s1, [[o(0), -0.2], [o(0.9), -0.2], [o(0.85), h], [o(0.6), h + 0.25], [o(0.3), h + 0.25], [o(0.05), h]], PAINT, col, { step: 1 });
+    sweep(geo, road, s0, s1, [[o(0), -0.2], [o(0.9), -0.2], [o(0.85), h], [o(0.6), h + 0.25], [o(0.3), h + 0.25], [o(0.05), h]], LEAVES, col, { step: 1 });
   } else if (style === 'picket') {
     const col = '#efede6';
     for (const y of [0.25, 0.7]) sweep(geo, road, s0, s1, [[o(0.02), y], [o(0.06), y], [o(0.06), y + 0.07], [o(0.02), y + 0.07]], PAINT, col, { step: 2, caps: false });
