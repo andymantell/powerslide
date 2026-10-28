@@ -327,7 +327,7 @@ function setUnits(mph) {
 }
 setUnits(game.mph);
 
-// Volumes: master, effects, ambience and music, as sliders like the endless
+// Volumes: master, effects, and ambience, as sliders like the endless
 // setup's (drag or tap along them, or left / right with the D-pad).
 function volumeRow([key, label]) {
   const row = document.createElement('div');

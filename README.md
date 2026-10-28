@@ -324,32 +324,42 @@ somewhere else:
 
 ## Sound
 
-Everything is synthesised with WebAudio at run time (nothing to download, so
-it works offline). Volumes for master, effects, ambience and music are on the
-Settings screen; `M` mutes. Safari only allows sound after a touch, so the
-first touch, click or key starts it, and it sleeps while the game is hidden.
+Every sound is a real recording, played and mixed with WebAudio. The
+recordings are CC0 sounds from BigSoundBank, Freesound and Kenney, cut into
+short mono MP3s in `src/assets/sounds` (`src/samples.js` loads them when the
+audio starts; the service worker caches them, so they work offline after the
+first run). Volumes for master, effects and ambience are on the Settings
+screen; `M` mutes. Safari only allows sound after a touch, so the first
+touch, click or key starts it, and it sleeps while the game is hidden.
 
-- **Rider and board** (`src/audio.js`): wheel roar and bearing hum that rise
-  with speed and change with the surface (smooth, bumpy, wet, gravel, grit),
+To change a sound, edit its recipe in `tools/sounds/sounds.json` (the
+source's own page, plus how long a loop to cut or how many one-shots, and
+any filtering) and run `python3 tools/sounds/build.py` (numpy, scipy and
+ffmpeg). It checks the licence on each source's page (CC0 only), downloads
+it once into `tools/sounds/.cache`, cuts it, records the source in
+`tools/sounds/sources.json` and writes its `credits.json` entry. Kenney packs
+have to be unzipped into `tools/sounds/.cache/kenney/<pack>` by hand first.
+
+- **Rider and board** (`src/audio.js`): wheel roar that rises and speeds up
+  with speed and changes with the surface (smooth, bumpy, wet, gravel, grit),
   slide hiss with a urethane squeal, the hand-down puck scrape with spark
   crackle, footbrake, push kicks, wind that a tuck cuts and an air brake
   catches (with flapping leathers), wobble rattle, guardrail clang and scrape,
   crash and ragdoll thuds, and the loose board clattering away.
-- **Traffic**: each vehicle type has its own engine (gears, harmonics), tyre
-  noise, horn and doppler. The traffic code names a car's type in `car.kind`
+- **Traffic**: each vehicle type has its own engine recording (revving
+  through the gears), tyre noise, horn and doppler. The traffic code names a car's type in `car.kind`
   (`car`, `taxi`, `van`, `suv`, `pickup`, `camper`, `bus`, `lorry`, `tractor`,
   `motorbike`, `police`, `ambulance`, `fire`, `icecream`, `horsebox`; see
   `ENGINES`). `car.siren = true` sounds an emergency vehicle's siren.
 - **Ambience** (`src/ambience.js`, calls in `src/sfx.js`): `AMBIENCE[biome]`
   sets each biome's beds (`wind`, `water`, `surf`, `hum`, `insects`,
-  `crickets`), the calls dropped in at random (cowbells, skylarks, sheep,
+  `crickets`, with `beds` naming which recording each plays), the calls dropped in at random (cowbells, skylarks, sheep,
   ponies, gulls, sirens…) and an `echo`. Set pieces and props make their own
   sounds as you ride past (`spotsFor`): waterfalls, streams, church bells, the
   sawmill, cow herds, sheep and ponies, ducks, the inn, a parked tractor,
   fountains and fords; galleries ring with an echo and hedge banks close the
   sound in. Cattle grids rattle and fords splash under the board.
-- **Music** (`src/music.js`): an optional four-chord loop per biome, with
-  bass and drums while riding.
+- There's no music.
 
 A level's `"ambience"` changes its biome's mix:
 
@@ -362,8 +372,9 @@ A level's `"ambience"` changes its biome's mix:
 }
 ```
 
-Setting a layer or event to 0 turns it off. A spot's `sound` is a bed
-(`stream`, `waterfall`, `surf`) or any call in `CALLS` (repeated every
+Setting a layer or event to 0 turns it off. A spot's `sound` is a bed in
+`LOOPS` (`stream`, `water`, `waterfall`, `surf`, `pub`, `tractorIdle`,
+`mastHum`) or any call in `CALLS` (repeated every
 `every` seconds while in earshot). The weather and time of day come from the
 level's `sky`, and code can change them at any time with
 `audio.setWeather({ rain, wind, thunder })` (0..1) and
@@ -422,7 +433,7 @@ listen to, and `npm run clips` records every sound on its own into
   and at night, in rain or in mist their lamps light up, with light pools on
   the road and a few real spot lights (`carLights` in the quality presets).
 - **Audio** (`src/audio.js`, `src/ambience.js`, `src/sfx.js`,
-  `src/music.js`): see Sound above.
+  `src/samples.js`): see Sound above.
 
 ## Deploying
 

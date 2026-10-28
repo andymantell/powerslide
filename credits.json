@@ -1,21 +1,1393 @@
 {
   "about": "Where every file the game ships came from. Made-here files are listed by the tool that builds them. Third-party files need one entry each with source, author, licence and the date they were downloaded. Run `npm run credits` to check. See README, \"Third-party assets\".",
-  "allowedLicences": ["CC0-1.0", "MIT"],
-  "needsAskingFirst": ["CC-BY-4.0", "CC-BY-3.0"],
-  "neverUse": ["CC-BY-NC", "CC-BY-NC-SA", "CC-BY-ND", "CC-BY-SA", "Editorial", "Personal use only", "Unknown"],
-  "original": [
-    { "files": ["src/assets/models/props*.glb"], "madeBy": "tools/blender/props.py and props_<biome>.py" },
-    { "files": ["src/assets/models/vehicles.glb"], "madeBy": "tools/blender/vehicles.py" },
-    { "files": ["src/assets/models/conifers.glb"], "madeBy": "tools/blender/tree.py" },
-    { "files": ["src/assets/models/rocks.glb"], "madeBy": "tools/blender/rocks.py" },
-    { "files": ["src/assets/models/board.glb"], "madeBy": "tools/blender/board.py" },
-    { "files": ["src/assets/models/rider.glb"], "madeBy": "tools/blender/rider.py" },
-    { "files": ["src/assets/textures/props_detail.png"], "madeBy": "tools/textures/props.py" },
-    { "files": ["src/assets/textures/*"], "madeBy": "tools/textures/gen.py" },
-    { "files": ["public/icons/*"], "madeBy": "tools/icons.mjs" },
-    { "files": ["public/manifest.webmanifest", "public/sw.js"], "madeBy": "hand-written" }
+  "allowedLicences": [
+    "CC0-1.0",
+    "MIT"
   ],
-  "assets": [],
+  "needsAskingFirst": [
+    "CC-BY-4.0",
+    "CC-BY-3.0"
+  ],
+  "neverUse": [
+    "CC-BY-NC",
+    "CC-BY-NC-SA",
+    "CC-BY-ND",
+    "CC-BY-SA",
+    "Editorial",
+    "Personal use only",
+    "Unknown"
+  ],
+  "original": [
+    {
+      "files": [
+        "src/assets/models/props*.glb"
+      ],
+      "madeBy": "tools/blender/props.py and props_<biome>.py"
+    },
+    {
+      "files": [
+        "src/assets/models/vehicles.glb"
+      ],
+      "madeBy": "tools/blender/vehicles.py"
+    },
+    {
+      "files": [
+        "src/assets/models/conifers.glb"
+      ],
+      "madeBy": "tools/blender/tree.py"
+    },
+    {
+      "files": [
+        "src/assets/models/rocks.glb"
+      ],
+      "madeBy": "tools/blender/rocks.py"
+    },
+    {
+      "files": [
+        "src/assets/models/board.glb"
+      ],
+      "madeBy": "tools/blender/board.py"
+    },
+    {
+      "files": [
+        "src/assets/models/rider.glb"
+      ],
+      "madeBy": "tools/blender/rider.py"
+    },
+    {
+      "files": [
+        "src/assets/textures/props_detail.png"
+      ],
+      "madeBy": "tools/textures/props.py"
+    },
+    {
+      "files": [
+        "src/assets/textures/*"
+      ],
+      "madeBy": "tools/textures/gen.py"
+    },
+    {
+      "files": [
+        "public/icons/*"
+      ],
+      "madeBy": "tools/icons.mjs"
+    },
+    {
+      "files": [
+        "public/manifest.webmanifest",
+        "public/sw.js"
+      ],
+      "madeBy": "hand-written"
+    }
+  ],
+  "assets": [
+    {
+      "title": "Skateboard rolling down concrete ramp.wav by Bruno_Garcez",
+      "files": [
+        "src/assets/sounds/roll.mp3"
+      ],
+      "source": "https://freesound.org/people/Bruno_Garcez/sounds/243765/",
+      "author": "Bruno_Garcez",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 6 s loop from 1.1 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Skateboard by zvance1110",
+      "files": [
+        "src/assets/sounds/roll-rough.mp3"
+      ],
+      "source": "https://freesound.org/people/zvance1110/sounds/521086/",
+      "author": "zvance1110",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 6 s loop from 7.2 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Bike on gravel (MTB) by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/gravel.mp3"
+      ],
+      "source": "https://bigsoundbank.com/bike-on-gravel-mtb-1-s1284.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 5 s loop from 5.5 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "cars passing close by goose278",
+      "files": [
+        "src/assets/sounds/wet.mp3"
+      ],
+      "source": "https://freesound.org/people/goose278/sounds/174820/",
+      "author": "goose278",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 6 s loop from 77.5 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "skate board screech.wav by pawsound",
+      "files": [
+        "src/assets/sounds/slide.mp3"
+      ],
+      "source": "https://freesound.org/people/pawsound/sounds/154855/",
+      "author": "pawsound",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 3 s loop from 5.5 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Tire squeal by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/squeal.mp3"
+      ],
+      "source": "https://bigsoundbank.com/tire-squeal-s0500.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 0.8 s loop from 3.7 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Bin that slides by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/puck.mp3"
+      ],
+      "source": "https://bigsoundbank.com/bin-that-slides-s0756.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 2.2 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Shoes scrapes on concrete by LPA134",
+      "files": [
+        "src/assets/sounds/shoe.mp3"
+      ],
+      "source": "https://freesound.org/people/LPA134/sounds/329514/",
+      "author": "LPA134",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 3.1 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "car goes over cattle grid 2.WAV by soundtracvkradio",
+      "files": [
+        "src/assets/sounds/grid.mp3"
+      ],
+      "source": "https://freesound.org/people/soundtracvkradio/sounds/345595/",
+      "author": "soundtracvkradio",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 1.5 s loop from 6.6 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "In Car Driving with Open Window.wav by RutgerMuller",
+      "files": [
+        "src/assets/sounds/rush.mp3"
+      ],
+      "source": "https://freesound.org/people/RutgerMuller/sounds/50911/",
+      "author": "RutgerMuller",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 8 s loop from 49.5 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "skateboard4.wav by Rbrtbiehl",
+      "files": [
+        "src/assets/sounds/skitter.mp3"
+      ],
+      "source": "https://freesound.org/people/Rbrtbiehl/sounds/630642/",
+      "author": "Rbrtbiehl",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 2.5 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Car Crash (with Glass) by magnuswaker",
+      "files": [
+        "src/assets/sounds/car-crash.mp3"
+      ],
+      "source": "https://freesound.org/people/magnuswaker/sounds/592388/",
+      "author": "magnuswaker",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.6 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Plastic Hit 1.wav by bellick",
+      "files": [
+        "src/assets/sounds/cone-1.mp3",
+        "src/assets/sounds/cone-2.mp3",
+        "src/assets/sounds/cone-3.mp3"
+      ],
+      "source": "https://freesound.org/people/bellick/sounds/151470/",
+      "author": "bellick",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 event(s) of up to 0.6 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Car Engine Idling.wav by jpkweli",
+      "files": [
+        "src/assets/sounds/engine-car.mp3"
+      ],
+      "source": "https://freesound.org/people/jpkweli/sounds/154758/",
+      "author": "jpkweli",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 25.8 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Truck Engine Idle Loops.flac by qubodup",
+      "files": [
+        "src/assets/sounds/engine-lorry.mp3"
+      ],
+      "source": "https://freesound.org/people/qubodup/sounds/187564/",
+      "author": "qubodup",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 3 s loop from 18.8 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Bus Motor/Engine Sound Loop by qubodup",
+      "files": [
+        "src/assets/sounds/engine-bus.mp3"
+      ],
+      "source": "https://freesound.org/people/qubodup/sounds/54909/",
+      "author": "qubodup",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 3 s loop from 1.8 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Car rolling on asphalt .wav by orlandorizo",
+      "files": [
+        "src/assets/sounds/tyres.mp3"
+      ],
+      "source": "https://freesound.org/people/orlandorizo/sounds/591079/",
+      "author": "orlandorizo",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 5 s loop from 44.2 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Siren police car British by SoundingSam",
+      "files": [
+        "src/assets/sounds/siren-twotone.mp3"
+      ],
+      "source": "https://freesound.org/people/SoundingSam/sounds/706296/",
+      "author": "SoundingSam",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 4.4 s loop from 65.0 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Police siren by sofialomba",
+      "files": [
+        "src/assets/sounds/siren-wail.mp3"
+      ],
+      "source": "https://freesound.org/people/sofialomba/sounds/469411/",
+      "author": "sofialomba",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 5 s loop from 3.1 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Ice Cream Truck.wav by Bansemer",
+      "files": [
+        "src/assets/sounds/icecream.mp3"
+      ],
+      "source": "https://freesound.org/people/Bansemer/sounds/702133/",
+      "author": "Bansemer",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 0-12 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "skylark.wav by Andy_Gardner",
+      "files": [
+        "src/assets/sounds/skylark-1.mp3",
+        "src/assets/sounds/skylark-2.mp3",
+        "src/assets/sounds/skylark-3.mp3"
+      ],
+      "source": "https://freesound.org/people/Andy_Gardner/sounds/277149/",
+      "author": "Andy_Gardner",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 stretch(es) of 6 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Cuckoo.wav by bratendu",
+      "files": [
+        "src/assets/sounds/cuckoo-1.mp3",
+        "src/assets/sounds/cuckoo-2.mp3"
+      ],
+      "source": "https://freesound.org/people/bratendu/sounds/506675/",
+      "author": "bratendu",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 2 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "raven call.ogg by adharca",
+      "files": [
+        "src/assets/sounds/raven-1.mp3"
+      ],
+      "source": "https://freesound.org/people/adharca/sounds/275466/",
+      "author": "adharca",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Raven Croak or Crow Caw by fudgealtoid",
+      "files": [
+        "src/assets/sounds/raven-2.mp3"
+      ],
+      "source": "https://freesound.org/people/fudgealtoid/sounds/716962/",
+      "author": "fudgealtoid",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "210227 Red Tailed Hawk, eq isolated calls, roof 77mel 10am.wav by TRP",
+      "files": [
+        "src/assets/sounds/raptor-1.mp3",
+        "src/assets/sounds/raptor-2.mp3"
+      ],
+      "source": "https://freesound.org/people/TRP/sounds/616926/",
+      "author": "TRP",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 2 event(s) of up to 2.5 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Eagle Cry.wav by kaydinhamby",
+      "files": [
+        "src/assets/sounds/raptor-3.mp3"
+      ],
+      "source": "https://freesound.org/people/kaydinhamby/sounds/381200/",
+      "author": "kaydinhamby",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Hoary marmot whistles by SoundsLikeYukon",
+      "files": [
+        "src/assets/sounds/marmot-1.mp3",
+        "src/assets/sounds/marmot-2.mp3",
+        "src/assets/sounds/marmot-3.mp3"
+      ],
+      "source": "https://freesound.org/people/SoundsLikeYukon/sounds/822939/",
+      "author": "SoundsLikeYukon",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 event(s) of up to 1.2 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Woodpecker by SKrafft",
+      "files": [
+        "src/assets/sounds/woodpecker-1.mp3",
+        "src/assets/sounds/woodpecker-2.mp3",
+        "src/assets/sounds/woodpecker-3.mp3"
+      ],
+      "source": "https://freesound.org/people/SKrafft/sounds/626923/",
+      "author": "SKrafft",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 event(s) of up to 2.5 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Peaceful sound of a herd of cows in the Swiss Alps by florianreichelt",
+      "files": [
+        "src/assets/sounds/cowbell-1.mp3",
+        "src/assets/sounds/cowbell-2.mp3",
+        "src/assets/sounds/cowbell-3.mp3",
+        "src/assets/sounds/cowbell-4.mp3"
+      ],
+      "source": "https://freesound.org/people/florianreichelt/sounds/457569/",
+      "author": "florianreichelt",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 4 stretch(es) of 4 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Tram, tram bell and windy, part 1.wav by onni.merila",
+      "files": [
+        "src/assets/sounds/tram-bell.mp3"
+      ],
+      "source": "https://freesound.org/people/onni.merila/sounds/659250/",
+      "author": "onni.merila",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 stretch(es) of 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Air Hiss by Jofae",
+      "files": [
+        "src/assets/sounds/air-hiss.mp3"
+      ],
+      "source": "https://freesound.org/people/Jofae/sounds/367125/",
+      "author": "Jofae",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "S29-19 Bell buoy.wav by craigsmith",
+      "files": [
+        "src/assets/sounds/buoy-1.mp3",
+        "src/assets/sounds/buoy-2.mp3",
+        "src/assets/sounds/buoy-3.mp3"
+      ],
+      "source": "https://freesound.org/people/craigsmith/sounds/675693/",
+      "author": "craigsmith",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 stretch(es) of 3.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Irish Pub Ambience by Talitha5",
+      "files": [
+        "src/assets/sounds/pub.mp3"
+      ],
+      "source": "https://freesound.org/people/Talitha5/sounds/509951/",
+      "author": "Talitha5",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 12 s loop from 1.8 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Synthetic Coat Rubbed by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/scrape.mp3"
+      ],
+      "source": "https://bigsoundbank.com/synthetic-coat-rubbed-s1104.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 3 s loop from 4.2 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Metal barrier: Opening by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/rail-scrape.mp3"
+      ],
+      "source": "https://bigsoundbank.com/grinding-metal-barrier-opening-1-s2355.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 1.47 s loop from 0.3 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Shoes in the Water by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wade.mp3"
+      ],
+      "source": "https://bigsoundbank.com/shoes-in-the-water-s0690.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 3 s loop from 18.6 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Flag in the wind by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/flap.mp3"
+      ],
+      "source": "https://bigsoundbank.com/flag-in-the-wind-1-s1632.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 4 s loop from 114.9 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Footsteps, Shoe on Concrete by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/push-1.mp3",
+        "src/assets/sounds/push-2.mp3",
+        "src/assets/sounds/push-3.mp3",
+        "src/assets/sounds/push-4.mp3"
+      ],
+      "source": "https://bigsoundbank.com/footsteps-shoe-on-concrete-s0514.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 4 event(s) of up to 0.5 s, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Body Fall by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/body-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/body-fall-1-s2452.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Body Fall by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/body-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/body-fall-2-s2453.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Body fall by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/body-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/body-fall-3-s2454.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Impact Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/board-hit-1.mp3",
+        "src/assets/sounds/board-hit-2.mp3",
+        "src/assets/sounds/board-hit-3.mp3",
+        "src/assets/sounds/board-hit-4.mp3",
+        "src/assets/sounds/board-hit-5.mp3"
+      ],
+      "source": "https://kenney.nl/assets/impact-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Impact Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/clang-1.mp3",
+        "src/assets/sounds/clang-2.mp3",
+        "src/assets/sounds/clang-3.mp3",
+        "src/assets/sounds/clang-4.mp3",
+        "src/assets/sounds/clang-5.mp3"
+      ],
+      "source": "https://kenney.nl/assets/impact-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Splash, Small by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/splash-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/splash-small-1-s1529.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Splash, small by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/splash-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/splash-small-2-s1530.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Ford Courier Engine by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/engine-diesel.mp3"
+      ],
+      "source": "https://bigsoundbank.com/ford-courier-engine-s0896.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 13.2 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Car Engine by Denischardonnet",
+      "files": [
+        "src/assets/sounds/engine-big.mp3"
+      ],
+      "source": "https://bigsoundbank.com/car-engine-2-s0291.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 1.8 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Tractor by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/engine-tractor.mp3"
+      ],
+      "source": "https://bigsoundbank.com/tractor-1-s0132.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 2 s loop from 13.7 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Motorcycle by Denischardonnet",
+      "files": [
+        "src/assets/sounds/engine-bike.mp3"
+      ],
+      "source": "https://bigsoundbank.com/motorcycle-s0281.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 1.5 s loop from 1.6 s, crossfaded, filtered, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Recent car horn by Denischardonnet",
+      "files": [
+        "src/assets/sounds/horn-car-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/recent-car-horn-1-s0257.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Recent Car Horn by Denischardonnet",
+      "files": [
+        "src/assets/sounds/horn-car-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/recent-car-horn-2-s0258.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Recent car horn by Denischardonnet",
+      "files": [
+        "src/assets/sounds/horn-car-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/recent-car-horn-3-s0259.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Old car horn by Denischardonnet",
+      "files": [
+        "src/assets/sounds/horn-old.mp3"
+      ],
+      "source": "https://bigsoundbank.com/old-car-horn-2-s0255.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Truck Horn by Pierre Sibanarco",
+      "files": [
+        "src/assets/sounds/horn-truck.mp3"
+      ],
+      "source": "https://bigsoundbank.com/truck-horn-s2721.html",
+      "author": "Pierre Sibanarco",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Bus horn by Joseph Sardin &Amp; Axeline T.",
+      "files": [
+        "src/assets/sounds/horn-bus.mp3"
+      ],
+      "source": "https://bigsoundbank.com/bus-horn-s3594.html",
+      "author": "Joseph Sardin &Amp; Axeline T.",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Wind in Tall Grass by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wind-grass.mp3"
+      ],
+      "source": "https://bigsoundbank.com/wind-in-tall-grass-s0908.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 16 s loop from 14.1 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Strong Wind by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wind-strong.mp3"
+      ],
+      "source": "https://bigsoundbank.com/strong-wind-1-s0146.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 16 s loop from 38.4 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Wind in the Trees by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wind-trees.mp3"
+      ],
+      "source": "https://bigsoundbank.com/forest-wind-in-the-trees-s0904.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 16 s loop from 4.3 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Whistling of the Wind by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wind-whistle.mp3"
+      ],
+      "source": "https://bigsoundbank.com/whistling-of-the-wind-1-s0147.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 12 s loop from 51.2 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Mountain stream by Pierre Sibanarco",
+      "files": [
+        "src/assets/sounds/water.mp3"
+      ],
+      "source": "https://bigsoundbank.com/mountain-stream-1-s2754.html",
+      "author": "Pierre Sibanarco",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 12 s loop from 198.4 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Small stream by Gamin",
+      "files": [
+        "src/assets/sounds/stream.mp3"
+      ],
+      "source": "https://bigsoundbank.com/small-stream-1-s0213.html",
+      "author": "Gamin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 37.5 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Small waterfall by Gamin",
+      "files": [
+        "src/assets/sounds/waterfall.mp3"
+      ],
+      "source": "https://bigsoundbank.com/small-waterfall-2-s0219.html",
+      "author": "Gamin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 0.7 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Sea: Waves by Denischardonnet",
+      "files": [
+        "src/assets/sounds/surf.mp3"
+      ],
+      "source": "https://bigsoundbank.com/sea-waves-s0266.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 20 s loop from 12.2 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Paris by Night by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/hum-city.mp3"
+      ],
+      "source": "https://bigsoundbank.com/paris-by-night-s0680.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 16 s loop from 6.1 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Street and Roads by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/hum-town.mp3"
+      ],
+      "source": "https://bigsoundbank.com/street-and-roads-s0608.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 16 s loop from 102.9 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Insect song by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/insects.mp3"
+      ],
+      "source": "https://bigsoundbank.com/insect-song-s1052.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 1.9 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Cicadas by Clarisse",
+      "files": [
+        "src/assets/sounds/cicadas.mp3"
+      ],
+      "source": "https://bigsoundbank.com/cicadas-s3002.html",
+      "author": "Clarisse",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 26.1 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Nocturnal Insects by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/crickets.mp3"
+      ],
+      "source": "https://bigsoundbank.com/nocturnal-insects-4-s1470.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 3.1 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Rain on concrete by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/rain.mp3"
+      ],
+      "source": "https://bigsoundbank.com/rain-on-concrete-s1289.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 10 s loop from 2.4 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Electric transformer by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/mast-hum.mp3"
+      ],
+      "source": "https://bigsoundbank.com/electric-transformer-1-s0064.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 4 s loop from 5.5 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Thunder by Joseph Sardin &Amp; Axeline T.",
+      "files": [
+        "src/assets/sounds/thunder-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/thunder-2-s3113.html",
+      "author": "Joseph Sardin &Amp; Axeline T.",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Thunder by Joseph Sardin &Amp; Axeline T.",
+      "files": [
+        "src/assets/sounds/thunder-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/thunder-4-s3115.html",
+      "author": "Joseph Sardin &Amp; Axeline T.",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Common Blackbird by Le Tiroir Du Fond",
+      "files": [
+        "src/assets/sounds/songbird-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/common-blackbird-2-s3475.html",
+      "author": "Le Tiroir Du Fond",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 3.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Robin by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/songbird-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/robin-1-s1667.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 3.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Carrion crow by Le Tiroir Du Fond",
+      "files": [
+        "src/assets/sounds/crow-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/carrion-crow-1-s3461.html",
+      "author": "Le Tiroir Du Fond",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Carrion Crow by Le Tiroir Du Fond",
+      "files": [
+        "src/assets/sounds/crow-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/carrion-crow-3-s3463.html",
+      "author": "Le Tiroir Du Fond",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Gulls on the Harbor by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/gull-1.mp3",
+        "src/assets/sounds/gull-2.mp3",
+        "src/assets/sounds/gull-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/gulls-on-the-harbor-s2573.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 event(s) of up to 3 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Tawny Owl by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/owl-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/tawny-owl-1-s1763.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 4 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Tawny Owl by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/owl-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/tawny-owl-2-s1764.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 4 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Sheep by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/sheep-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/sheep-1-s2343.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Sheep by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/sheep-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/sheep-3-s2345.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Sheep by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/sheep-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/sheep-5-s2347.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Horse neighing by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/pony-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/horse-neighing-4-s1541.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 3 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Horse neighing by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/pony-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/horse-neighing-5-s1542.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 3 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Barking dog by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/dog-1.mp3",
+        "src/assets/sounds/dog-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/barking-dog-s0916.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 2 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Small dog barking by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/dog-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/small-dog-barking-s0612.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Chimes \"Dream\" by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/chimes-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/chimes-dream-1-s2079.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Chimes \"dream\" by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/chimes-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/chimes-dream-2-s2080.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Lawn tractors by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/mower.mp3"
+      ],
+      "source": "https://bigsoundbank.com/lawn-tractors-s1018.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 5-15 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Ambulance, 3 tons siren, passage by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/siren-far-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/ambulance-3-tons-siren-passage-s2031.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 stretch(es) of 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Gendarmerie, Siren, Passage by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/siren-far-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/gendarmerie-siren-passage-s2029.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 stretch(es) of 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Car honking at 90 km/h by Joseph Sardin &Amp; Axeline T.",
+      "files": [
+        "src/assets/sounds/far-horn-1.mp3"
+      ],
+      "source": "https://bigsoundbank.com/car-honking-at-90-km-h-1-s3436.html",
+      "author": "Joseph Sardin &Amp; Axeline T.",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 event(s) of up to 1.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Small waves, rocks and beach by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/wave-1.mp3",
+        "src/assets/sounds/wave-2.mp3",
+        "src/assets/sounds/wave-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/small-waves-rocks-and-beach-s1445.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 stretch(es) of 5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Gas fog horn by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/foghorn.mp3"
+      ],
+      "source": "https://bigsoundbank.com/gas-fog-horn-1-s1048.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 stretch(es) of 4 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "1 church bell by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/church-bell.mp3"
+      ],
+      "source": "https://bigsoundbank.com/1-church-bell-s0830.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 1 stretch(es) of 7 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Sawmill by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/saw-1.mp3",
+        "src/assets/sounds/saw-2.mp3"
+      ],
+      "source": "https://bigsoundbank.com/sawmill-1-s1536.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 2 stretch(es) of 4 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Ducks by Denischardonnet",
+      "files": [
+        "src/assets/sounds/duck-1.mp3",
+        "src/assets/sounds/duck-2.mp3",
+        "src/assets/sounds/duck-3.mp3"
+      ],
+      "source": "https://bigsoundbank.com/ducks-s0276.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 3 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Fixed telephone ring by Denischardonnet",
+      "files": [
+        "src/assets/sounds/phone.mp3"
+      ],
+      "source": "https://bigsoundbank.com/fixed-telephone-ring-3-s0252.html",
+      "author": "Denischardonnet",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "cut 0-4.5 s, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Small Tractor by Joseph Sardin",
+      "files": [
+        "src/assets/sounds/tractor-idle.mp3"
+      ],
+      "source": "https://bigsoundbank.com/small-tractor-s0499.html",
+      "author": "Joseph Sardin",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "a 4 s loop from 8.6 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/ui-click.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/ui-back.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/ui-move.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/ui-tick.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/ding.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/fanfare.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    },
+    {
+      "title": "Interface Sounds by Kenney",
+      "files": [
+        "src/assets/sounds/unlock.mp3"
+      ],
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "author": "Kenney",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
+    }
+  ],
   "code": [
     {
       "name": "three.js (including the GLTFLoader, meshopt decoder and post-processing addons)",

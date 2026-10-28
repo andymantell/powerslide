@@ -31,7 +31,7 @@ await page.addInitScript(() => localStorage.setItem('powerslide.quality', '"low"
 await page.goto(url);
 await page.waitForFunction(() => window.__powerslide?.game.mode === 'title', null, { timeout: 300000 });
 await page.mouse.click(5, 5); // the first touch starts the audio
-await page.waitForFunction(() => window.__powerslide.audio.ctx?.state === 'running');
+await page.waitForFunction(() => window.__powerslide.audio.ctx?.state === 'running' && window.__powerslide.audio.ready);
 
 // Taps the master and each bus with an analyser, and records the master.
 await page.evaluate(() => {
@@ -42,7 +42,7 @@ await page.evaluate(() => {
     node.connect(an);
     return an;
   };
-  window.__meters = { master: meter(a.master), effects: meter(a.bus.effects), ambience: meter(a.bus.ambience), music: meter(a.bus.music) };
+  window.__meters = { master: meter(a.master), effects: meter(a.bus.effects), ambience: meter(a.bus.ambience) };
   window.__dest = a.ctx.createMediaStreamDestination();
   a.master.connect(window.__dest);
 });
@@ -50,14 +50,14 @@ await page.evaluate(() => {
 async function record(name, seconds, act, solo = null) {
   await page.evaluate((solo) => {
     const a = window.__powerslide.audio;
-    for (const k of ['effects', 'ambience', 'music']) a.bus[k].gain.value = solo && solo !== k ? 0 : 1;
+    for (const k of ['effects', 'ambience']) a.bus[k].gain.value = solo && solo !== k ? 0 : 1;
     if (!solo) a.applyVolume();
     a.ambience.log = [];
   }, solo);
   await page.evaluate(() => {
     window.__chunks = [];
-    window.__peaks = { master: 0, effects: 0, ambience: 0, music: 0 };
-    window.__sum = { master: 0, effects: 0, ambience: 0, music: 0, n: 0 };
+    window.__peaks = { master: 0, effects: 0, ambience: 0 };
+    window.__sum = { master: 0, effects: 0, ambience: 0, n: 0 };
     const rec = (window.__rec = new MediaRecorder(window.__dest.stream, { mimeType: 'audio/webm;codecs=opus' }));
     rec.ondataavailable = (e) => window.__chunks.push(e.data);
     rec.start();
@@ -89,7 +89,7 @@ async function record(name, seconds, act, solo = null) {
           let bin = '';
           for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
           const n = window.__sum.n || 1;
-          const rms = Object.fromEntries(['master', 'effects', 'ambience', 'music'].map((k) => [k, +(window.__sum[k] / n).toFixed(4)]));
+          const rms = Object.fromEntries(['master', 'effects', 'ambience'].map((k) => [k, +(window.__sum[k] / n).toFixed(4)]));
           done({ data: btoa(bin), rms, peaks: window.__peaks, nan: !!window.__nan });
         };
         window.__rec.stop();

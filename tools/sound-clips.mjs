@@ -1,6 +1,6 @@
 // Renders every sound in the game on its own, for listening to one at a time:
 // each ambience call and bed, the rider and board sounds (driven by a fake
-// rider), each vehicle driving past, horns, menu sounds and each biome's music.
+// rider), each vehicle driving past, horns and menu sounds.
 //   node tools/sound-clips.mjs [url] [outDir] [id,id,...]
 // Writes <id>.webm per clip and clips.json (id, group, name) to outDir.
 // Needs `npm run build && npx vite preview` running.
@@ -20,12 +20,11 @@ const out = process.argv[3] || 'sounds/clips';
 const only = process.argv[4] ? process.argv[4].split(',') : null;
 fs.mkdirSync(out, { recursive: true });
 
-const CALLS = ['songbird', 'skylark', 'cuckoo', 'curlew', 'crow', 'raven', 'gull', 'raptor', 'marmot', 'chough', 'owl', 'woodpecker', 'sheep', 'pony', 'cowbell', 'dog', 'duck', 'chimes', 'mower', 'siren', 'farHorn', 'tramBell', 'airHiss', 'wave', 'foghorn', 'buoy', 'thunder', 'churchBell', 'saw', 'pub', 'phone', 'tractorIdle', 'mastHum'];
-const BEDS = ['wind', 'water', 'waterfall', 'surf', 'hum', 'insects', 'crickets', 'rain'];
+const CALLS = ['songbird', 'skylark', 'cuckoo', 'crow', 'raven', 'gull', 'raptor', 'marmot', 'chough', 'owl', 'woodpecker', 'sheep', 'pony', 'cowbell', 'dog', 'duck', 'chimes', 'mower', 'siren', 'farHorn', 'tramBell', 'airHiss', 'wave', 'foghorn', 'buoy', 'thunder', 'churchBell', 'saw', 'pub', 'phone', 'tractorIdle', 'mastHum'];
+const BEDS = ['wind', 'water', 'stream', 'waterfall', 'surf', 'hum', 'insects', 'crickets', 'rain', 'pub', 'tractorIdle', 'mastHum'];
 const RIDER = ['roll', 'rollBumpy', 'rollWet', 'gravel', 'grit', 'windTuck', 'airbrake', 'slide', 'handDown', 'footbrake', 'push', 'wobble', 'railScrape', 'grid', 'ford'];
 const SHOTS = ['crash', 'thud', 'clack', 'carHit', 'rail', 'kick', 'cone', 'ding', 'fanfare', 'unlock', 'uiClick', 'uiBack', 'uiMove', 'uiTick'];
 const VEHICLES = ['car', 'taxi', 'van', 'suv', 'pickup', 'camper', 'bus', 'lorry', 'tractor', 'motorbike', 'police', 'ambulance', 'fire', 'icecream', 'horsebox'];
-const MUSIC = ['alpine', 'dartmoor', 'suburbs', 'forest', 'canyon', 'city', 'coast', 'pass'];
 const clips = [
   ...CALLS.map((n) => ({ id: `call-${n}`, group: 'call', name: n })),
   ...BEDS.map((n) => ({ id: `bed-${n}`, group: 'bed', name: n })),
@@ -33,7 +32,6 @@ const clips = [
   ...SHOTS.map((n) => ({ id: `shot-${n}`, group: 'shot', name: n })),
   ...VEHICLES.map((n) => ({ id: `vehicle-${n}`, group: 'vehicle', name: n })),
   ...VEHICLES.map((n) => ({ id: `horn-${n}`, group: 'horn', name: n })),
-  ...MUSIC.map((n) => ({ id: `music-${n}`, group: 'music', name: n })),
 ].filter((c) => !only || only.includes(c.id));
 
 const browser = await pw.chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -44,17 +42,16 @@ await page.addInitScript(() => localStorage.setItem('powerslide.quality', '"low"
 await page.goto(url);
 await page.waitForFunction(() => window.__powerslide?.game.mode === 'title', null, { timeout: 300000 });
 await page.mouse.click(5, 5);
-await page.waitForFunction(() => window.__powerslide.audio.ctx?.state === 'running');
+await page.waitForFunction(() => window.__powerslide.audio.ctx?.state === 'running' && window.__powerslide.audio.ready);
 
 // Stop the game feeding the audio, silence everything, and tap the master.
 await page.evaluate(() => {
   const P = window.__powerslide;
   const a = P.audio;
   P.game.mode = 'paused';
-  a.music.setOn(false);
-  for (const k of ['effects', 'ambience', 'music']) a.bus[k].gain.value = 1;
+  for (const k of ['effects', 'ambience']) a.bus[k].gain.value = 1;
   for (const l of Object.values(a.ambience.layers)) l.g.gain.value = 0;
-  for (const v of a.voices) v.g.gain.value = v.tyre.g.gain.value = v.siren.g.gain.value = 0;
+  for (const v of a.voices) v.g.gain.value = v.tyre.g.gain.value = v.sirenG.gain.value = 0;
   window.__dest = a.ctx.createMediaStreamDestination();
   a.master.connect(window.__dest);
   const idle = () => ({
@@ -110,7 +107,7 @@ await page.evaluate(() => {
     } else if (group === 'bed') {
       const l = a.ambience.make(name);
       l.g.gain.value = 0.6;
-      if (name === 'wind') l.whistleG.gain.value = 0.06;
+      if (name === 'wind') l.whistleG.gain.value = 0.2;
       await wait(8);
       l.g.gain.value = 0;
       l.stop();
@@ -149,14 +146,6 @@ await page.evaluate(() => {
     } else if (group === 'horn') {
       a.honk(12, { kind: name });
       await wait(1.6);
-    } else if (group === 'music') {
-      a.music.setBiome(name);
-      a.music.riding = 1;
-      a.music.step = 0;
-      a.music.setOn(true);
-      await wait(14);
-      a.music.setOn(false);
-      await wait(1.5);
     }
   };
 });

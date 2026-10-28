@@ -1,6 +1,7 @@
 node_modules
 dist
 __pycache__/
-sounds/
+/sounds/
+tools/sounds/.cache/
 tools/props/audition/dl/
 tools/props/audition/out/
