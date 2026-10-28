@@ -65,6 +65,30 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         float track = smoothstep(0.55, 0.85, lane) * smoothstep(1.15, 0.85, lane);
         rcol *= 1.0 - track * 0.12;
         float rough = 0.93 - track * 0.06 - patchy * 0.03;
+        // Square-cut repair patches every so often: newer, darker tarmac
+        // with a crisp edge.
+        float pk = floor(rs / 34.0);
+        float ps0 = (pk + rHash(pk * 3.1) * 0.6) * 34.0, pl = 2.0 + rHash(pk * 5.7) * 7.0;
+        float pu0 = mix(-3.2, 0.4, rHash(pk * 9.3)), pw = 1.4 + rHash(pk * 2.9) * 2.4;
+        float pd = max(max(ps0 - rs, rs - ps0 - pl), max(pu0 - ru, ru - pu0 - pw));
+        float repair = step(rHash(pk * 7.7), 0.45) * (1.0 - smoothstep(-0.02, 0.02, pd));
+        rcol *= 1.0 - repair * 0.3;
+        rough -= repair * 0.04;
+        // Oil and rubber stains down the middle of each lane.
+        float lc = 1.0 - smoothstep(0.15, 0.45, abs(au - 1.75));
+        float oil = lc * smoothstep(0.55, 0.85, rNoise(rs * 0.9 + ru * 0.3) * 0.6 + rNoise(rs * 0.17 + sign(ru) * 11.0) * 0.6);
+        rcol *= 1.0 - oil * 0.22;
+        // Cracks sealed with tar: wandering transverse ones every few tens of
+        // metres, and one down the old centre joint.
+        float ck = floor(rs / 11.0);
+        float cs = (ck + 0.2 + rHash(ck * 1.3) * 0.6) * 11.0 + (rNoise(ru * 1.1 + ck * 4.0) - 0.5) * 0.9 + ru * (rHash(ck * 8.1) - 0.5) * 0.3;
+        float cSpan = smoothstep(0.0, 0.3, (rHash(ck * 4.4) * 7.0 - 3.5) - ru) * step(rHash(ck * 6.2), 0.6);
+        float cT = (1.0 - smoothstep(0.012, 0.035 + fwidth(rs), abs(rs - cs))) * cSpan;
+        float cj = abs(ru - 0.12 - (rNoise(rs * 0.6) - 0.5) * 0.18);
+        float cL = (1.0 - smoothstep(0.01, 0.03 + fwidth(ru), cj)) * smoothstep(0.45, 0.6, rNoise(rs * 0.05 + 7.0));
+        float crack = max(cT, cL) * (1.0 - repair);
+        rcol = mix(rcol, vec3(0.02, 0.02, 0.022), crack * 0.9);
+        rough = mix(rough, 0.85, crack);
 
         // Markings: paint is missing where the aggregate is low.
         float wear = smoothstep(0.15, 0.45, asp.a + rNoise(rs * 3.1) * 0.25);
@@ -100,7 +124,7 @@ export function createRoadMaterial(renderer, markings = MARKINGS.alpine) {
         '#include <normal_fragment_maps>',
         `{
           vec3 tn = texture2D(tAspN, vec2(ru, rs) * 0.75).xyz * 2.0 - 1.0;
-          tn.xy *= (1.0 - puddle * 0.95) * (1.0 - track * 0.5) * (1.0 - max(cLine, eLine) * wear * 0.7) * mix(1.0, uSurface.y, 1.0 - verge);
+          tn.xy *= (1.0 - puddle * 0.95) * (1.0 - track * 0.5) * (1.0 - crack * 0.8) * (1.0 - repair * 0.4) * (1.0 - max(cLine, eLine) * wear * 0.7) * mix(1.0, uSurface.y, 1.0 - verge);
           // Tangent frame from screen-space derivatives of the road UVs.
           vec3 q0 = dFdx(-vViewPosition), q1 = dFdy(-vViewPosition);
           vec2 st0 = dFdx(vRoad), st1 = dFdy(vRoad);

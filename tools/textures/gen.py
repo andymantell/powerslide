@@ -833,5 +833,9 @@ def desert():
 ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig, sandstone=sandstone, desert=desert, leaves=leaves, birch_bark=birch_bark)
 
 if __name__ == '__main__':
-    for n in sys.argv[1:] or ALL:
+    # These now ship as library textures (tools/textures/library.py), so they
+    # are only regenerated here when named. needles and desert also write
+    # fern_tuft and desert_tuft: name them, then rerun library.py.
+    from library import PICKS
+    for n in sys.argv[1:] or [n for n in ALL if n not in PICKS]:
         ALL[n]()

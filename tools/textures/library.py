@@ -9,8 +9,10 @@ ambientCG doesn't, so we assume 2 m). The shaders tile every surface at a
 fixed size (TILE, metres), so a smaller source is repeated k x k inside the
 output to keep its real scale.
 
-  python tools/textures/library.py <out dir> <name>=<src>:<id> [...]
+  python tools/textures/library.py <out dir> [<name>=<src>:<id> ...]
 e.g. python tools/textures/library.py src/assets/textures grass=acg:Grass004
+With no pairs it rebuilds every texture in PICKS (the ones the game ships;
+credits.json lists them). gen.py leaves these alone.
 <src> is ph (Poly Haven) or acg (ambientCG). Downloads are cached in
 tools/textures/.cache (not committed). Snow keeps the generated height in its
 alpha: the ground shader reads snow's alpha as general-purpose noise.
@@ -34,6 +36,10 @@ GAME = os.path.join(HERE, '..', '..', 'src', 'assets', 'textures')
 TILE = dict(grass=3.0, lawn=3.0, moor=3.0, needles=3.0, desert=3.0, sand=5.0, snow=8.3, gravel=2.2,
             asphalt=1.33, paving=2.4, rock=6.25, granite=6.25, sandstone=6.25, bark=None)
 SIZE = dict(bark=512)
+# Andy's picks from the texture audition (2026-10-28).
+PICKS = dict(gravel='acg:Gravel040', needles='ph:forest_leaves_04', rock='acg:Rock028', granite='acg:Rock020',
+             sandstone='ph:tiger_rock', desert='ph:dry_ground_rocks', sand='acg:Ground079S', paving='ph:pavement_01',
+             bark='acg:Bark014')
 ACG_SIZE_M = 2.0
 
 
@@ -94,6 +100,6 @@ def convert(name, src, id, out):
 
 if __name__ == '__main__':
     out = sys.argv[1]
-    for arg in sys.argv[2:]:
+    for arg in sys.argv[2:] or [f'{k}={v}' for k, v in PICKS.items()]:
         name, ref = arg.split('=')
         convert(name, *ref.split(':'), out)

@@ -58,7 +58,7 @@
       "files": [
         "src/assets/textures/*"
       ],
-      "madeBy": "tools/textures/gen.py"
+      "madeBy": "tools/textures/gen.py (except the library textures listed under assets, made by tools/textures/library.py)"
     },
     {
       "files": [
@@ -1417,6 +1417,123 @@
       "downloaded": "2026-10-28",
       "changes": "cut 1 stretch(es) of 5 s, mono, normalised, MP3 (tools/sounds/build.py)",
       "attribution": "\"Curlew .wav\" by Benboncan (freesound.org), CC BY 4.0, cut and normalised"
+    },
+    {
+      "title": "Gravel 040 (ambientCG), road verge gravel",
+      "files": [
+        "src/assets/textures/gravel_albedo.webp",
+        "src/assets/textures/gravel_normal.webp"
+      ],
+      "source": "https://ambientcg.com/a/Gravel040",
+      "author": "ambientCG (Lennart Demes)",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Forest Leaves 04 (Poly Haven), Pine Forest floor",
+      "files": [
+        "src/assets/textures/needles_albedo.webp",
+        "src/assets/textures/needles_normal.webp"
+      ],
+      "source": "https://polyhaven.com/a/forest_leaves_04",
+      "author": "Rob Tuytel",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://polyhaven.com/license",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 2x2, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Rock 028 (ambientCG), rock cuttings and outcrops",
+      "files": [
+        "src/assets/textures/rock_albedo.webp",
+        "src/assets/textures/rock_normal.webp"
+      ],
+      "source": "https://ambientcg.com/a/Rock028",
+      "author": "ambientCG (Lennart Demes)",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 3x3, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Rock 020 (ambientCG), granite cliffs and banks",
+      "files": [
+        "src/assets/textures/granite_albedo.webp",
+        "src/assets/textures/granite_normal.webp"
+      ],
+      "source": "https://ambientcg.com/a/Rock020",
+      "author": "ambientCG (Lennart Demes)",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 3x3, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Tiger Rock (Poly Haven), Desert Canyon sandstone",
+      "files": [
+        "src/assets/textures/sandstone_albedo.webp",
+        "src/assets/textures/sandstone_normal.webp"
+      ],
+      "source": "https://polyhaven.com/a/tiger_rock",
+      "author": "Dario Barresi",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://polyhaven.com/license",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 2x2, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Dry Ground Rocks (Poly Haven), Desert Canyon ground",
+      "files": [
+        "src/assets/textures/desert_albedo.webp",
+        "src/assets/textures/desert_normal.webp"
+      ],
+      "source": "https://polyhaven.com/a/dry_ground_rocks",
+      "author": "Rob Tuytel",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://polyhaven.com/license",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Ground 079 S (ambientCG), beach and lake-shore sand",
+      "files": [
+        "src/assets/textures/sand_albedo.webp",
+        "src/assets/textures/sand_normal.webp"
+      ],
+      "source": "https://ambientcg.com/a/Ground079S",
+      "author": "ambientCG (Lennart Demes)",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 2x2, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Pavement 01 (Poly Haven), pavements and kerbs",
+      "files": [
+        "src/assets/textures/paving_albedo.webp",
+        "src/assets/textures/paving_normal.webp"
+      ],
+      "source": "https://polyhaven.com/a/pavement_01",
+      "author": "Rob Tuytel",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://polyhaven.com/license",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 1024 px, tiled 2x2, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
+    },
+    {
+      "title": "Bark 014 (ambientCG), tree trunks",
+      "files": [
+        "src/assets/textures/bark_albedo.webp",
+        "src/assets/textures/bark_normal.webp"
+      ],
+      "source": "https://ambientcg.com/a/Bark014",
+      "author": "ambientCG (Lennart Demes)",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "2K colour, OpenGL normal and displacement resized to 512 px, displacement packed into the albedo alpha as height, WebP (tools/textures/library.py)"
     }
   ],
   "code": [
