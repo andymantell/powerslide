@@ -30,6 +30,13 @@ SPECIES = {
         max_len=3.4, len_pow=0.8, droop=(0.05, -0.5), tip_up=0.4, card_w=1.5, segs=3,
         twig='spruce_twig.png', bark='bark_albedo.webp',
     ),
+    # Tall pines for the Pine Forest: a long bare trunk and a high, rounded
+    # crown of fewer, longer branches that sweep upward.
+    'pine': dict(
+        height=(17.0, 23.0), trunk_r=0.34, crown_base=0.0, crown_frac=(0.45, 0.6), whorl_gap=0.42, per_whorl=(5, 7),
+        max_len=3.6, len_pow=0.28, droop=(0.4, -0.1), tip_up=0.45, card_w=2.6, segs=3,
+        twig='pine_twig.png', bark='bark_albedo.webp',
+    ),
 }
 
 
@@ -93,6 +100,8 @@ def foliage(rng, sp, H, mat):
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new()
     y0 = sp['crown_base'] + rng.uniform(-0.3, 0.6)
+    if 'crown_frac' in sp:
+        y0 = H * rng.uniform(*sp['crown_frac'])
     y = H - 0.15
     whorl = 0
     while y > y0:
@@ -153,7 +162,6 @@ def card(bm, uv, rng, sp, base, az, L, droop, width=None):
 
 def build(species='spruce', variants=3, seed=7):
     sp = SPECIES[species]
-    reset()
     bark = material('bark', sp['bark'])
     leaf = material('needles', sp['twig'], alpha=True)
     objs = []
@@ -181,5 +189,7 @@ def export(path):
 
 if __name__ == '__main__':
     variants = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-    objs = build('spruce', variants)
+    reset()
+    for species in SPECIES:
+        build(species, variants)
     export(os.path.join(OUT, 'conifers.glb'))

@@ -1,0 +1,149 @@
+{
+  "id": "forest-01",
+  "name": "Ranger Station",
+  "biome": "forest",
+  "seed": 4101,
+  "hint": "Welcome to the pine forest! The bends are hidden by the trees, and there's grit on the inside of the tight ones. Ride wide of it or you'll slide.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 120,
+      "length": 90
+    },
+    {
+      "straight": 110,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 130,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 90
+    },
+    {
+      "straight": 120,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 150,
+      "grade": 0.05
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 20,
+      "to": 140,
+      "width": 50
+    },
+    {
+      "type": "grit",
+      "at": 375,
+      "d": -2.4,
+      "len": 10,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 958,
+      "d": 2.3,
+      "len": 8,
+      "width": 1.5
+    }
+  ],
+  "props": [
+    {
+      "type": "ranger_hut",
+      "at": 80,
+      "d": 20
+    },
+    {
+      "type": "sign_fire",
+      "at": 56,
+      "d": 7.2
+    },
+    {
+      "type": "trail_map",
+      "at": 104,
+      "d": 8.5
+    },
+    {
+      "type": "picnic_table",
+      "at": 60,
+      "d": -11
+    },
+    {
+      "type": "picnic_table",
+      "at": 72,
+      "d": -14
+    },
+    {
+      "type": "picnic_table",
+      "at": 86,
+      "d": -11.5
+    },
+    {
+      "type": "bear_bin",
+      "at": 95,
+      "d": -9
+    },
+    {
+      "type": "sign_forestry",
+      "at": 12,
+      "d": -7.5
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1115,
+      "near": 9,
+      "far": 40,
+      "count": 16
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.15,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 120,
+    "score": 1600
+  }
+}

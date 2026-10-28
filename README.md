@@ -140,7 +140,15 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   roundabout with side roads both ways), `zebra` (a zebra crossing with
   flashing beacons), `bump` (a speed hump: a jolt and lost speed, or a crash
   above about 47 km/h) and `railbridge` (the road under a brick railway
-  bridge on an embankment, with a train crossing every `every` seconds).
+  bridge on an embankment, with a train crossing every `every` seconds). Pine
+  Forest adds `tunneltree` (the road runs through a tunnel cut in a giant
+  redwood; its walls are what you crash into), `trestle` (an old timber
+  railway trestle `height` m over the road, on banks where the ground
+  reaches it), `logbridge` (a log bridge over a rushing river), `smoke`
+  (chimney smoke `h` m up at `at`/`d`, `"side": "valley"` as for props),
+  `firebreak` (a strip cleared of trees across the road, `width`), and
+  `burnt` and `clearing` (no living trees out to `far` m along a stretch:
+  dress a burnt one with `snag` props).
 - A piece's `ramp` (metres) makes its new grade come in that quickly instead
   of easing over a few hundred metres, for humps, crests and dips. A negative
   grade climbs.
@@ -152,7 +160,8 @@ Biomes and their rules (tightest bend, slope range) are in `src/biomes.js`.
   single props, rows (`"face": "road"` for houses), scatters and props at
   every tight bend. `"side": "valley"` keeps a prop off the mountain side. Every tight bend also gets
   chevrons and a warning sign on its own (`"chevrons": false` turns them off).
-- `terrain` tweaks the biome's ground for one level: `treeDensity`, `relief`,
+- `terrain` tweaks the biome's ground for one level: `treeDensity`, `treeClear`
+  (how close to the road trees grow), `relief`,
   `maxRelief` and `snowLine` (metres above the road).
 - `sky` sets the time of day (`dawn`, `day`, `dusk`, `night`) and weather
   (`clear`, `cloudy`, `mist`, `rain`, `snow`). Rain also makes the road wet

@@ -37,6 +37,22 @@ export const ATMOSPHERE = {
     envIntensity: 0.6,
     fogScale: 1.2,
   },
+  // Warm, resinous air under a high summer sun: shafts of light through the
+  // pines and a soft blue haze between the ridges.
+  forest: {
+    sunAzimuth: -2.1,
+    sunElevation: 0.55,
+    zenith: '#2b5ca6',
+    horizon: '#bfd0dc',
+    haze: '#a9b8c0',
+    sunHaze: '#f0d6a8',
+    sunColor: '#fff0d2',
+    sunIntensity: 3.1,
+    cloudCover: 0.35,
+    cloudColor: '#ffffff',
+    envIntensity: 0.5,
+    fogScale: 1.6,
+  },
   // Overcast, soft and misty, with a low sun breaking through.
   dartmoor: {
     sunAzimuth: -2.0,

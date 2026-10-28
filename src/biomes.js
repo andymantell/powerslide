@@ -42,7 +42,16 @@ export const BIOMES = [
     rails: false,
     look: { markings: 'uk', lane: 3.0 },
   },
-  { id: 'forest', name: 'Pine Forest', blurb: 'Blind bends and grit on the inside line.' },
+  {
+    id: 'forest',
+    name: 'Pine Forest',
+    blurb: 'Blind bends and grit on the inside line.',
+    // A logging road through tall pines: the trees crowd the verges so bends
+    // are blind, grit washes onto the inside of the bends, and the grades
+    // are steady rather than steep. Guardrails on the drops.
+    rules: { minRadius: 16, maxGrade: 0.12, minGrade: -0.03 },
+    look: { species: 'pine', lane: 3.3 },
+  },
   { id: 'canyon', name: 'Desert Canyon', blurb: 'Long, steep straights fast enough to wobble.' },
   { id: 'city', name: 'City at Night', blurb: 'Steep streets, tram lines and buses.' },
   { id: 'coast', name: 'Coastal Cliffs', blurb: 'Hairpins, side winds and a long drop to the sea.' },

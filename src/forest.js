@@ -16,7 +16,10 @@ const snowOnTop = () => `
   }`;
 
 const MODEL = new URL('./assets/models/conifers.glb', import.meta.url).href;
-const TWIG = new URL('./assets/textures/spruce_twig.png', import.meta.url).href;
+const TWIGS = {
+  spruce: new URL('./assets/textures/spruce_twig.png', import.meta.url).href,
+  pine: new URL('./assets/textures/pine_twig.png', import.meta.url).href,
+};
 const MAX_FULL = 1200;
 const MAX_IMP = 24000;
 const IMP_W = 256;
@@ -77,7 +80,7 @@ export class Forest {
     this.sources = new Set(); // Float32Arrays of [x, y, z, scale, yaw, variant, tint]
 
     let twigLoaded;
-    const twig = new THREE.TextureLoader().load(TWIG, () => twigLoaded());
+    const twig = new THREE.TextureLoader().load(TWIGS[species] || TWIGS.spruce, () => twigLoaded());
     const twigReady = new Promise((res) => (twigLoaded = res));
     twig.colorSpace = THREE.SRGBColorSpace;
     twig.anisotropy = 4;

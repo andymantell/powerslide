@@ -1,0 +1,158 @@
+{
+  "id": "forest-03",
+  "name": "Fire Lookout",
+  "biome": "forest",
+  "seed": 4103,
+  "hint": "Look up! A fire lookout tower stands on the ridge, keeping watch over the forest. The bends get tighter here, so brake before them.",
+  "pieces": [
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 100,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 35,
+      "grade": 0.08
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 200,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 110,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 30,
+      "length": 30
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.06
+    },
+    {
+      "straight": 140
+    }
+  ],
+  "features": [
+    {
+      "type": "firebreak",
+      "at": 640,
+      "width": 70
+    },
+    {
+      "type": "grit",
+      "at": 317,
+      "d": -2.1,
+      "len": 12,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 471,
+      "d": 1.8,
+      "len": 10,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 720,
+      "d": -2.4,
+      "len": 12,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 875,
+      "d": 1.9,
+      "len": 12,
+      "width": 1.5
+    }
+  ],
+  "props": [
+    {
+      "type": "lookout",
+      "at": 640,
+      "d": 34,
+      "side": "mountain"
+    },
+    {
+      "type": "water_tank",
+      "at": 625,
+      "d": 30,
+      "side": "mountain"
+    },
+    {
+      "type": "sign_fire",
+      "at": 600,
+      "d": 7.0
+    },
+    {
+      "type": "trail_map",
+      "at": 615,
+      "d": -8.0
+    },
+    {
+      "type": "picnic_table",
+      "at": 660,
+      "d": 12,
+      "side": "valley"
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1200,
+      "near": 9,
+      "far": 40,
+      "count": 17
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.2,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 120,
+    "score": 1900
+  }
+}

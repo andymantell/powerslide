@@ -1,0 +1,306 @@
+{
+  "id": "forest-02",
+  "name": "Log Stacks",
+  "biome": "forest",
+  "seed": 4102,
+  "hint": "Towers of logs line the road here, waiting for the trucks. Keep an eye out for logging trucks, and the grit on the inside of the bends.",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "bend": "left",
+      "radius": 80,
+      "length": 80
+    },
+    {
+      "straight": 120,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 260,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 110,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 55,
+      "length": 55
+    },
+    {
+      "straight": 150,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "grit",
+      "at": 389,
+      "d": 1.8,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 691,
+      "d": -2.3,
+      "len": 10,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 1058,
+      "d": -2.3,
+      "len": 8,
+      "width": 1.8
+    }
+  ],
+  "props": [
+    {
+      "type": "sign_trucks",
+      "at": 120,
+      "d": 6.5
+    },
+    {
+      "type": "sign_forestry_b",
+      "at": 300,
+      "d": -7.5
+    },
+    {
+      "type": "log_loader",
+      "at": 470,
+      "d": -24,
+      "yaw": 30
+    },
+    {
+      "type": "logging_truck",
+      "at": 560,
+      "d": 16,
+      "yaw": "along"
+    },
+    {
+      "type": "log_pile",
+      "at": 600,
+      "d": -12,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 330,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 347,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 364,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 381,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 398,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 415,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 432,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 449,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 466,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 483,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 500,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 517,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 534,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 551,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 568,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 345,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 362,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 379,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 396,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 413,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 430,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 447,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 464,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 481,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 498,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 515,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 532,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 549,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1215,
+      "near": 9,
+      "far": 40,
+      "count": 17
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.25,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 130,
+    "score": 1800
+  }
+}

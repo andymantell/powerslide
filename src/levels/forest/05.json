@@ -1,0 +1,226 @@
+{
+  "id": "forest-05",
+  "name": "Cabin Lake",
+  "biome": "forest",
+  "seed": 4105,
+  "hint": "Log cabins sit by a still, dark lake, with canoes pulled up on the shore. A lovely spot for an evening ride, but the bends after it are tight!",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 160,
+      "length": 120,
+      "grade": 0.04
+    },
+    {
+      "straight": 220,
+      "grade": 0.04
+    },
+    {
+      "bend": "left",
+      "radius": 200,
+      "length": 120
+    },
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "bend": "left",
+      "radius": 45,
+      "length": 45,
+      "grade": 0.07
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "lake",
+      "from": 560,
+      "to": 1080,
+      "near": 30,
+      "far": 320,
+      "below": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 177,
+      "d": 2.4,
+      "len": 12,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 334,
+      "d": -2.2,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1138,
+      "d": -2.1,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 1302,
+      "d": 1.8,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "smoke",
+      "at": 703,
+      "d": 19.5,
+      "h": 7.5,
+      "side": "valley",
+      "color": "#cfcac2"
+    },
+    {
+      "type": "smoke",
+      "at": 957,
+      "d": 19.5,
+      "h": 7.5,
+      "side": "valley",
+      "color": "#cfcac2"
+    }
+  ],
+  "props": [
+    {
+      "type": "log_cabin",
+      "at": 600,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin_b",
+      "at": 700,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin",
+      "at": 830,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin_b",
+      "at": 960,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin",
+      "at": 1040,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "jetty_long",
+      "at": 765,
+      "d": 28,
+      "side": "valley"
+    },
+    {
+      "type": "jetty_long",
+      "at": 900,
+      "d": 28,
+      "side": "valley"
+    },
+    {
+      "type": "canoe",
+      "at": 740,
+      "d": 26,
+      "side": "valley",
+      "yaw": 70
+    },
+    {
+      "type": "canoe_green",
+      "at": 745,
+      "d": 27,
+      "side": "valley",
+      "yaw": 80
+    },
+    {
+      "type": "canoe",
+      "at": 920,
+      "d": 26.5,
+      "side": "valley",
+      "yaw": 100
+    },
+    {
+      "type": "picnic_table",
+      "at": 880,
+      "d": 20,
+      "side": "valley"
+    },
+    {
+      "type": "bear_bin",
+      "at": 650,
+      "d": 8,
+      "side": "valley"
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1440,
+      "near": 9,
+      "far": 40,
+      "count": 20
+    }
+  ],
+  "sky": {
+    "time": "dusk",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.2,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 150,
+    "score": 2400
+  }
+}

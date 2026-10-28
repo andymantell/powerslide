@@ -1,0 +1,161 @@
+{
+  "id": "forest-06",
+  "name": "Tunnel Tree",
+  "biome": "forest",
+  "seed": 4106,
+  "hint": "These trees are giants, the biggest living things on Earth! Ride right through the tunnel cut in one. Line up in the middle so you don't clip the sides.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 110,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 130,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 90,
+      "length": 90
+    },
+    {
+      "straight": 260,
+      "grade": 0.04
+    },
+    {
+      "bend": "right",
+      "radius": 50,
+      "length": 50,
+      "grade": 0.07
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 150,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "tunneltree",
+      "at": 770,
+      "span": 14
+    },
+    {
+      "type": "grit",
+      "at": 178,
+      "d": -2.2,
+      "len": 10,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 328,
+      "d": 2.2,
+      "len": 12,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 843,
+      "d": 2.2,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1018,
+      "d": -2.2,
+      "len": 8,
+      "width": 1.5
+    }
+  ],
+  "props": [
+    {
+      "type": "gift_shop",
+      "at": 720,
+      "d": 16
+    },
+    {
+      "type": "picnic_table",
+      "at": 735,
+      "d": -12
+    },
+    {
+      "type": "picnic_table",
+      "at": 745,
+      "d": -15
+    },
+    {
+      "type": "sign_forestry",
+      "at": 700,
+      "d": -7.5
+    },
+    {
+      "scatter": [
+        "giant_tree",
+        "giant_tree_b"
+      ],
+      "from": 600,
+      "to": 1000,
+      "near": 16,
+      "far": 70,
+      "count": 14
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1335,
+      "near": 9,
+      "far": 40,
+      "count": 19
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.2,
+    "speed": 0.8
+  },
+  "targets": {
+    "time": 135,
+    "score": 2400
+  }
+}

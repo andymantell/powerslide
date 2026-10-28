@@ -297,6 +297,81 @@ def snow(name='snow', seed=41):
     save(name, col, h, normal_from_height(h, 2.5))
 
 
+def needles():
+    """Pine Forest: a floor of fallen needles, with moss and the odd cone."""
+    soil, dark, mid, light, moss = (hexcol(c) for c in ('#241b14', '#3a2b1f', '#5e4632', '#83674a', '#4a6327'))
+    macro = norm01(fbm(N, 4, 5, 13))
+    base = lerp(soil, dark, macro[..., None] * 0.8)
+
+    def needle(rng):
+        t = rng.random()
+        c = lerp(dark, light, t ** 1.3) * rng.uniform(0.85, 1.1)
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)), int(90 + t * 120)
+
+    # Long thin needles lying every which way.
+    rgb, h = strokes(N, 90000, 15, (10, 26), (0.7, 1.2), np.pi, needle, base=base, scale=8)
+    mossy = smoothstep(0.5, 0.72, norm01(fbm(N, 6, 5, 17) + fbm(N, 48, 3, 23) * 0.35))[..., None]
+    fine = norm01(fbm(N, 96, 3, 19))[..., None]
+    rgb = lerp(rgb, moss * (0.6 + 0.6 * fine), mossy * 0.7)
+    h = np.maximum(h, mossy[..., 0] * (0.5 + fine[..., 0] * 0.3))
+    f1, _, cid = worley(N, 40, 21)
+    cone = smoothstep(0.12, 0.06, f1) * (cid > 0.9)
+    rgb = lerp(rgb, hexcol('#5a3a20') * (0.7 + 0.5 * fine), cone[..., None])
+    h = np.maximum(h, cone)
+    rgb = rgb * (0.88 + macro[..., None] * 0.24)
+    height = norm01(h)
+    save('needles', rgb, height, normal_from_height(blur(height, 1), 3.0), quality=72)
+    # Ferns and bilberry under the pines.
+    fern('fern_tuft', seed=87)
+
+
+def fern(name='fern_tuft', seed=87, size=512):
+    """Alpha-tested fern clump cards, side view: two tiles, bracken and a lighter fern."""
+    S = size * 4
+    rng = np.random.default_rng(seed)
+    img = Image.new('RGBA', (S * 2, S), (0, 0, 0, 0))
+
+    def c8(c, a=255):
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)) + (a,)
+
+    for tile, (dark, light) in enumerate(((hexcol('#25401a'), hexcol('#5c7f2c')), (hexcol('#3b5a1e'), hexcol('#86a440')))):
+        part = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+        d = ImageDraw.Draw(part)
+        for _ in range(16 if tile == 0 else 22):
+            # A frond arches up and out from the crown at the bottom centre.
+            ang = -np.pi / 2 + rng.normal(0, 0.55)
+            L = S * rng.uniform(0.45, 0.85)
+            curl = rng.uniform(0.6, 1.4) * np.sign(np.cos(ang) + 1e-3)
+            x, y = S * 0.5 + rng.normal(0, S * 0.03), S - 2
+            n = 40
+            pts = []
+            for i in range(n + 1):
+                t = i / n
+                a = ang + curl * t * t
+                pts.append((x, y, t, a))
+                x += np.cos(a) * L / n
+                y += np.sin(a) * L / n
+            shade = rng.random()
+            for x, y, t, a in pts[3:]:
+                pl = S * 0.09 * np.sin(min(1.0, t * 1.15) * np.pi) * (1 - t * 0.5)
+                for side in (-1, 1):
+                    pa = a + side * 1.15
+                    col = lerp(dark, light, 0.3 + 0.5 * shade + 0.2 * t) * rng.uniform(0.85, 1.1)
+                    tip = (x + np.cos(pa) * pl, y + np.sin(pa) * pl + pl * 0.3)
+                    d.line([(x, y), tip], fill=c8(col), width=max(2, int(S * 0.007 * (1 - t * 0.6))))
+            d.line([(p[0], p[1]) for p in pts], fill=c8(dark * 0.8), width=max(2, int(S * 0.004)))
+        img.paste(part, (tile * S, 0))
+    img = img.resize((size * 2, size), Image.LANCZOS)
+    arr = np.asarray(img) / 255.0
+    rgb, alpha = arr[..., :3], arr[..., 3]
+    rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
+    rgb = bleed(rgb, alpha)
+    rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
+    Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(
+        os.path.join(OUT, f'{name}.webp'), quality=85, alpha_quality=80, method=6)
+    print('wrote', name)
+
+
 def bleed(rgb, alpha, passes=24):
     """Spreads opaque colours into transparent pixels so mipmaps don't fringe."""
     rgb = rgb.copy()
@@ -315,7 +390,7 @@ def bleed(rgb, alpha, passes=24):
     return rgb
 
 
-def twig(name='spruce_twig', pal=None, seed=51, size=512):
+def twig(name='spruce_twig', pal=None, seed=51, size=512, needle=1.0, spread=(0.5, 1.3), branches=2):
     """Alpha-tested branch card: a spruce shoot seen from above, stem at the bottom centre."""
     pal = pal or dict(dark='#16281a', light='#3d5a30', tip='#6c8a40', stem='#4a3426')
     dark, light, tip, stem = (hexcol(pal[k]) for k in ('dark', 'light', 'tip', 'stem'))
@@ -341,8 +416,8 @@ def twig(name='spruce_twig', pal=None, seed=51, size=512):
         for x, y, t, a in pts:
             for side in (-1, 1):
                 for _ in range(1 if rng.random() < 0.6 else 2):
-                    na = a + side * rng.uniform(0.5, 1.3)
-                    nl = S * rng.uniform(0.022, 0.032) * (1 - t * 0.35) * (width / 1.0)
+                    na = a + side * rng.uniform(*spread)
+                    nl = S * rng.uniform(0.022, 0.032) * needle * (1 - t * 0.35) * (width / 1.0)
                     shade = rng.random()
                     col = lerp(dark, light, shade)
                     col = lerp(col, tip, smoothstep(0.75, 1.0, t) * 0.7)
@@ -354,13 +429,53 @@ def twig(name='spruce_twig', pal=None, seed=51, size=512):
                 side = 1 if (i // 2) % 2 else -1
                 shoot(x, y, a + side * rng.uniform(0.8, 1.15), length * (1 - t * 0.8) * rng.uniform(0.3, 0.45), width * 0.75, depth - 1)
 
-    shoot(S * 0.5, S * 0.98, -np.pi / 2, S * 0.9, 1.0, 2)
+    shoot(S * 0.5, S * 0.98, -np.pi / 2, S * 0.9, 1.0, branches)
     img = img.resize((size, size), Image.LANCZOS)
     arr = np.asarray(img) / 255.0
     rgb, alpha = arr[..., :3], arr[..., 3]
     rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
     rgb = bleed(rgb, alpha)
     os.makedirs(OUT, exist_ok=True)
+    rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
+    Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(os.path.join(OUT, f'{name}.png'), optimize=True)
+    print('wrote', name)
+
+
+def pine_twig(name='pine_twig', seed=53, size=512):
+    """Pine shoots: a fan of stout shoots, each a brush of long needles swept forward."""
+    dark, light, tip, stem = (hexcol(c) for c in ('#1b3020', '#45663a', '#7f9c55', '#6a4a30'))
+    S = size * 4
+    rng = np.random.default_rng(seed)
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    def c8(c, a=255):
+        return tuple(int(v * 255) for v in np.clip(c, 0, 1)) + (a,)
+
+    x0, y0 = S * 0.5, S * 0.98
+    shoots = [(-np.pi / 2, 0.78)] + [(-np.pi / 2 + s * rng.uniform(0.35, 0.75), rng.uniform(0.45, 0.6)) for s in (-1, 1, -1, 1)]
+    stems = []
+    for ang, frac in shoots:
+        # Side shoots start part way up the main one.
+        bx, by = (x0, y0) if frac > 0.7 else (x0, y0 - S * rng.uniform(0.15, 0.35))
+        L = S * frac
+        n = 60
+        pts = [(bx + np.cos(ang) * L * i / n, by + np.sin(ang) * L * i / n, i / n) for i in range(n + 1)]
+        stems.append(pts)
+        for x, y, t in pts[int(n * 0.12):]:
+            for _ in range(5):
+                na = ang + rng.choice((-1, 1)) * rng.uniform(0.15, 0.75)
+                nl = S * rng.uniform(0.09, 0.14) * (1 - 0.35 * t)
+                col = lerp(dark, light, rng.random()) 
+                col = lerp(col, tip, smoothstep(0.7, 1.0, t) * 0.6)
+                d.line([(x, y), (x + np.cos(na) * nl, y + np.sin(na) * nl)], fill=c8(col), width=max(2, int(S * 0.003)))
+    for pts in stems:
+        d.line([(p[0], p[1]) for p in pts[: int(len(pts) * 0.5)]], fill=c8(stem), width=int(S * 0.008))
+    img = img.resize((size, size), Image.LANCZOS)
+    arr = np.asarray(img) / 255.0
+    rgb, alpha = arr[..., :3], arr[..., 3]
+    rgb = np.where(alpha[..., None] > 0, rgb / np.maximum(alpha[..., None], 1e-3), 0)
+    rgb = bleed(rgb, alpha)
     rgba = np.dstack([np.clip(rgb, 0, 1), alpha])
     Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save(os.path.join(OUT, f'{name}.png'), optimize=True)
     print('wrote', name)
@@ -517,7 +632,7 @@ def sand(name='sand', seed=101):
     save(name, col, h, normal_from_height(blur(h, 1), 3.0), quality=75)
 
 
-ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand)
+ALL = dict(grass=grass, rock=rock, gravel=gravel, asphalt=asphalt, snow=snow, twig=twig, bark=bark, deck=deck, tuft=tuft, moor=moor, granite=granite, lawn=lawn, paving=paving, sand=sand, needles=needles, pine_twig=pine_twig)
 
 if __name__ == '__main__':
     for n in sys.argv[1:] or ALL:

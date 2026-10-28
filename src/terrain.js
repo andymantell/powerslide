@@ -231,7 +231,7 @@ export class Terrain {
           }
           continue;
         }
-        if (f.dist < 9 || (r > forest * 0.9 * this.treeDensity && r > 0.04)) continue;
+        if (f.dist < this.treeClear || (r > forest * 0.9 * this.treeDensity && r > 0.04)) continue;
         if (r <= 0.04 && slope < 1.2) {
           // A boulder, sometimes with a few smaller ones tumbled around it.
           const sc = 0.35 + rand() ** 2 * 1.8;
@@ -315,6 +315,7 @@ export class Terrain {
     this.snowCover = !!g.snowCover;
     if (this.snowCover) this.snowLine = Math.min(this.snowLine, -260);
     this.treeDensity = g.treeDensity ?? 1;
+    this.treeClear = g.treeClear ?? 9; // no trees closer to the road centre (m)
   }
 
   reset(seed, shape) {

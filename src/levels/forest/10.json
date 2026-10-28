@@ -1,0 +1,805 @@
+{
+  "id": "forest-10",
+  "name": "Logging Road",
+  "biome": "forest",
+  "seed": 4110,
+  "hint": "The whole forest in one long ride: log stacks, the lookout, the sawmill, Cabin Lake, the tunnel tree, the trestle, the logging yard and Burnt Ridge, then over the log bridge to the finish!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 120,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 260,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 110,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 150,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 260,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 180,
+      "length": 120,
+      "grade": 0.04
+    },
+    {
+      "straight": 300,
+      "grade": 0.04
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 50,
+      "grade": 0.06
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 220,
+      "grade": 0.05
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70
+    },
+    {
+      "straight": 240,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 140
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 90,
+      "grade": 0.04
+    },
+    {
+      "straight": 300,
+      "grade": 0.04
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40,
+      "grade": 0.07
+    },
+    {
+      "straight": 160,
+      "grade": 0.08
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 180,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 60,
+      "length": 60
+    },
+    {
+      "straight": 180,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 80,
+      "grade": 0.05
+    },
+    {
+      "straight": 60,
+      "grade": 0.0,
+      "ramp": 30
+    },
+    {
+      "straight": 150,
+      "grade": 0.05
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 20,
+      "to": 150,
+      "width": 50
+    },
+    {
+      "type": "firebreak",
+      "at": 1115,
+      "width": 70
+    },
+    {
+      "type": "flat",
+      "from": 1275,
+      "to": 1495,
+      "width": 70
+    },
+    {
+      "type": "smoke",
+      "at": 1382,
+      "d": -40,
+      "h": 16.5
+    },
+    {
+      "type": "lake",
+      "from": 1695,
+      "to": 2075,
+      "near": 30,
+      "far": 300,
+      "below": 2.5
+    },
+    {
+      "type": "smoke",
+      "at": 1858,
+      "d": 19.5,
+      "h": 7.5,
+      "side": "valley",
+      "color": "#cfcac2"
+    },
+    {
+      "type": "tunneltree",
+      "at": 2455,
+      "span": 14
+    },
+    {
+      "type": "trestle",
+      "at": 2765,
+      "height": 15
+    },
+    {
+      "type": "flat",
+      "from": 3150,
+      "to": 3420,
+      "width": 80
+    },
+    {
+      "type": "clearing",
+      "from": 3160,
+      "to": 3410,
+      "far": 70
+    },
+    {
+      "type": "grit",
+      "at": 3170,
+      "d": -1.5,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3194,
+      "d": -1.0,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3218,
+      "d": 2.4,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3242,
+      "d": -0.6,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3266,
+      "d": 1.3,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3290,
+      "d": -2.7,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3314,
+      "d": 0.6,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3338,
+      "d": -1.9,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3362,
+      "d": 1.5,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3386,
+      "d": 1.6,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3410,
+      "d": 2.0,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "burnt",
+      "from": 3470,
+      "to": 3920,
+      "far": 240
+    },
+    {
+      "type": "logbridge",
+      "from": 4237,
+      "to": 4267
+    },
+    {
+      "type": "grit",
+      "at": 364,
+      "d": -2.6,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 670,
+      "d": 2.0,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 824,
+      "d": -2.0,
+      "len": 12,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1011,
+      "d": 2.3,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1531,
+      "d": 2.1,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 2123,
+      "d": -2.3,
+      "len": 12,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 2305,
+      "d": 2.1,
+      "len": 12,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 2879,
+      "d": 1.9,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 3448,
+      "d": 2.1,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 3655,
+      "d": -1.9,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 4118,
+      "d": -2.3,
+      "len": 8,
+      "width": 1.5
+    }
+  ],
+  "props": [
+    {
+      "type": "ranger_hut",
+      "at": 90,
+      "d": 20
+    },
+    {
+      "type": "sign_fire",
+      "at": 60,
+      "d": 7.2
+    },
+    {
+      "type": "trail_map",
+      "at": 112,
+      "d": 8.5
+    },
+    {
+      "type": "picnic_table",
+      "at": 70,
+      "d": -11
+    },
+    {
+      "type": "picnic_table",
+      "at": 84,
+      "d": -13
+    },
+    {
+      "type": "log_stack",
+      "at": 425,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 442,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 459,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 476,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 493,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 510,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 527,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 544,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 561,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 578,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 595,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 612,
+      "d": -13.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 440,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 457,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 474,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 491,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 508,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 525,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 542,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 559,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 576,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 593,
+      "d": 14.5,
+      "yaw": "along"
+    },
+    {
+      "type": "sign_trucks",
+      "at": 395,
+      "d": 6.5
+    },
+    {
+      "type": "log_loader",
+      "at": 525,
+      "d": -24,
+      "yaw": 30
+    },
+    {
+      "type": "lookout",
+      "at": 1115,
+      "d": 34,
+      "side": "mountain"
+    },
+    {
+      "type": "water_tank",
+      "at": 1100,
+      "d": 30,
+      "side": "mountain"
+    },
+    {
+      "type": "mill",
+      "at": 1385,
+      "d": -31
+    },
+    {
+      "row": "flume",
+      "from": 1315,
+      "to": 1455,
+      "d": 13,
+      "every": 12
+    },
+    {
+      "scatter": [
+        "timber_stack",
+        "timber_stack_b"
+      ],
+      "from": 1305,
+      "to": 1465,
+      "side": "right",
+      "near": 18,
+      "far": 40,
+      "count": 10
+    },
+    {
+      "type": "log_cabin",
+      "at": 1735,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin_b",
+      "at": 1855,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "log_cabin",
+      "at": 1995,
+      "d": 15.5,
+      "side": "valley"
+    },
+    {
+      "type": "jetty_long",
+      "at": 1925,
+      "d": 28,
+      "side": "valley"
+    },
+    {
+      "type": "canoe",
+      "at": 1905,
+      "d": 26,
+      "side": "valley",
+      "yaw": 70
+    },
+    {
+      "type": "gift_shop",
+      "at": 2405,
+      "d": 16
+    },
+    {
+      "scatter": [
+        "giant_tree",
+        "giant_tree_b"
+      ],
+      "from": 2285,
+      "to": 2565,
+      "near": 16,
+      "far": 70,
+      "count": 10
+    },
+    {
+      "type": "water_tower",
+      "at": 2777,
+      "d": 38
+    },
+    {
+      "row": [
+        "logging_truck",
+        "logging_truck_b"
+      ],
+      "from": 3170,
+      "to": 3220,
+      "d": -22,
+      "every": 5,
+      "across": true
+    },
+    {
+      "type": "log_loader",
+      "at": 3260,
+      "d": -18,
+      "yaw": 20
+    },
+    {
+      "type": "log_stack",
+      "at": 3270,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 3287,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 3304,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 3321,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 3338,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 3355,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 3372,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 3389,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 3406,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "scatter": [
+        "snag",
+        "snag_b",
+        "snag_c"
+      ],
+      "from": 3470,
+      "to": 3920,
+      "near": 8,
+      "far": 200,
+      "count": 450
+    },
+    {
+      "scatter": [
+        "sapling",
+        "sapling_b",
+        "fireweed",
+        "stump_burnt"
+      ],
+      "from": 3470,
+      "to": 3920,
+      "near": 7,
+      "far": 40,
+      "count": 70
+    },
+    {
+      "type": "bear_bin",
+      "at": 4410,
+      "d": 7.5
+    },
+    {
+      "type": "picnic_table",
+      "at": 4395,
+      "d": -11
+    },
+    {
+      "type": "sign_forestry_b",
+      "at": 4375,
+      "d": -7.5
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 4415,
+      "near": 9,
+      "far": 40,
+      "count": 63
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "clear"
+  },
+  "checkpoints": [
+    1295,
+    2675,
+    3530
+  ],
+  "traffic": {
+    "density": 0.35,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 365,
+    "score": 6800
+  }
+}

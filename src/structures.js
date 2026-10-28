@@ -11,6 +11,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { spanRange, SPAN_TYPES, RAIL_OFFSET, HALF_WIDTH } from './road.js';
 import { createPropMaterial } from './propmat.js';
 import { mulberry32, clamp } from './noise.js';
+import { Props } from './props.js';
 
 const PAINT = 0, PLANKS = 1, SHINGLES = 2, MASONRY = 3, PLASTER = 4, GLASS = 5, METAL = 6, EMISSIVE = 7, LEAVES = 8, PAVING = 9, TARMAC = 10;
 // Structure half width: the parapet's inner face sits at the guardrail line
@@ -893,10 +894,229 @@ export const PLANS = {
       return h + (want - h) * w;
     });
   },
+
+  // ---------------------------------------------------------------- forest
+  // { type: 'tunneltree', at } A giant redwood standing over the road, with a
+  // tunnel cut through its trunk that the road runs through. Its walls are
+  // what you crash into.
+  tunneltree(job) {
+    const at = (job.s0 + job.s1) / 2;
+    const m = this.road.sample(at, {});
+    job.at = at;
+    // Level ground round the foot of the trunk, at the road's height.
+    this.terrain.mods.push((x, z, f, h) => {
+      const r = Math.hypot(x - m.x, z - m.z);
+      if (r > 30) return h;
+      return h + (m.y - 0.2 - h) * (1 - smooth(14, 30, r));
+    });
+    this.props.add('tunnel_tree', m.x, m.z, Math.atan2(-m.dirZ, m.dirX), 1, m.y - 0.05);
+    this.terrain.block(m.x, m.z, 13);
+  },
+
+  // { type: 'trestle', at, height } An old timber railway trestle crossing
+  // high over the road (`height` m, 14), on banks where the ground reaches it.
+  trestle(job) {
+    const road = this.road;
+    const at = job.s0;
+    const m = road.sample(at, {});
+    const top = m.y + (job.f.height ?? 14);
+    // How far out each side the valley stays below the rails.
+    const ext = {};
+    for (const side of [-1, 1]) {
+      let t = 10;
+      while (t < 130 && this.terrain.heightAt(m.x + m.rightX * side * t, m.z + m.rightZ * side * t) < top - 1) t += 4;
+      ext[side] = t;
+    }
+    Object.assign(job, { ox: m.x, oz: m.z, ux: m.rightX, uz: m.rightZ, vx: m.dirX, vz: m.dirZ, top, ext });
+    this.terrain.mods.push((x, z, f, h) => {
+      const n = Math.abs((x - m.x) * m.dirX + (z - m.z) * m.dirZ);
+      if (n > 32) return h;
+      const tt = (x - m.x) * m.rightX + (z - m.z) * m.rightZ;
+      const t = Math.abs(tt);
+      const e = ext[tt < 0 ? -1 : 1];
+      if (t > e + 60) return h;
+      const slope = Math.max(0, n - 4) / 1.4;
+      // A bank up to the rails beyond the trestle's ends; a notch cut for
+      // them wherever the hill is higher.
+      const bank = smooth(e - 8, e + 2, t) * (1 - smooth(e + 40, e + 60, t));
+      let want = h;
+      if (h < top) want = h + (Math.max(h, top - slope) - h) * bank;
+      else want = Math.min(h, top + slope);
+      return h + (want - h) * smooth(RAIL_OFFSET + 1, RAIL_OFFSET + 4, t);
+    });
+    for (const side of [-1, 1]) for (let t = 6; t < ext[side] + 30; t += 5) this.terrain.block(m.x + m.rightX * side * t, m.z + m.rightZ * side * t, 4);
+  },
+
+  // { type: 'logbridge', from, to } A bridge of logs over a rushing river,
+  // with log rails.
+  logbridge(job) {
+    job.mid = (job.s0 + job.s1) / 2;
+    job.up = mountainSide(this.road, job.s0, job.s1);
+    this.terrain.mods.push(gorge(this.road, job.s0 + 2, job.s1 - 2, job.f.depth ?? 8));
+    job.river = acrossLine(this.road, job.mid, job.up * clearRun(this.road, job.mid, job.up, 300), -job.up * clearRun(this.road, job.mid, -job.up, 450), 6);
+    for (let i = 0; i < job.river.length; i += 2) this.terrain.block(job.river[i], job.river[i + 1], 8);
+  },
+
+  // { type: 'firebreak', at, width } A wide strip cleared of trees across
+  // the road and up the hills either side.
+  firebreak(job) {
+    const w = job.f.width ?? 30;
+    const pts = acrossLine(this.road, job.s0, -500, 500, w / 3);
+    for (let i = 0; i < pts.length; i += 2) this.terrain.block(pts[i], pts[i + 1], w / 2);
+  },
+
+  // { type: 'burnt', from, to, far } A stretch where a forest fire went
+  // through: no living trees out to `far` m (dress it with snags).
+  burnt(job) {
+    const far = job.f.far ?? 220;
+    const fr = {};
+    for (let s = job.s0; s <= job.s1; s += 14) {
+      this.road.sample(s, fr);
+      for (let d = -far; d <= far; d += 14) this.terrain.block(fr.x + fr.rightX * d, fr.z + fr.rightZ * d, 11);
+    }
+  },
+
+  // { type: 'clearing', from, to, far } Trees felled out to `far` m: a
+  // logging yard or a clearing.
+  clearing(job) {
+    PLANS.burnt.call(this, job);
+  },
+
+  // { type: 'smoke', at, d, h, side } Smoke curling up from a chimney `h` m
+  // above the ground at (at, d) ("side": "valley" as for props).
+  smoke() {},
 };
 
 // ---------------------------------------------------------------- builds
 const BUILDS = {
+
+  tunneltree() {},
+
+  trestle(job) {
+    const { ox, oz, ux, uz, vx, vz, top, ext } = job;
+    const geo = new Geo();
+    const P = (t, n, y) => new THREE.Vector3(ox + ux * t + vx * n, y, oz + uz * t + vz * n);
+    const U = new THREE.Vector3(ux, 0, uz), V = new THREE.Vector3(vx, 0, vz);
+    const BENT = '#5e4532', DECK = '#4e3b2c', RUST = '#6b4b3a';
+    const gap = RAIL_OFFSET + 2.5;
+    // Bents every 5 m across the valley, skipping the road.
+    for (const side of [-1, 1]) {
+      for (let t = gap; t <= ext[side] + 2; t += 5) {
+        const tt = side * t;
+        const g = Math.min(this.terrain.heightAt(P(tt, -2, 0).x, P(tt, -2, 0).z), this.terrain.heightAt(P(tt, 2, 0).x, P(tt, 2, 0).z)) - 0.3;
+        const H = top - 0.5 - g;
+        if (H < 0.8) continue;
+        const spread = 1.3 + H * 0.12;
+        // Two vertical inner posts and two battered outer posts.
+        for (const n of [-0.55, 0.55]) strut(geo, P(tt, n, g), P(tt, n, top - 0.5), 0.14, PLANKS, BENT);
+        for (const k of [-1, 1]) strut(geo, P(tt, k * spread, g), P(tt, k * 1.3, top - 0.5), 0.15, PLANKS, BENT);
+        // Sills and girts, with X bracing between them.
+        const tiers = Math.max(1, Math.round(H / 5));
+        for (let i = 0; i <= tiers; i++) {
+          const y = g + (H * i) / tiers;
+          const w = spread + (1.3 - spread) * (i / tiers);
+          strut(geo, P(tt, -w - 0.2, y), P(tt, w + 0.2, y), 0.1, PLANKS, BENT);
+          if (i < tiers) {
+            const y2 = g + (H * (i + 1)) / tiers, w2 = spread + (1.3 - spread) * ((i + 1) / tiers);
+            strut(geo, P(tt, -w, y), P(tt, w2, y2), 0.07, PLANKS, BENT);
+            strut(geo, P(tt, w, y), P(tt, -w2, y2), 0.07, PLANKS, BENT);
+          }
+        }
+        // Longitudinal braces to the next bent.
+        if (t + 5 <= ext[side] + 2) for (const n of [-1.3, 1.3]) strut(geo, P(tt, n, top - 2.5), P(tt + side * 5, n, top - 2.5), 0.08, PLANKS, BENT);
+      }
+    }
+    const t0 = -ext[-1] - 6, t1 = ext[1] + 6;
+    // Deep girders over the road, the stringers, the ties and two rusty rails.
+    for (const n of [-0.9, 0.9]) {
+      const a = P(-gap - 0.5, n, 0), b = P(gap + 0.5, n, 0);
+      geo.box((a.x + b.x) / 2, (a.z + b.z) / 2, top - 1.6, top - 0.5, U, gap + 0.5, V, 0.2, PLANKS, DECK);
+      const c = P(t0, n, 0), d = P(t1, n, 0);
+      geo.box((c.x + d.x) / 2, (c.z + d.z) / 2, top - 0.5, top - 0.15, U, (t1 - t0) / 2, V, 0.25, PLANKS, DECK);
+    }
+    for (let t = t0; t <= t1; t += 0.65) {
+      const c = P(t, 0, 0);
+      geo.box(c.x, c.z, top - 0.15, top, U, 0.12, V, 1.4, PLANKS, '#3e2f24');
+    }
+    for (const n of [-0.72, 0.72]) {
+      const c = P((t0 + t1) / 2, n, 0);
+      geo.box(c.x, c.z, top, top + 0.16, U, (t1 - t0) / 2, V, 0.04, METAL, RUST);
+    }
+    for (const n of [-1.45, 1.45]) {
+      const c = P((t0 + t1) / 2, n, 0);
+      geo.box(c.x, c.z, top, top + 0.22, U, (t1 - t0) / 2, V, 0.1, PLANKS, DECK);
+    }
+    this.mesh(geo);
+  },
+
+  logbridge(job) {
+    const { s0, s1 } = job;
+    const road = this.road;
+    const geo = new Geo();
+    const w = W - 0.2;
+    // Plank deck on great log stringers, log rails on log posts.
+    sweep(geo, road, s0 - 1, s1 + 1, [[-w - 0.3, -0.35], [w + 0.3, -0.35], [w + 0.3, -0.02], [-w - 0.3, -0.02]], PLANKS, '#6a4c34');
+    for (let k = -3; k <= 3; k++) {
+      const d = (k / 3) * (w - 0.2);
+      sweep(geo, road, s0 - 3, s1 + 3, logSection(d, -0.85, 0.5), PLANKS, k % 2 ? '#5a4030' : '#634634', { step: 3 });
+    }
+    for (const side of [-1, 1]) {
+      const o = side * w;
+      sweep(geo, road, s0, s1, logSection(o, 0.95, 0.17), PLANKS, '#6e5038', { step: 2 });
+      sweep(geo, road, s0, s1, logSection(o, 0.45, 0.12), PLANKS, '#6e5038', { step: 2 });
+      const n = Math.round((s1 - s0) / 3);
+      for (let i = 0; i <= n; i++) {
+        const { f, along, across } = frame(road, s0 + ((s1 - s0) * i) / n);
+        geo.box(f.x + across.x * o, f.z + across.z * o, f.y - 0.4, f.y + 1.15, along, 0.16, across, 0.16, PLANKS, '#5a4030');
+      }
+    }
+    // Crib piers of crossed logs at each bank.
+    for (const s of [s0, s1]) {
+      const { f, along, across } = frame(road, s);
+      for (let i = 0; i < 8; i++) {
+        const y = f.y - 1.1 - i * 0.5;
+        if (i % 2) geo.box(f.x, f.z, y - 0.5, y, along, 1.4, across, 0.25, PLANKS, '#4e3829');
+        else for (const k of [-1, 1]) geo.box(f.x + along.x * k * 1.2, f.z + along.z * k * 1.2, y - 0.5, y, along, 0.25, across, w + 0.6, PLANKS, '#5a4030');
+      }
+    }
+    this.mesh(geo);
+    river.call(this, job.river, 7);
+  },
+
+  firebreak() {},
+  burnt() {},
+  clearing() {},
+
+  smoke(job) {
+    const f = job.f;
+    const s = this.road.start + f.at;
+    let d = f.d ?? 0;
+    if (f.side === 'valley' || f.side === 'mountain') d = Math.abs(d) * ((this.road.c[Math.round(s)] || 0) > 0 ? 1 : -1) * (f.side === 'valley' ? -1 : 1);
+    const p = Props.at(this.road, s, d);
+    const y = this.terrain.heightAt(p.x, p.z) + (f.h ?? 8);
+    const tex = smokeTexture();
+    const puffs = [];
+    const N = 14;
+    for (let i = 0; i < N; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: f.color ?? '#d8d4cc', transparent: true, depthWrite: false, opacity: 0 }));
+      this.group.add(sp);
+      puffs.push(sp);
+    }
+    const rate = 0.09, drift = new THREE.Vector3(1, 0, 0.4).normalize();
+    this.gondolas.push({
+      update: (time) => {
+        for (let i = 0; i < N; i++) {
+          const ph = (time * rate + i / N) % 1;
+          const sp = puffs[i];
+          const r = 1.2 + ph * 6;
+          sp.position.set(p.x + drift.x * ph * 14 + Math.sin(i * 7.1 + ph * 3) * ph * 1.5, y + ph * 18, p.z + drift.z * ph * 14);
+          sp.scale.set(r, r, 1);
+          sp.material.opacity = Math.min(1, ph * 6) * (1 - ph) * 0.55;
+          sp.material.rotation = i * 1.3 + ph * 0.8;
+        }
+      },
+    });
+  },
   bridge(job) {
     const { s0, s1 } = job;
     const geo = new Geo();
@@ -1742,6 +1962,47 @@ function river(pts, width, fall = false) {
   this.streamMat.side = THREE.DoubleSide;
   m.receiveShadow = true;
   this.group.add(m);
+}
+
+// A square beam of half width r between two points.
+function strut(geo, a, b, r, kind, col) {
+  const d = new THREE.Vector3().subVectors(b, a);
+  const up = Math.abs(d.y) / (d.length() || 1) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const p = new THREE.Vector3().crossVectors(d, up).normalize().multiplyScalar(r);
+  const q = new THREE.Vector3().crossVectors(d, p).normalize().multiplyScalar(r);
+  const c = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+  const corner = (o, sp, sq) => o.clone().addScaledVector(p, sp).addScaledVector(q, sq);
+  const A = [corner(a, -1, -1), corner(a, 1, -1), corner(a, 1, 1), corner(a, -1, 1)];
+  const B = [corner(b, -1, -1), corner(b, 1, -1), corner(b, 1, 1), corner(b, -1, 1)];
+  for (let i = 0; i < 4; i++) geo.quad(A[i], A[(i + 1) % 4], B[(i + 1) % 4], B[i], kind, col, c);
+  geo.quad(A[0], A[1], A[2], A[3], kind, col, c);
+  geo.quad(B[0], B[1], B[2], B[3], kind, col, c);
+}
+
+// An eight-sided log's cross-section (for sweep), centred d across and h up.
+function logSection(d, h, r) {
+  return Array.from({ length: 8 }, (_, i) => [d + Math.cos((i / 8) * 6.2832) * r, h + Math.sin((i / 8) * 6.2832) * r]);
+}
+
+// A soft round puff for chimney smoke.
+let smokeTex = null;
+function smokeTexture() {
+  if (smokeTex) return smokeTex;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const rnd = mulberry32(5);
+  for (let i = 0; i < 7; i++) {
+    const x = 20 + rnd() * 24, y = 20 + rnd() * 24, r = 12 + rnd() * 10;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(255,255,255,0.55)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 64, 64);
+  }
+  smokeTex = new THREE.CanvasTexture(c);
+  smokeTex.colorSpace = THREE.SRGBColorSpace;
+  return smokeTex;
 }
 
 // ---------------------------------------------------------------- suburbs

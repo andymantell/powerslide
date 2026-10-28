@@ -1,0 +1,201 @@
+{
+  "id": "forest-04",
+  "name": "Sawmill",
+  "biome": "forest",
+  "seed": 4104,
+  "hint": "Smell the sawdust! The sawmill is busy cutting logs into planks, and the flume carries logs along the road on its water channel.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 55,
+      "length": 55
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 110
+    },
+    {
+      "bend": "left",
+      "radius": 120,
+      "length": 80,
+      "grade": 0.05
+    },
+    {
+      "straight": 300,
+      "grade": 0.05
+    },
+    {
+      "bend": "right",
+      "radius": 45,
+      "length": 45,
+      "grade": 0.07
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "right",
+      "radius": 80,
+      "length": 80
+    },
+    {
+      "straight": 130,
+      "grade": 0.06
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 540,
+      "to": 800,
+      "width": 70
+    },
+    {
+      "type": "clearing",
+      "from": 580,
+      "to": 770,
+      "far": 60
+    },
+    {
+      "type": "smoke",
+      "at": 667,
+      "d": -40,
+      "h": 16.5
+    },
+    {
+      "type": "grit",
+      "at": 171,
+      "d": -2.1,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 343,
+      "d": 2.5,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 875,
+      "d": 2.4,
+      "len": 8,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 1050,
+      "d": -2.5,
+      "len": 10,
+      "width": 1.8
+    }
+  ],
+  "props": [
+    {
+      "type": "mill",
+      "at": 670,
+      "d": -31
+    },
+    {
+      "type": "sign_forestry",
+      "at": 560,
+      "d": -7.5
+    },
+    {
+      "type": "sign_trucks",
+      "at": 520,
+      "d": 6.5
+    },
+    {
+      "type": "logging_truck_b",
+      "at": 615,
+      "d": -16,
+      "yaw": "along"
+    },
+    {
+      "type": "log_loader",
+      "at": 735,
+      "d": -20,
+      "yaw": 60
+    },
+    {
+      "row": "flume",
+      "from": 600,
+      "to": 760,
+      "d": 13,
+      "every": 12
+    },
+    {
+      "scatter": [
+        "timber_stack",
+        "timber_stack_b"
+      ],
+      "from": 590,
+      "to": 760,
+      "side": "right",
+      "near": 18,
+      "far": 40,
+      "count": 12
+    },
+    {
+      "scatter": [
+        "log_pile",
+        "log_stack_b"
+      ],
+      "from": 600,
+      "to": 780,
+      "side": "left",
+      "near": 50,
+      "far": 70,
+      "count": 6
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1375,
+      "near": 9,
+      "far": 40,
+      "count": 19
+    }
+  ],
+  "sky": {
+    "time": "dawn",
+    "weather": "clear"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 135,
+    "score": 2200
+  }
+}

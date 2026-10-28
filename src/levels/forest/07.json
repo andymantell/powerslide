@@ -1,0 +1,157 @@
+{
+  "id": "forest-07",
+  "name": "Trestle",
+  "biome": "forest",
+  "seed": 4107,
+  "hint": "An old wooden railway bridge crosses high over the road. Look up as you fly underneath, then get ready for some tight bends.",
+  "pieces": [
+    {
+      "straight": 150,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 55,
+      "length": 55
+    },
+    {
+      "straight": 140,
+      "grade": 0.06
+    },
+    {
+      "bend": "right",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 140,
+      "grade": 0.07
+    },
+    {
+      "bend": "left",
+      "radius": 100,
+      "length": 90,
+      "grade": 0.06
+    },
+    {
+      "straight": 220,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 50,
+      "length": 50
+    },
+    {
+      "straight": 110,
+      "grade": 0.08
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.06
+    },
+    {
+      "straight": 140
+    }
+  ],
+  "features": [
+    {
+      "type": "trestle",
+      "at": 880,
+      "height": 15
+    },
+    {
+      "type": "grit",
+      "at": 167,
+      "d": 2.3,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 342,
+      "d": -2.5,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 526,
+      "d": 2.0,
+      "len": 12,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 1020,
+      "d": -2.6,
+      "len": 12,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1170,
+      "d": 2.3,
+      "len": 8,
+      "width": 1.5
+    }
+  ],
+  "props": [
+    {
+      "type": "water_tower",
+      "at": 892,
+      "d": 38
+    },
+    {
+      "type": "sign_forestry_b",
+      "at": 820,
+      "d": 7.5
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1505,
+      "near": 9,
+      "far": 40,
+      "count": 21
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "cloudy"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.3,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 145,
+    "score": 2700
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "id": "forest-08",
+  "name": "Logging Yard",
+  "biome": "forest",
+  "seed": 4108,
+  "hint": "The logging yard is the busiest place in the forest. Trucks drop grit and bark all over the road, so it's slippery everywhere. Steer smoothly!",
+  "pieces": [
+    {
+      "straight": 160,
+      "grade": 0.06
+    },
+    {
+      "bend": "left",
+      "radius": 45,
+      "length": 45
+    },
+    {
+      "straight": 120,
+      "grade": 0.07
+    },
+    {
+      "bend": "right",
+      "radius": 55,
+      "length": 55
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 140,
+      "length": 90,
+      "grade": 0.04
+    },
+    {
+      "straight": 320,
+      "grade": 0.04
+    },
+    {
+      "bend": "right",
+      "radius": 40,
+      "length": 40,
+      "grade": 0.07
+    },
+    {
+      "straight": 120
+    },
+    {
+      "bend": "left",
+      "radius": 35,
+      "length": 35
+    },
+    {
+      "straight": 130
+    },
+    {
+      "bend": "right",
+      "radius": 70,
+      "length": 70,
+      "grade": 0.06
+    },
+    {
+      "straight": 150
+    }
+  ],
+  "features": [
+    {
+      "type": "flat",
+      "from": 560,
+      "to": 900,
+      "width": 80
+    },
+    {
+      "type": "clearing",
+      "from": 590,
+      "to": 880,
+      "far": 70
+    },
+    {
+      "type": "lake",
+      "from": 700,
+      "to": 860,
+      "side": "right",
+      "near": 30,
+      "far": 110,
+      "below": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 578,
+      "d": 2.7,
+      "len": 8,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 597,
+      "d": -0.8,
+      "len": 14,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 625,
+      "d": -1.6,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 648,
+      "d": -2.6,
+      "len": 10,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 670,
+      "d": -2.2,
+      "len": 14,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 693,
+      "d": 1.6,
+      "len": 10,
+      "width": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 708,
+      "d": 0.7,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 738,
+      "d": 0.7,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 754,
+      "d": -1.6,
+      "len": 14,
+      "width": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 776,
+      "d": -1.9,
+      "len": 14,
+      "width": 1.5
+    },
+    {
+      "type": "grit",
+      "at": 802,
+      "d": -0.8,
+      "len": 14,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 826,
+      "d": 1.2,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 841,
+      "d": -2.3,
+      "len": 8,
+      "width": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 866,
+      "d": 2.7,
+      "len": 10,
+      "width": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 892,
+      "d": -1.2,
+      "len": 10,
+      "width": 2.5
+    },
+    {
+      "type": "grit",
+      "at": 183,
+      "d": -2.4,
+      "len": 12,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 349,
+      "d": 2.5,
+      "len": 10,
+      "width": 1.8
+    },
+    {
+      "type": "grit",
+      "at": 924,
+      "d": 2.0,
+      "len": 10,
+      "width": 2.0
+    },
+    {
+      "type": "grit",
+      "at": 1084,
+      "d": -2.1,
+      "len": 8,
+      "width": 2.0
+    },
+    {
+      "type": "smoke",
+      "at": 857,
+      "d": -49,
+      "h": 16.5
+    }
+  ],
+  "props": [
+    {
+      "type": "sign_trucks",
+      "at": 520,
+      "d": 6.5
+    },
+    {
+      "type": "sign_forestry",
+      "at": 548,
+      "d": -7.5
+    },
+    {
+      "row": [
+        "logging_truck",
+        "logging_truck_b"
+      ],
+      "from": 600,
+      "to": 660,
+      "d": -22,
+      "every": 5,
+      "across": true
+    },
+    {
+      "type": "log_loader",
+      "at": 690,
+      "d": -18,
+      "yaw": 20
+    },
+    {
+      "type": "log_loader",
+      "at": 800,
+      "d": -24,
+      "yaw": -40
+    },
+    {
+      "type": "mill",
+      "at": 860,
+      "d": -40
+    },
+    {
+      "type": "log_stack",
+      "at": 700,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 717,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 734,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 751,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 768,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 785,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 802,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 819,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack",
+      "at": 836,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "type": "log_stack_b",
+      "at": 853,
+      "d": -14,
+      "yaw": "along"
+    },
+    {
+      "scatter": [
+        "log_pile",
+        "fallen_log"
+      ],
+      "from": 700,
+      "to": 860,
+      "side": "right",
+      "near": 31,
+      "far": 60,
+      "count": 8
+    },
+    {
+      "scatter": [
+        "fallen_log",
+        "fallen_log_b",
+        "stump",
+        "stump",
+        "log_pile"
+      ],
+      "from": 40,
+      "to": 1435,
+      "near": 9,
+      "far": 40,
+      "count": 20
+    }
+  ],
+  "sky": {
+    "time": "day",
+    "weather": "cloudy"
+  },
+  "checkpoints": [],
+  "traffic": {
+    "density": 0.45,
+    "speed": 0.85
+  },
+  "targets": {
+    "time": 145,
+    "score": 2700
+  }
+}
