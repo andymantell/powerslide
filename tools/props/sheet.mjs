@@ -1,5 +1,6 @@
 // Renders the numbered prop sheet: one image per prop, and an index.
 //   npm run dev, then node tools/props/sheet.mjs [outDir] [only,names]
+// SHEET_Q=az=90 views from the side (sheet.js query).
 // Numbers are kept in tools/props/sheet-ids.json, so a prop keeps its number
 // from one sheet to the next and new props get the next free ones.
 import { createRequire } from 'node:module';
@@ -23,7 +24,7 @@ const browser = await pw.chromium.launch({ args: ['--use-angle=swiftshader', '--
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: +(process.env.SHOT_DPR || 1) });
 page.on('console', (m) => { if (m.type() === 'error') console.log('[page]', m.text()); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-await page.goto(`${process.env.SHOT_URL || 'http://localhost:5173/'}tools/props/sheet.html`);
+await page.goto(`${process.env.SHOT_URL || 'http://localhost:5173/'}tools/props/sheet.html?${process.env.SHEET_Q || ''}`);
 await page.waitForFunction(() => window.__sheetReady, null, { timeout: 300000 });
 const items = await page.evaluate(() => window.__sheet.items);
 

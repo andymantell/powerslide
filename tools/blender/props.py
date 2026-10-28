@@ -330,29 +330,99 @@ def farmhouse():
     return chalet('farmhouse', w=10, d=9, floors=2, wood='#6e4527', base='#efe7d6', roof='#5c534c', shutters='#a32e2e')
 
 
-def cow(name, body='#8b5a3c', patch=None, face='#f1ece2'):
-    """A grazing cow, about 2.3 m long, facing -Y (its front)."""
-    ball(0.55, 0, 0, 1.25, sx=0.85, sy=1.9, sz=1.0, col=body, segs=12)
-    if patch:
-        ball(0.45, 0.18, 0.3, 1.38, sx=0.8, sy=1.0, sz=0.8, col=patch, segs=10)
-        ball(0.36, -0.2, -0.4, 1.2, sx=0.8, sy=1.0, sz=0.9, col=patch, segs=10)
-    for lx in (-0.28, 0.28):
-        for ly in (-0.65, 0.7):
-            cyl(0.1, 0.95, lx, ly, 0, PAINT, body, verts=6, r2=0.07)
-            cyl(0.085, 0.12, lx, ly, 0, PAINT, '#2a2420', verts=6)
-    # Neck and head, lowered to graze.
-    ball(0.28, 0, -1.05, 1.15, sx=0.9, sy=1.4, sz=1.0, col=body, segs=10, rx=0.6)
-    ball(0.24, 0, -1.4, 0.75, sx=0.85, sy=1.5, sz=0.9, col=face, segs=10, rx=1.0)
-    ball(0.15, 0, -1.62, 0.5, sx=1.2, sy=0.9, sz=0.9, col='#d8a7a0', segs=8)
+def cow(name, coat='braunvieh', graze=False):
+    """A cow, about 1.4 m at the withers and 2.4 m nose to tail, facing -Y.
+    One smooth body (organic.py) painted by coat: braunvieh (grey-brown with a
+    pale muzzle ring), simmental (red-brown with a white head, belly, legs
+    and splashes) or dun. graze: head down in the grass."""
+    from mathutils import noise
+    from organic import Blob, V, mix
+    b = Blob(0.028)
+    # Body: deep chest and brisket, barrel with a little sag, broad
+    # hindquarters with a level top, withers, hook and pin bones.
+    # Half-extents: (across, along, up).
+    b.ellip(V(0, -0.45, 1.0), 0.25, 0.3, 0.36)
+    b.ellip(V(0, -0.55, 0.74), 0.14, 0.14, 0.12)
+    b.ellip(V(0, 0.0, 1.0), 0.31, 0.55, 0.34)
+    b.ellip(V(0, 0.05, 0.82), 0.27, 0.42, 0.17)
+    b.ellip(V(0, 0.52, 1.03), 0.26, 0.28, 0.29)
+    b.ellip(V(0, 0.4, 1.26), 0.22, 0.33, 0.08)
+    b.ellip(V(0, -0.5, 1.3), 0.14, 0.24, 0.1)
     for s in (-1, 1):
-        cyl(0.04, 0.22, s * 0.16, -1.25, 1.02, PAINT, '#e8e2cf', verts=5, r2=0.01, ry=s * 1.0)
-        ball(0.1, s * 0.28, -1.18, 0.95, sx=1.4, sy=0.4, sz=0.6, col=body, segs=6)
-    # Udder, tail and the bell.
-    ball(0.2, 0, 0.45, 0.78, sx=1.1, sy=1.0, sz=0.7, col='#e6b6ae', segs=8)
-    cyl(0.03, 0.9, 0, 1.0, 0.55, PAINT, body, verts=5)
-    ball(0.08, 0, 1.0, 0.55, sz=1.5, col='#2a2420', segs=6)
-    cyl(0.11, 0.18, 0, -0.98, 0.75, METAL, '#b8913a', verts=8, r2=0.08)
-    box(0.36, 0.05, 0.08, 0, -0.95, 0.94, PAINT, '#3b2a1e', rx=0.6)
+        b.ellip(V(s * 0.2, 0.32, 1.27), 0.06, 0.06, 0.05)
+        b.ellip(V(s * 0.09, 0.75, 1.21), 0.05, 0.05, 0.05)
+    # Legs: forearm to knee to fetlock in front; thigh, gaskin, hock behind.
+    for s in (-1, 1):
+        x = s * 0.17
+        b.taper(V(x, -0.52, 1.0), V(x, -0.48, 0.62), 0.13, 0.095, 3)
+        b.taper(V(x, -0.48, 0.62), V(x, -0.48, 0.38), 0.08, 0.066, 2)
+        b.capsule(V(x, -0.48, 0.38), V(x, -0.49, 0.1), 0.055)
+        x = s * 0.18
+        b.taper(V(x, 0.5, 1.05), V(x, 0.45, 0.68), 0.16, 0.11, 3)
+        b.taper(V(x * 0.95, 0.47, 0.7), V(x * 0.9, 0.66, 0.45), 0.09, 0.065, 3)
+        b.capsule(V(x * 0.9, 0.66, 0.45), V(x * 0.9, 0.6, 0.1), 0.054)
+    # Udder and teats.
+    b.ellip(V(0, 0.4, 0.64), 0.13, 0.15, 0.1)
+    for tx in (-0.06, 0.06):
+        for ty in (0.33, 0.47):
+            b.capsule(V(tx, ty, 0.58), V(tx, ty, 0.5), 0.018)
+    # Neck with its dewlap, then a long wedge of a head: broad flat forehead
+    # between the horns, eyes at the sides, narrowing to a wide square muzzle.
+    if graze:
+        poll, muzzle, neck_end = V(0, -1.08, 0.66), V(0, -1.28, 0.14), V(0, -0.98, 0.76)
+    else:
+        poll, muzzle, neck_end = V(0, -1.02, 1.3), V(0, -1.36, 0.9), V(0, -0.92, 1.16)
+    b.taper(V(0, -0.6, 1.14), neck_end, 0.26, 0.17, 4)
+    mid = V(0, -0.75, 1.1).lerp(neck_end, 0.4)
+    b.ellip(mid + V(0, 0, -0.27), 0.08, 0.18, 0.17)
+    hd = (muzzle - poll).normalized()
+    b.taper(poll, poll.lerp(muzzle, 0.45), 0.13, 0.115, 2)
+    b.taper(poll.lerp(muzzle, 0.45), muzzle, 0.1, 0.085, 3)
+    b.ellip(poll + hd * 0.05, 0.15, 0.09, 0.09)
+    b.ellip(poll.lerp(muzzle, 0.3), 0.125, 0.11, 0.11)
+    b.ellip(muzzle, 0.115, 0.08, 0.075)
+
+    def paint(p):
+        q = V(p.x, p.y, p.z)
+        to_m = (q - muzzle).length
+        if to_m < 0.115 and (q - muzzle).dot(hd) > 0.02:
+            return '#2b2622' if coat != 'dun' else '#b98d80'
+        head = (q - poll).length < 0.5 and q.y < poll.y + 0.12
+        if q.z < 0.13:
+            return '#3a3029'
+        if coat == 'simmental':
+            if head or q.z < 0.48 or (abs(q.x) < 0.2 and 0.22 < q.y < 0.6 and q.z < 0.72):
+                return '#f2eee4'
+            # Red-brown on the upper body, white belly, a few white splashes.
+            n = noise.noise(q * 2.0 + V(3.1, 1.7, 0.4)) + 0.4 * noise.noise(q * 4.5)
+            line = 0.78 + 0.12 * noise.noise(q * 3.0)
+            return '#9b4f28' if q.z > line and n < 0.35 else '#f2eee4'
+        base, light = ('#7a6857', '#b4a796') if coat == 'braunvieh' else ('#c39a6a', '#e0c8a4')
+        if to_m < 0.15 and (q - muzzle).dot(hd) > -0.06:
+            return '#ebe5d8'
+        if abs(q.x) < 0.2 and 0.22 < q.y < 0.6 and q.z < 0.72:
+            return '#e2b8ac'
+        c = mix(base, light, (0.8 - q.z) * 3) if q.z < 0.8 else base
+        return mix(c, '#4a3e34', (0.38 - q.z) * 4) if q.z < 0.38 else c
+
+    b.mesh(finish, paint, ratio=0.12)
+    # Hooves, ears, eyes, horns, tail with its dark switch, and the bell.
+    for s in (-1, 1):
+        cyl(0.06, 0.1, s * 0.17, -0.49, 0, PAINT, '#2a2420', verts=8, r2=0.052)
+        cyl(0.058, 0.1, s * 0.16, 0.6, 0, PAINT, '#2a2420', verts=8, r2=0.05)
+    side = V(1, 0, 0)
+    up = hd.cross(side).normalized()  # out of the forehead
+    for s in (-1, 1):
+        e = poll + side * s * 0.16 - up * 0.02
+        ball(0.09, e.x + s * 0.06, e.y, e.z, sx=1.4, sy=0.35, sz=0.7, col='#6b5a4c' if coat == 'braunvieh' else '#c4a07a' if coat == 'dun' else '#f2eee4', segs=8, rz=s * 0.25)
+        ey = poll + hd * 0.17 + side * s * 0.115 + up * 0.04
+        ball(0.022, ey.x, ey.y, ey.z, col='#15110e', segs=6)
+        h = poll + side * s * 0.1 + up * 0.04
+        cyl(0.03, 0.18, h.x, h.y, h.z, PAINT, '#e9e0c8', verts=6, r2=0.008, ry=s * 1.0, rx=-0.3)
+    cyl(0.024, 0.72, 0, 0.79, 0.5, PAINT, '#6b5a4c' if coat == 'braunvieh' else '#c39a6a' if coat == 'dun' else '#f2eee4', verts=6, rx=-0.12)
+    ball(0.06, 0, 0.8, 0.46, sz=2.2, col='#2a2420' if coat != 'simmental' else '#f2eee4', segs=6)
+    bell = neck_end.lerp(V(0, -0.7, 1.1), 0.5) + V(0, 0, -0.33)
+    cyl(0.085, 0.15, bell.x, bell.y, bell.z - 0.12, METAL, '#b8913a', verts=10, r2=0.06)
     return build(name)
 
 
@@ -455,13 +525,75 @@ def jetty():
 
 
 def rowboat():
-    """A little rowing boat, floating: the hull sits half under the water line."""
-    ball(0.6, 0, 0, 0.0, sx=0.9, sy=3.0, sz=0.5, col='#b84b33', segs=12)
-    box(1.0, 3.2, 0.06, 0, 0, 0.16, PLANKS, '#8a7356')
-    for y in (-0.7, 0.5):
-        box(1.0, 0.3, 0.06, 0, y, 0.22, PLANKS, '#6f5a43')
+    """A wooden rowing boat, 3.5 m long, afloat (the water line is z = 0):
+    a lofted hull with a pointed bow and a square transom stern, white
+    topsides over red antifouling, varnished inside, three thwarts, rowlocks
+    and a pair of oars stowed along the seats. Bow towards -Y."""
+    from organic import paint
+    N, M = 16, 9  # stations along, points down each side
+
+    def station(t):
+        y = 1.6 - 3.4 * t
+        if t >= 0.42:
+            w = 0.68 * (1 - ((t - 0.42) / 0.58) ** 1.8)
+        else:
+            w = 0.68 - 0.16 * ((0.42 - t) / 0.42) ** 2
+        top = 0.3 + 0.2 * t ** 3 + 0.04 * (1 - t) ** 2
+        bot = -0.2 + 0.16 * t ** 4
+        return y, max(w, 0.0), top, bot
+
+    def ring(t, inset):
+        y, w, top, bot = station(t)
+        pts = []
+        for k in range(-M + 1, M):  # gunwale left, keel, gunwale right
+            a = abs(k) / (M - 1) * math.pi / 2
+            x = math.copysign(max(w - inset, 0.0) * math.sin(a) ** 0.6, k)
+            z = bot + inset + (top - bot - inset) * (1 - math.cos(a)) ** 0.9
+            pts.append((x, y, z))
+        return pts
+
+    K = 2 * M - 1
+    shells = []
+    for inset in (0.0, 0.035):
+        verts, faces = [], []
+        for i in range(N + 1):
+            verts += ring(i / N, inset)
+        for i in range(N):
+            for k in range(K - 1):
+                a, b = i * K + k, (i + 1) * K + k
+                faces.append((a, a + 1, b + 1, b) if inset == 0 else (a, b, b + 1, a + 1))
+        # Transom: the stern end of the shell, facing aft (+Y) outside.
+        ring0 = list(range(K))
+        faces.append(tuple(reversed(ring0)) if inset == 0 else tuple(ring0))
+        shells.append((verts, faces))
+    (ov, of), (iv, inf) = shells
+    # Outside: white topsides, red antifouling below the water line.
+    paint(mesh(ov, of, PLANKS, '#ffffff'), lambda p: '#8a2a1e' if p.z < 0.03 else '#f1eee6')
+    mesh(iv, inf, PLANKS, '#a87b4f')
+    # Gunwale capping: a strip over the top edge of both shells.
+    rv, rf = [], []
+    for k in (0, K - 1):
+        base = len(rv)
+        for i in range(N + 1):
+            rv += [ov[i * K + k], iv[i * K + k]]
+        for i in range(N):
+            a = base + 2 * i
+            f = (a, a + 2, a + 3, a + 1)
+            rf.append(f if k == 0 else tuple(reversed(f)))
+    mesh(rv, rf, PLANKS, '#5a3c24')
+    # Thwarts across at seat height, a stern sheet, rowlocks and the oars.
+    for t in (0.18, 0.47, 0.75):
+        y, w, top, bot = station(t)
+        box(2 * w - 0.08, 0.24, 0.035, 0, y, top - 0.17, PLANKS, '#b88b5a')
+    y, w, top, bot = station(0.47)
     for s in (-1, 1):
-        cyl(0.025, 1.6, s * 0.45, 0, 0.25, PLANKS, '#c8b48f', verts=5, ry=s * 1.25)
+        cyl(0.012, 0.09, s * (w - 0.02), y + 0.45, top, METAL, '#8a8f94', verts=5)
+        # Oar stowed along the seats: loom, then a flat blade towards the bow.
+        cyl(0.022, 2.1, s * 0.22, 1.25, top - 0.11, PLANKS, '#d2b48a', verts=6, rx=math.pi / 2)
+        box(0.12, 0.55, 0.014, s * 0.22, -0.85 - 0.27, top - 0.12, PLANKS, '#d2b48a')
+    # Painter (mooring rope) coiled on the bow seat.
+    yb, wb, topb, _ = station(0.88)
+    cyl(0.09, 0.04, 0, yb, topb - 0.25, PAINT, '#c9b98f', verts=10)
     return build('rowboat')
 
 
@@ -629,14 +761,30 @@ def chevron(name, sx):
 
 
 def warnsign(name, sx):
-    """Bend warning triangle on a post; the bend symbol turns towards sx."""
+    """Bend warning triangle on a post: red border, white inside and a black
+    bend, one bar that runs straight up and curves away towards sx."""
     box(0.08, 0.08, 2.2, 0, 0.04, 0, METAL, '#9ea3a8')
-    v = [(math.cos(a) * 0.62, 0, math.sin(a) * 0.62 + 2.2) for a in (math.pi / 2, math.pi / 2 + 2.094, math.pi / 2 + 4.189)]
+    tri = [(math.pi / 2), (math.pi / 2 + 2.094), (math.pi / 2 + 4.189)]
+    v = [(math.cos(a) * 0.62, 0, math.sin(a) * 0.62 + 2.2) for a in tri]
     mesh([(x, y, z) for x, y, z in v] + [(x, 0.03, z) for x, y, z in v], [(0, 1, 2), (3, 5, 4), (0, 3, 4, 1), (1, 4, 5, 2), (2, 5, 3, 0)], PAINT, '#c8251f')
-    v2 = [(math.cos(a) * 0.45, -0.01, math.sin(a) * 0.45 + 2.2) for a in (math.pi / 2, math.pi / 2 + 2.094, math.pi / 2 + 4.189)]
-    mesh(v2 + [(x, -0.012, z) for x, y, z in v2], [(0, 2, 1)], PAINT, '#f7f4ec')
-    box(0.07, 0.02, 0.3, 0.0, -0.025, 1.98, PAINT, '#1a1a1a')
-    box(0.07, 0.02, 0.22, 0.06 * sx, -0.025, 2.24, PAINT, '#1a1a1a', ry=0.6 * sx)
+    v2 = [(math.cos(a) * 0.44, -0.01, math.sin(a) * 0.44 + 2.2) for a in tri]
+    mesh(v2, [(0, 1, 2)], PAINT, '#f7f4ec')
+    # The bend: a straight run up from the bottom, then an arc of radius R.
+    R, w = 0.21, 0.05
+    path = [(0, 1.99 + k * 0.05) for k in range(4)]
+    for k in range(1, 9):
+        th = k / 8 * 1.15
+        path.append((sx * R * (1 - math.cos(th)), 2.14 + R * math.sin(th)))
+    verts = []
+    for i, (x, z) in enumerate(path):
+        x0, z0 = path[max(i - 1, 0)]
+        x1, z1 = path[min(i + 1, len(path) - 1)]
+        dx, dz = x1 - x0, z1 - z0
+        n = math.hypot(dx, dz)
+        nx, nz = dz / n, -dx / n  # right of the direction of travel
+        verts += [(x - nx * w, -0.016, z - nz * w), (x + nx * w, -0.016, z + nz * w)]
+    faces = [(2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2) for i in range(len(path) - 1)]
+    mesh(verts, faces, PAINT, '#1a1a1a')
     return build(name)
 
 
@@ -662,17 +810,79 @@ def flagpole_flag():
     return build('banner')
 
 
-def spectator(name, shirt, arms_up):
-    """A simple standing fan, about 1.75 m, facing -Y."""
+def spectator(name, top='#2b6cb0', legs='#2f3a4f', skin='#e0b393', hair='#5a3a22', pose='cheer', hat=None, scarf=None):
+    """A race fan, about 1.75 m, facing -Y: one smooth body (organic.py) in a
+    top and trousers, with a face, hair, hands and shoes. pose: cheer (both
+    arms up), clap (hands together in front) or film (phone held up)."""
+    from organic import Blob, V
+    b = Blob(0.014)
+    head = V(0, -0.01, 1.655)
+    # Legs: hip, knee, ankle, a little apart.
     for s in (-1, 1):
-        cyl(0.09, 0.85, s * 0.11, 0, 0, PAINT, '#2f3a4f', verts=6)
-    ball(0.2, 0, 0, 1.15, sx=1.05, sy=0.7, sz=1.5, col=shirt, segs=8)
-    ball(0.12, 0, 0, 1.62, col='#e0b393', segs=8)
+        hip, knee, ank = V(s * 0.095, 0, 0.92), V(s * 0.105, -0.025, 0.5), V(s * 0.11, 0.0, 0.09)
+        b.taper(hip, knee, 0.078, 0.056, 3)
+        b.taper(knee, knee.lerp(ank, 0.3), 0.056, 0.055, 1)
+        b.taper(knee.lerp(ank, 0.3), ank, 0.055, 0.04, 2)
+        # Trainers: a rounded toe box and heel.
+        b.ellip(V(s * 0.11, -0.05, 0.05), 0.048, 0.125, 0.045)
+    # Hips, waist, chest, shoulders, neck.
+    b.ellip(V(0, 0, 0.96), 0.165, 0.105, 0.11)
+    b.ellip(V(0, 0, 1.1), 0.15, 0.1, 0.12)
+    b.ellip(V(0, -0.005, 1.3), 0.185, 0.115, 0.15)
+    b.ellip(V(0, 0, 1.43), 0.2, 0.09, 0.05)
+    b.capsule(V(0, 0, 1.45), V(0, -0.005, 1.56), 0.052)
+    if scarf:
+        b.ellip(V(0, -0.01, 1.47), 0.085, 0.08, 0.04)
+    # Head: skull, jaw, nose and ears.
+    b.ellip(head, 0.083, 0.098, 0.112)
+    b.ellip(head + V(0, -0.025, -0.06), 0.068, 0.07, 0.06)
+    b.ellip(head + V(0, -0.1, -0.005), 0.016, 0.02, 0.028)
     for s in (-1, 1):
-        if arms_up:
-            cyl(0.05, 0.7, s * 0.24, 0, 1.38, PAINT, shirt, verts=5, ry=s * 0.35)
-        else:
-            cyl(0.05, 0.62, s * 0.25, 0, 0.82, PAINT, shirt, verts=5, ry=-s * 0.12)
+        b.ellip(head + V(s * 0.083, 0.005, 0.0), 0.012, 0.022, 0.03)
+    # Arms: shoulder, elbow, hand per pose.
+    arms = {
+        'cheer': [(V(0.33, 0.02, 1.68), V(0.38, -0.02, 1.96)), (V(-0.33, 0.02, 1.68), V(-0.38, -0.02, 1.96))],
+        'clap': [(V(0.28, -0.1, 1.18), V(0.035, -0.33, 1.42)), (V(-0.28, -0.1, 1.18), V(-0.035, -0.33, 1.42))],
+        'film': [(V(0.29, -0.2, 1.4), V(0.1, -0.4, 1.62)), (V(-0.24, 0.0, 1.13), V(-0.27, -0.04, 0.88))],
+    }[pose]
+    hands = []
+    for s, (el, ha) in zip((1, -1), arms):
+        sh = V(s * 0.2, 0, 1.43)
+        b.taper(sh, el, 0.05, 0.04, 3)
+        b.taper(el, ha, 0.04, 0.032, 3)
+        d = (ha - el).normalized()
+        hc = ha + d * 0.05
+        b.capsule(ha, hc + d * 0.03, 0.033)
+        hands.append(hc)
+
+    def paint(p):
+        q = V(p.x, p.y, p.z)
+        h = q - head
+        if h.length < 0.16 and q.z > 1.5:
+            hair_line = q.z > head.z + 0.035 or (h.y > 0.035 and q.z > head.z - 0.07)
+            if hat and q.z > head.z + 0.03:
+                return hat
+            if hair_line and not (abs(h.x) > 0.075 and q.z < head.z + 0.03):
+                return hair
+            return skin
+        if any((q - c).length < 0.075 for c in hands):
+            return skin
+        if scarf and 1.43 < q.z < 1.53 and math.hypot(q.x, q.y) < 0.11:
+            return scarf
+        if q.z < 0.1:
+            return '#24262a' if q.z > 0.025 else '#e8e6e0'
+        if q.z < 0.93:
+            return legs
+        return top
+
+    b.mesh(finish, paint, ratio=0.12)
+    # Eyes, and the phone or bobble.
+    for s in (-1, 1):
+        ball(0.011, head.x + s * 0.034, head.y - 0.088, head.z + 0.015, col='#1d1a18', segs=6)
+    if pose == 'film':
+        box(0.075, 0.012, 0.15, hands[0].x - 0.03, hands[0].y - 0.04, hands[0].z - 0.06, PAINT, '#15171a', rx=-0.25)
+    if hat:
+        ball(0.04, head.x, head.y + 0.01, head.z + 0.125, col='#f2f2ee', segs=8)
     return build(name)
 
 
@@ -684,9 +894,9 @@ def main():
     farmhouse()
     church()
     barn()
-    cow('cow', body='#8b5a3c', face='#efe6d6')
-    cow('cow_pied', body='#f1ece2', patch='#2a2420', face='#f1ece2')
-    cow('cow_dun', body='#c49a6c', face='#e9dcc7')
+    cow('cow', 'braunvieh')
+    cow('cow_pied', 'simmental', graze=True)
+    cow('cow_dun', 'dun')
     haybale()
     fence()
     churns()
@@ -713,9 +923,9 @@ def main():
     snowpole()
     bunting_pole()
     flagpole_flag()
-    spectator('fan_a', '#2b6cb0', True)
-    spectator('fan_b', '#d69e2e', False)
-    spectator('fan_c', '#c53030', True)
+    spectator('fan_a', top='#2b6cb0', legs='#2f3a4f', pose='cheer', hair='#3b2618')
+    spectator('fan_b', top='#d69e2e', legs='#4a4f57', skin='#c68a64', hair='#1d1714', pose='clap', scarf='#c53030')
+    spectator('fan_c', top='#c53030', legs='#2b3442', skin='#f0c8a8', hair='#b5803e', pose='film', hat='#2f6b4a')
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, 'props.glb')
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', export_materials='NONE', export_normals=True,

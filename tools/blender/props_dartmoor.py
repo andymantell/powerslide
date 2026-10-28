@@ -168,22 +168,75 @@ def sheep(name, wool='#e9e4d6', face='#2a2622'):
     return build(name)
 
 
-def pony(name, coat='#6b4a33', mane='#2a1f18', blaze=None):
-    """A stocky Dartmoor pony, about 1.2 m at the withers, facing -Y."""
-    ball(0.42, 0, 0, 0.95, sx=0.85, sy=1.75, sz=0.95, col=coat, segs=12)
-    for lx in (-0.18, 0.18):
-        for ly in (-0.5, 0.55):
-            cyl(0.075, 0.82, lx, ly, 0, PAINT, coat, verts=6, r2=0.06)
-            cyl(0.075, 0.1, lx, ly, 0, PAINT, '#2a2420', verts=6)
-    # Neck up and forward, head.
-    cyl(0.2, 0.75, 0, -0.62, 1.0, PAINT, coat, verts=8, r2=0.15, rx=0.6)
-    ball(0.17, 0, -1.0, 1.55, sx=0.8, sy=1.8, sz=0.9, col=coat, segs=10, rx=0.9)
-    if blaze:
-        ball(0.06, 0, -1.2, 1.5, sx=0.8, sy=2.0, sz=0.8, col=blaze, segs=6, rx=0.9)
-    box(0.08, 0.6, 0.18, 0, -0.75, 1.42, PAINT, mane, rx=0.65)
+def pony(name, coat='#6b4a33', mane='#2a1f18', blaze=None, points=None, muzzle='#8a6a4c', graze=False):
+    """A stocky Dartmoor pony, about 1.2 m at the withers, facing -Y: one
+    smooth body (organic.py) with a thick mane, forelock and a full tail.
+    points: the dark lower legs of a bay; blaze: a white stripe down the face."""
+    from organic import Blob, V
+    b = Blob(0.022)
+    # Body: chest, barrel, round hindquarters, croup, withers, shoulders, thighs.
+    b.ellip(V(0, -0.4, 0.86), 0.2, 0.22, 0.26)
+    b.ellip(V(0, 0, 0.84), 0.24, 0.46, 0.25)
+    b.ellip(V(0, 0.4, 0.9), 0.22, 0.25, 0.24)
+    b.ellip(V(0, 0.38, 1.08), 0.18, 0.24, 0.07)
+    b.ellip(V(0, -0.38, 1.1), 0.08, 0.16, 0.08)
     for s in (-1, 1):
-        cyl(0.04, 0.16, s * 0.08, -0.82, 1.72, PAINT, coat, verts=5, r2=0.01)
-    cyl(0.07, 0.75, 0, 0.75, 0.4, PAINT, mane, verts=6, r2=0.03, rx=-0.3)
+        b.ellip(V(s * 0.12, -0.4, 0.88), 0.08, 0.13, 0.2)
+        b.ellip(V(s * 0.13, 0.44, 0.84), 0.08, 0.16, 0.18)
+    # Legs: forearm, knee, cannon, fetlock, pastern; gaskin, hock behind.
+    for s in (-1, 1):
+        x = s * 0.13
+        b.taper(V(x, -0.42, 0.72), V(x, -0.43, 0.38), 0.07, 0.05, 3)
+        b.capsule(V(x, -0.43, 0.38), V(x, -0.44, 0.12), 0.04)
+        b.capsule(V(x, -0.44, 0.12), V(x, -0.47, 0.05), 0.045)
+        x = s * 0.14
+        b.taper(V(x, 0.38, 0.78), V(x, 0.52, 0.42), 0.09, 0.055, 3)
+        b.capsule(V(x, 0.52, 0.42), V(x, 0.47, 0.12), 0.042)
+        b.capsule(V(x, 0.47, 0.12), V(x, 0.44, 0.05), 0.045)
+    # Neck arching up to the head.
+    if graze:
+        throat, poll, nose = V(0, -0.78, 0.66), V(0, -0.86, 0.56), V(0, -0.98, 0.12)
+    else:
+        throat, poll, nose = V(0, -0.74, 1.2), V(0, -0.83, 1.3), V(0, -1.07, 1.02)
+    b.taper(V(0, -0.42, 0.98), throat, 0.2, 0.13, 4)
+    b.taper(V(0, -0.38, 1.1), poll + V(0, 0.05, 0), 0.07, 0.06, 4)  # crest
+    hd = (nose - poll).normalized()
+    b.taper(poll, nose, 0.095, 0.068, 4)
+    b.ellip(poll.lerp(nose, 0.25) + V(0, 0.04, -0.03), 0.075, 0.08, 0.08)
+    b.ellip(nose, 0.068, 0.07, 0.065)
+    # Mane along the crest, forelock, and a full tail.
+    crest = [V(0, -0.38, 1.18).lerp(poll + V(0, 0.04, 0.06), t / 6) for t in range(7)]
+    for c in crest:
+        b.ellip(c, 0.04, 0.06, 0.06)
+    tail = [V(0, 0.62, 1.04), V(0, 0.7, 0.85), V(0, 0.73, 0.6), V(0, 0.73, 0.38)]
+    for i in range(3):
+        b.taper(tail[i], tail[i + 1], 0.05 + 0.02 * i, 0.06 + 0.02 * i, 2)
+
+    def paint(p):
+        q = V(p.x, p.y, p.z)
+        if min((q - c).length for c in crest) < 0.085 and q.z > 0.6:
+            return mane
+        if q.y > 0.6 and q.z < 1.06 and abs(q.x) < 0.12:
+            return mane
+        if (q - poll).length < 0.09 and (q - poll).dot(hd) > -0.02 and abs(q.x) < 0.05 and q.y < poll.y:
+            return mane  # forelock
+        if (q - nose).length < 0.075:
+            return muzzle
+        if blaze and abs(q.x) < 0.028 and q.y < poll.y and (q - poll).dot(hd) > 0.02 and (q - nose).length > 0.05:
+            return blaze
+        if q.z < 0.07:
+            return '#2a2420'
+        if points and q.z < 0.4:
+            return points
+        return coat
+
+    b.mesh(finish, paint, ratio=0.15)
+    side = V(1, 0, 0)
+    for s in (-1, 1):
+        e = poll + side * s * 0.045 - hd * 0.03
+        cyl(0.028, 0.11, e.x, e.y, e.z, PAINT, coat, verts=5, r2=0.006, ry=s * 0.25)
+        ey = poll.lerp(nose, 0.22) + side * s * 0.075
+        ball(0.016, ey.x, ey.y, ey.z, col='#120e0b', segs=6)
     return build(name)
 
 
@@ -488,10 +541,46 @@ def gauge():
     return build('gauge')
 
 
-def duck(name, head='#1f5a32'):
-    ball(0.18, 0, 0, 0.08, sx=0.8, sy=1.3, sz=0.6, col='#8a7458', segs=8)
-    ball(0.08, 0, -0.22, 0.22, col=head, segs=6)
-    box(0.05, 0.1, 0.03, 0, -0.32, 0.21, PAINT, '#e0a020')
+def duck(name, drake=True):
+    """A mallard sitting on the water (z = 0 is the surface), facing -Y: a
+    drake (green head, white collar, chestnut breast, grey body) or a duck
+    (mottled brown). Both have the blue wing patch."""
+    from mathutils import noise
+    from organic import Blob, V
+    b = Blob(0.012)
+    b.ellip(V(0, 0.0, 0.1), 0.12, 0.23, 0.085)
+    b.ellip(V(0, -0.1, 0.12), 0.1, 0.12, 0.08)
+    b.ellip(V(0, 0.2, 0.15), 0.06, 0.09, 0.035)  # tail, tipped up
+    head, bill = V(0, -0.2, 0.31), V(0, -0.29, 0.29)
+    b.taper(V(0, -0.15, 0.17), head, 0.045, 0.038, 3)
+    b.ellip(head, 0.045, 0.06, 0.05)
+
+    def paint(p):
+        q = V(p.x, p.y, p.z)
+        n = noise.noise(q * 40.0)
+        if drake:
+            if q.z > 0.235:
+                return '#1f5a32'
+            if q.z > 0.215:
+                return '#f2f0ea'
+            if q.y < -0.1 and q.z > 0.07:
+                return '#6b3a26'
+            if q.y > 0.17:
+                return '#1c1c1c' if q.z > 0.13 else '#e8e6e0'
+            if abs(q.x) > 0.08 and 0.0 < q.y < 0.1 and q.z > 0.13:
+                return '#2f4f9a'
+            return '#a9a8a2' if q.z > 0.08 else '#d4d2cc'
+        if abs(q.x) > 0.08 and 0.0 < q.y < 0.1 and q.z > 0.13:
+            return '#2f4f9a'
+        if q.z > 0.29 and abs(q.x) < 0.05 and q.y > head.y - 0.04:
+            return '#4a3a2a'  # dark crown
+        return '#6e5236' if n > 0.15 else '#9a7a56'
+
+    b.mesh(finish, paint, ratio=0.25)
+    # Bill (yellow on the drake, orange-brown on the duck) and eyes.
+    ball(0.05, bill.x, bill.y, bill.z, sx=0.6, sy=1.1, sz=0.28, col='#d8b43a' if drake else '#c8873a', segs=8)
+    for s in (-1, 1):
+        ball(0.009, s * 0.04, head.y - 0.02, head.z + 0.012, col='#0f0d0b', segs=6)
     return build(name)
 
 
@@ -542,9 +631,9 @@ def main():
     tor('tor_small', 7, 3)
     sheep('sheep')
     sheep('sheep_dark', wool='#d6cdb8', face='#d6cdb8')
-    pony('pony', coat='#6b4a33', mane='#2a1f18')
-    pony('pony_dark', coat='#3a2c24', mane='#1a1512', blaze='#efe8dc')
-    pony('pony_grey', coat='#a39e94', mane='#5e5a54')
+    pony('pony', coat='#6b4a33', mane='#1f1712', points='#2a1f18')
+    pony('pony_dark', coat='#2e231c', mane='#15110e', blaze='#efe8dc', muzzle='#4a3a2e', graze=True)
+    pony('pony_grey', coat='#b0aba1', mane='#6a665f', muzzle='#5a5650')
     fieldwall()
     ruinwall('ruin_a', 1)
     ruinwall('ruin_b', 2)
@@ -575,7 +664,7 @@ def main():
     footbridge()
     gauge()
     duck('duck')
-    duck('duck_b', head='#6e5a44')
+    duck('duck_b', drake=False)
     clapper()
     gate()
     spoil()

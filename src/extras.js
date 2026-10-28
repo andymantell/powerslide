@@ -31,36 +31,35 @@ const _p = new THREE.Vector3();
 const _s = new THREE.Vector3(1, 1, 1);
 
 function coneGeometry() {
-  // A traffic cone: square black base, orange body, white reflective band.
+  // A traffic cone: square black base, orange body with two white reflective
+  // bands. Each band is its own ring of faces, so the colours stay sharp.
   const base = new THREE.BoxGeometry(0.42, 0.04, 0.42);
   base.translate(0, 0.02, 0);
-  const body = new THREE.CylinderGeometry(0.035, 0.17, 0.62, 12, 3, true);
-  body.translate(0, 0.35, 0);
   const black = new THREE.Color('#1b1b1b');
   const orange = new THREE.Color('#ff5a12');
   const white = new THREE.Color('#f2f2f2');
+  const r = (y) => 0.17 + ((0.035 - 0.17) * (y - 0.04)) / 0.62;
+  const bands = [[0.04, 0.3, orange], [0.3, 0.41, white], [0.41, 0.47, orange], [0.47, 0.56, white], [0.56, 0.66, orange]];
+  const parts = [[base, black]];
+  for (const [y0, y1, c] of bands) {
+    const g = new THREE.CylinderGeometry(r(y1), r(y0), y1 - y0, 16, 1, true);
+    g.translate(0, (y0 + y1) / 2, 0);
+    parts.push([g, c]);
+  }
   // Merge by hand, with a colour per vertex.
-  const parts = [base, body].map((g) => g.toNonIndexed());
-  const merged = new THREE.BufferGeometry();
-  const count = parts.reduce((n, g) => n + g.attributes.position.count, 0);
+  const flat = parts.map(([g, c]) => [g.toNonIndexed(), c]);
+  const count = flat.reduce((n, [g]) => n + g.attributes.position.count, 0);
   const position = new Float32Array(count * 3);
   const normal = new Float32Array(count * 3);
   const color = new Float32Array(count * 3);
   let o = 0;
-  for (const g of parts) {
+  for (const [g, c] of flat) {
     position.set(g.attributes.position.array, o * 3);
     normal.set(g.attributes.normal.array, o * 3);
+    for (let i = 0; i < g.attributes.position.count; i++) color.set([c.r, c.g, c.b], (o + i) * 3);
     o += g.attributes.position.count;
   }
-  o = 0;
-  for (const g of parts) {
-    const pos = g.attributes.position;
-    for (let i = 0; i < pos.count; i++, o++) {
-      const y = pos.getY(i);
-      const c = g === parts[0] ? black : y > 0.36 && y < 0.5 ? white : orange;
-      color.set([c.r, c.g, c.b], o * 3);
-    }
-  }
+  const merged = new THREE.BufferGeometry();
   merged.setAttribute('position', new THREE.BufferAttribute(position, 3));
   merged.setAttribute('normal', new THREE.BufferAttribute(normal, 3));
   merged.setAttribute('color', new THREE.BufferAttribute(color, 3));

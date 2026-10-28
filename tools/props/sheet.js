@@ -35,7 +35,7 @@ const GROUPS = [
   ['Dartmoor roadside', 'fingerpost sign_grid sign_pony sign_ford gate whitepost gauge picnic clapper footbridge'],
   ['Dartmoor parked vehicles', 'tractor car_red car_blue car_silver'],
   ['Traffic', '*traffic'], // every type in vehicles.glb
-  ['Trees and rocks', 'spruce0 spruce1 spruce2 rock0 rock1 rock2 rock3'],
+  ['Trees and rocks', 'spruce0 spruce1 spruce2 pine0 pine1 pine2 rock0 rock1 rock2 rock3'],
   ['Rider and board', 'rider_upright rider_tuck board'],
 ];
 
@@ -87,10 +87,16 @@ scene.add(rider.root);
 const makers = new Map();
 const propMat = createPropMaterial(renderer);
 const loader = new GLTFLoader();
-for (const pack of ['props', 'props_dartmoor']) {
-  const gltf = await loader.loadAsync(new URL(`../../src/assets/models/${pack}.glb`, import.meta.url).href);
+// Every prop pack (props.glb and each biome's props_<biome>.glb). Props not
+// listed in GROUPS are grouped by their pack.
+const PACK_FILES = import.meta.glob('../../src/assets/models/props*.glb', { query: '?url', import: 'default', eager: true });
+const packOf = new Map();
+for (const [file, url] of Object.entries(PACK_FILES)) {
+  const pack = file.match(/props(?:_(\w+))?\.glb$/)[1] || 'alpine';
+  const gltf = await loader.loadAsync(url);
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
+    if (!packOf.has(o.name)) packOf.set(o.name, pack);
     makers.set(o.name, () => {
       const m = new THREE.Mesh(o.geometry, propMat);
       m.castShadow = m.receiveShadow = true;
@@ -102,19 +108,21 @@ for (const pack of ['props', 'props_dartmoor']) {
   });
 }
 
-const forest = new Forest(new THREE.Scene(), renderer, {}, 'spruce');
+const forests = ['spruce', 'pine'].map((sp) => new Forest(new THREE.Scene(), renderer, {}, sp));
 const boulders = new Boulders(new THREE.Scene(), renderer);
 await texturesReady();
-forest.variants.forEach((v, i) =>
-  makers.set(`spruce${i}`, () => {
-    const g = new THREE.Group();
-    const t = new THREE.Mesh(v.trunk.geometry, forest.barkMat);
-    const f = new THREE.Mesh(v.foliage.geometry, forest.foliageMat);
-    for (const m of [t, f]) m.castShadow = m.receiveShadow = true;
-    g.add(t, f);
-    return g;
-  }),
-);
+for (const forest of forests) {
+  forest.variants.forEach((v, i) =>
+    makers.set(`${forest.species}${i}`, () => {
+      const g = new THREE.Group();
+      const t = new THREE.Mesh(v.trunk.geometry, forest.barkMat);
+      const f = new THREE.Mesh(v.foliage.geometry, forest.foliageMat);
+      for (const m of [t, f]) m.castShadow = m.receiveShadow = true;
+      g.add(t, f);
+      return g;
+    }),
+  );
+}
 boulders.meshes.forEach((bm, i) =>
   makers.set(`rock${i}`, () => {
     const m = new THREE.Mesh(bm.geometry, boulders.mat);
@@ -199,13 +207,19 @@ for (const [group, names] of GROUPS) {
     placed.add(n);
   }
 }
-for (const n of makers.keys()) if (!placed.has(n)) items.push({ name: n, group: 'Other' });
+const PACK_NAMES = { alpine: 'Alpine', dartmoor: 'Dartmoor', suburbs: 'Hillside Suburbs', forest: 'Pine Forest', canyon: 'Desert Canyon', city: 'City at Night', coast: 'Coastal Cliffs', pass: 'High Alpine Pass' };
+const rest = [...makers.keys()].filter((n) => !placed.has(n));
+for (const n of rest.sort((a, b) => (packOf.get(a) || '~').localeCompare(packOf.get(b) || '~'))) {
+  const pack = packOf.get(n);
+  items.push({ name: n, group: pack ? `${PACK_NAMES[pack] || pack} props` : 'Other' });
+}
 
 let current = null;
 const box = new THREE.Box3();
 const sphere = new THREE.Sphere();
 // Azimuth of the three-quarter view, from the front towards the right.
-const AZ = (35 * Math.PI) / 180;
+// ?az=90 turns the view (degrees) for side-on checks.
+const AZ = ((+new URLSearchParams(location.search).get('az') || 35) * Math.PI) / 180;
 // The same light on every tile: the game's sun height, from front-left of the camera.
 const SUN = new THREE.Vector3().setFromSphericalCoords(1, Math.acos(SUN_DIR.y), AZ - 1.0);
 
