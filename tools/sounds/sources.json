@@ -889,7 +889,7 @@
  },
  "https://bigsoundbank.com/bus-horn-s3594.html": {
   "title": "Bus horn",
-  "author": "Joseph Sardin &Amp; Axeline T.",
+  "author": "Joseph Sardin & Axeline T.",
   "page": "https://bigsoundbank.com/bus-horn-s3594.html",
   "download": "https://bigsoundbank.com/UPLOAD/ogg/3594.ogg",
   "downloaded": "2026-10-28",
@@ -1145,7 +1145,7 @@
  },
  "https://bigsoundbank.com/thunder-2-s3113.html": {
   "title": "Thunder",
-  "author": "Joseph Sardin &Amp; Axeline T.",
+  "author": "Joseph Sardin & Axeline T.",
   "page": "https://bigsoundbank.com/thunder-2-s3113.html",
   "download": "https://bigsoundbank.com/UPLOAD/ogg/3113.ogg",
   "downloaded": "2026-10-28",
@@ -1161,7 +1161,7 @@
  },
  "https://bigsoundbank.com/thunder-4-s3115.html": {
   "title": "Thunder",
-  "author": "Joseph Sardin &Amp; Axeline T.",
+  "author": "Joseph Sardin & Axeline T.",
   "page": "https://bigsoundbank.com/thunder-4-s3115.html",
   "download": "https://bigsoundbank.com/UPLOAD/ogg/3115.ogg",
   "downloaded": "2026-10-28",
@@ -1484,7 +1484,7 @@
  },
  "https://bigsoundbank.com/car-honking-at-90-km-h-1-s3436.html": {
   "title": "Car honking at 90 km/h",
-  "author": "Joseph Sardin &Amp; Axeline T.",
+  "author": "Joseph Sardin & Axeline T.",
   "page": "https://bigsoundbank.com/car-honking-at-90-km-h-1-s3436.html",
   "download": "https://bigsoundbank.com/UPLOAD/ogg/3436.ogg",
   "downloaded": "2026-10-28",
@@ -1717,6 +1717,23 @@
      "unlock.mp3"
     ],
     "how": "trimmed, mono, normalised, MP3"
+   }
+  }
+ },
+ "https://freesound.org/people/Benboncan/sounds/72892/": {
+  "title": "Curlew .wav",
+  "author": "Benboncan",
+  "page": "https://freesound.org/people/Benboncan/sounds/72892/",
+  "download": "https://cdn.freesound.org/previews/72/72892_634166-hq.mp3",
+  "licence": "CC-BY-4.0",
+  "downloaded": "2026-10-28",
+  "built": {
+   "curlew#1": {
+    "stamp": "3aeefaa725",
+    "files": [
+     "curlew.mp3"
+    ],
+    "how": "cut 1 stretch(es) of 5 s, mono, normalised, MP3"
    }
   }
  }

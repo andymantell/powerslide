@@ -76,6 +76,30 @@
   ],
   "assets": [
     {
+      "title": "Trees grown with ez-tree",
+      "files": [
+        "src/assets/models/trees/*.glb"
+      ],
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "author": "Daniel Greenheck",
+      "licence": "MIT",
+      "licenceUrl": "https://github.com/dgreenheck/ez-tree/blob/main/LICENSE",
+      "downloaded": "2026-10-28",
+      "changes": "Generator code from the npm package @dgreenheck/ez-tree 1.1.0, vendored in tools/trees/ez-tree with its licence; its textures, materials, wind shader and trellis were taken out and leaf cards can be oblong. tools/trees/build.mjs grows our own species from its presets and writes the geometry only; the leaf, twig and bark textures are ours (tools/textures/gen.py)."
+    },
+    {
+      "title": "Low Poly Car Pack Volume 1 by Designersoup (Beatall, Landyroamer, Toyoyo Highlight, Tristar Racer)",
+      "files": [
+        "src/assets/models/vehicles.glb"
+      ],
+      "source": "https://designersoup.itch.io/low-poly-car-pack-1",
+      "author": "Designersoup",
+      "licence": "CC0-1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "downloaded": "2026-10-28",
+      "changes": "the four car bodies, scaled to real sizes, palette texture baked to vertex colours, the body swatch made tintable paint, lamps sorted into head/tail/indicator, the maker's name on the pickup's tailgate removed, wheels replaced by ours, a decimated distance copy, smooth shading and baked ambient occlusion (tools/blender/vehicles.py). Sources are not in the repo (tools/blender/sources/README.md); the page also asks that the models aren't redistributed as standalone assets."
+    },
+    {
       "title": "Skateboard rolling down concrete ramp.wav by Bruno_Garcez",
       "files": [
         "src/assets/sounds/roll.mp3"
@@ -750,12 +774,12 @@
       "changes": "cut 1 event(s) of up to 2 s, mono, normalised, MP3 (tools/sounds/build.py)"
     },
     {
-      "title": "Bus horn by Joseph Sardin &Amp; Axeline T.",
+      "title": "Bus horn by Joseph Sardin & Axeline T.",
       "files": [
         "src/assets/sounds/horn-bus.mp3"
       ],
       "source": "https://bigsoundbank.com/bus-horn-s3594.html",
-      "author": "Joseph Sardin &Amp; Axeline T.",
+      "author": "Joseph Sardin & Axeline T.",
       "licence": "CC0-1.0",
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "downloaded": "2026-10-28",
@@ -942,24 +966,24 @@
       "changes": "a 4 s loop from 5.5 s, crossfaded, mono, normalised, MP3 (tools/sounds/build.py)"
     },
     {
-      "title": "Thunder by Joseph Sardin &Amp; Axeline T.",
+      "title": "Thunder by Joseph Sardin & Axeline T.",
       "files": [
         "src/assets/sounds/thunder-1.mp3"
       ],
       "source": "https://bigsoundbank.com/thunder-2-s3113.html",
-      "author": "Joseph Sardin &Amp; Axeline T.",
+      "author": "Joseph Sardin & Axeline T.",
       "licence": "CC0-1.0",
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "downloaded": "2026-10-28",
       "changes": "cut 1 event(s) of up to 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
     },
     {
-      "title": "Thunder by Joseph Sardin &Amp; Axeline T.",
+      "title": "Thunder by Joseph Sardin & Axeline T.",
       "files": [
         "src/assets/sounds/thunder-2.mp3"
       ],
       "source": "https://bigsoundbank.com/thunder-4-s3115.html",
-      "author": "Joseph Sardin &Amp; Axeline T.",
+      "author": "Joseph Sardin & Axeline T.",
       "licence": "CC0-1.0",
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "downloaded": "2026-10-28",
@@ -1197,12 +1221,12 @@
       "changes": "cut 1 stretch(es) of 9 s, mono, normalised, MP3 (tools/sounds/build.py)"
     },
     {
-      "title": "Car honking at 90 km/h by Joseph Sardin &Amp; Axeline T.",
+      "title": "Car honking at 90 km/h by Joseph Sardin & Axeline T.",
       "files": [
         "src/assets/sounds/far-horn-1.mp3"
       ],
       "source": "https://bigsoundbank.com/car-honking-at-90-km-h-1-s3436.html",
-      "author": "Joseph Sardin &Amp; Axeline T.",
+      "author": "Joseph Sardin & Axeline T.",
       "licence": "CC0-1.0",
       "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "downloaded": "2026-10-28",
@@ -1382,28 +1406,17 @@
       "changes": "trimmed, mono, normalised, MP3 (tools/sounds/build.py)"
     },
     {
-      "title": "Trees grown with ez-tree",
+      "title": "Curlew .wav by Benboncan",
       "files": [
-        "src/assets/models/trees/*.glb"
+        "src/assets/sounds/curlew.mp3"
       ],
-      "source": "https://github.com/dgreenheck/ez-tree",
-      "author": "Daniel Greenheck",
-      "licence": "MIT",
-      "licenceUrl": "https://github.com/dgreenheck/ez-tree/blob/main/LICENSE",
+      "source": "https://freesound.org/people/Benboncan/sounds/72892/",
+      "author": "Benboncan",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
       "downloaded": "2026-10-28",
-      "changes": "Generator code from the npm package @dgreenheck/ez-tree 1.1.0, vendored in tools/trees/ez-tree with its licence; its textures, materials, wind shader and trellis were taken out and leaf cards can be oblong. tools/trees/build.mjs grows our own species from its presets and writes the geometry only; the leaf, twig and bark textures are ours (tools/textures/gen.py)."
-    },
-    {
-      "title": "Low Poly Car Pack Volume 1 by Designersoup (Beatall, Landyroamer, Toyoyo Highlight, Tristar Racer)",
-      "files": [
-        "src/assets/models/vehicles.glb"
-      ],
-      "source": "https://designersoup.itch.io/low-poly-car-pack-1",
-      "author": "Designersoup",
-      "licence": "CC0-1.0",
-      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-      "downloaded": "2026-10-28",
-      "changes": "the four car bodies, scaled to real sizes, palette texture baked to vertex colours, the body swatch made tintable paint, lamps sorted into head/tail/indicator, the maker's name on the pickup's tailgate removed, wheels replaced by ours, a decimated distance copy, smooth shading and baked ambient occlusion (tools/blender/vehicles.py). Sources are not in the repo (tools/blender/sources/README.md); the page also asks that the models aren't redistributed as standalone assets."
+      "changes": "cut 1 stretch(es) of 5 s, mono, normalised, MP3 (tools/sounds/build.py)",
+      "attribution": "\"Curlew .wav\" by Benboncan (freesound.org), CC BY 4.0, cut and normalised"
     }
   ],
   "code": [

@@ -29,6 +29,7 @@ import { registerOffline, keepSaves } from './pwa.js';
 import { exportCode, importCode, hasProgress } from './transfer.js';
 import { store, loadSettings, QUALITY, QUALITY_ORDER, autoQuality } from './settings.js';
 import { lookOf } from './biomes.js';
+import { assets as CREDITS } from '../credits.json';
 import { GROUPS, PRESETS, optionsOf, defaults as endlessDefaults, applyPreset, presetOf, setValue, sliderStep, randomSeed, loadEndless, saveEndless, shareUrl, fromParams, bestKey, derive, levelMix } from './endless.js';
 import { setRoadSurface } from './roadmat.js';
 import { Extras } from './extras.js';
@@ -326,6 +327,22 @@ function setUnits(mph) {
   [...$('opt-units').children].forEach((b, i) => b.classList.toggle('on', UNITS[i][0] === mph));
 }
 setUnits(game.mph);
+
+// Credits, on the settings screen: everyone whose sounds or models the game
+// uses (from credits.json), and the exact line each CC BY licence asks for.
+{
+  const authors = [...new Set(CREDITS.map((a) => a.author))].sort((a, b) => a.localeCompare(b));
+  const p = document.createElement('p');
+  p.className = 'small';
+  p.textContent = `Free recordings and models by ${authors.join(', ')}. Thank you!`;
+  const lines = CREDITS.filter((a) => a.attribution).map((a) => {
+    const q = document.createElement('p');
+    q.className = 'small';
+    q.textContent = a.attribution;
+    return q;
+  });
+  $('credits').replaceChildren(p, ...lines);
+}
 
 // Volumes: master, effects, and ambience, as sliders like the endless
 // setup's (drag or tap along them, or left / right with the D-pad).

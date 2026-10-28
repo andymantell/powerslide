@@ -1,7 +1,8 @@
 """Builds src/assets/sounds from the recipes in tools/sounds/sounds.json.
 
 For each recipe it downloads the source (once, into tools/sounds/.cache),
-checks the licence on the sound's own page (CC0 only), cuts the loop or the
+checks the licence on the sound's own page (CC0, or CC BY 4.0 where the
+recipe says "licence": "CC-BY-4.0" because Andy agreed to it), cuts the loop or the
 one-shots, filters, normalises and saves a mono MP3. It records where each
 file came from in tools/sounds/sources.json and in credits.json's "assets".
 
@@ -43,6 +44,7 @@ LOCK = HERE / 'sources.json'
 CREDITS = ROOT / 'credits.json'
 RATE = 44100
 CC0 = 'https://creativecommons.org/publicdomain/zero/1.0/'
+CC_BY = 'https://creativecommons.org/licenses/by/4.0/'
 
 
 def fetch(url):
@@ -57,7 +59,7 @@ def fetch(url):
             time.sleep(15 * (i + 1))
 
 
-def page_info(src):
+def page_info(src, licence='CC0-1.0'):
     """Title, author, licence and download URL from a sound's own page."""
     if src.startswith('kenney:'):
         pack = src[7:].split('/')[0]
@@ -69,12 +71,13 @@ def page_info(src):
     page = fetch(src).decode('utf8', 'replace')
     if 'freesound.org' in src:
         lics = set(re.findall(r'creativecommons\.org/(publicdomain/zero|licenses/[a-z-]+)/([0-9.]+)', page))
-        if lics != {('publicdomain/zero', '1.0')}:
-            sys.exit(f'{src}: licence is {sorted(lics)}, not CC0')
+        want = {'CC0-1.0': ('publicdomain/zero', '1.0'), 'CC-BY-4.0': ('licenses/by', '4.0')}[licence]
+        if lics != {want}:
+            sys.exit(f'{src}: licence is {sorted(lics)}, not {licence}')
         title = html.unescape(re.search(r'<title>Freesound - (.*?) by [^<]*</title>', page, re.S).group(1)).strip()
         author = re.search(r'freesound\.org/people/([^/]+)/', src).group(1)
         prev = re.search(r'https://cdn\.freesound\.org/previews/[^"]*-hq\.mp3', page).group(0)
-        return {'title': title, 'author': urllib.parse.unquote(author), 'page': src, 'download': prev}
+        return {'title': title, 'author': urllib.parse.unquote(author), 'page': src, 'download': prev, 'licence': licence}
     if 'bigsoundbank.com' in src:
         text = re.sub(r'\s+', ' ', re.sub(r'<[^>]*>', ' ', page))
         if 'License CC0 (public domain): Free and royalty-free' not in text:
@@ -82,7 +85,7 @@ def page_info(src):
         title = html.unescape(re.search(r"<h1[^>]*>([^<]*)", page).group(1)).strip()
         author = re.search(r'Author : (.+?) Sound number', text)
         num = re.search(r'-s(\d+)\.html', src).group(1)
-        return {'title': title, 'author': author.group(1).title() if author else 'Joseph Sardin', 'page': src,
+        return {'title': title, 'author': html.unescape(author.group(1)).title() if author else 'Joseph Sardin', 'page': src,
                 'download': f'https://bigsoundbank.com/UPLOAD/ogg/{num}.ogg'}
     sys.exit(f'{src}: unknown source')
 
@@ -268,7 +271,7 @@ def main():
         src = r['src']
         info = lock.get(src)
         if not info:
-            info = {**page_info(src), 'downloaded': today}
+            info = {**page_info(src, r.get('licence', 'CC0-1.0')), 'downloaded': today}
             lock[src] = info
             LOCK.write_text(json.dumps(lock, indent=1, ensure_ascii=False) + '\n')
         stamp = hashlib.sha1(json.dumps(r, sort_keys=True).encode()).hexdigest()[:10]
@@ -325,16 +328,20 @@ def write_credits(lock):
     for src, info in lock.items():
         files = sorted({f for b in info['built'].values() for f in b['files']})
         hows = sorted({b['how'] for b in info['built'].values()})
-        entries.append({
+        licence = info.get('licence', 'CC0-1.0')
+        entry = {
             'title': f"{info['title']} by {info['author']}",
             'files': [f'src/assets/sounds/{f}' for f in files],
             'source': info['page'],
             'author': info['author'],
-            'licence': 'CC0-1.0',
-            'licenceUrl': CC0,
+            'licence': licence,
+            'licenceUrl': CC0 if licence == 'CC0-1.0' else CC_BY,
             'downloaded': info['downloaded'],
             'changes': '; '.join(hows) + ' (tools/sounds/build.py)',
-        })
+        }
+        if licence != 'CC0-1.0':
+            entry['attribution'] = f'"{info["title"]}" by {info["author"]} (freesound.org), CC BY 4.0, cut and normalised'
+        entries.append(entry)
     credits['assets'] = entries
     CREDITS.write_text(json.dumps(credits, indent=2, ensure_ascii=False) + '\n')
 

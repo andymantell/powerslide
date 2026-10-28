@@ -68,6 +68,7 @@
     { "name": "songbird", "src": "https://bigsoundbank.com/common-blackbird-2-s3475.html", "shots": 2, "max": 3.5 },
     { "name": "songbird", "src": "https://bigsoundbank.com/robin-1-s1667.html", "shots": 2, "max": 3.5, "first": 3 },
     { "name": "skylark", "src": "https://freesound.org/people/Andy_Gardner/sounds/277149/", "chunks": 3, "len": 6 },
+    { "name": "curlew", "src": "https://freesound.org/people/Benboncan/sounds/72892/", "licence": "CC-BY-4.0", "chunks": 1, "len": 5 },
     { "name": "cuckoo", "src": "https://freesound.org/people/bratendu/sounds/506675/", "shots": 2, "max": 2.5 },
     { "name": "crow", "src": "https://bigsoundbank.com/carrion-crow-1-s3461.html", "shots": 2, "max": 2 },
     { "name": "crow", "src": "https://bigsoundbank.com/carrion-crow-3-s3463.html", "shots": 1, "max": 2, "first": 3 },
