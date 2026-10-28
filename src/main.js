@@ -200,12 +200,15 @@ async function loadWorld(level) {
   terrain.reset(game.seed + 11, level?.terrain);
   // Level set pieces and props shape the terrain, so they go in before any tiles build.
   props.begin();
+  traffic.clearParked();
+  props.parked = (type, x, z, yaw, y) => traffic.park(type, x, z, yaw, y);
   structures.plan(level);
   dressLevel(level, road, props);
   props.shape();
   structures.build();
   traffic.setSideRoads(structures.sideRoads());
   props.finish();
+  traffic.settleParked((x, z) => terrain.heightAt(x, z));
   // Endless dresses its road as it goes; the first stretch before any tiles.
   if (level) scenery.clear();
   else {

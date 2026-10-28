@@ -53,6 +53,7 @@ const TYPES = {
   lorry: { kind: 'lorry', paint: LORRY_PAINT, trim: TRIM_BOX, speed: [10, 15], name: 'a lorry' },
   tipper: { kind: 'lorry', paint: LORRY_PAINT, trim: [['#e08a1c', 2], ['#c9b531', 1], ['#7d8288', 2], ['#8d1b1b', 1]], speed: [9, 14], name: 'a tipper lorry' },
   logger: { sound: 'lorry', kind: 'lorry', paint: LORRY_PAINT, trim: [['#2a2c2f', 3], ['#5a5d61', 1], ['#8d1b1b', 1]], speed: [8, 13], name: 'a logging truck' },
+  postbus: { sound: 'bus', kind: 'bus', paint: [['#f2c200', 1]], trim: [['#c4161c', 1]], speed: [9, 14], name: 'a post bus' },
   bus: { kind: 'bus', paint: BUS_PAINT, trim: [['#f1f1ee', 1]], speed: [9, 14], name: 'a bus' },
   tractor: { kind: 'tractor', paint: TRACTOR_PAINT, trim: [['#3a3c40', 1]], rims: [['#c9b531', 3], ['#b8241c', 2], ['#5a5d61', 1]], speed: [6, 9], name: 'a tractor' },
   police: { sound: 'police', kind: 'car', paint: [['#f1f1ee', 3], ['#c9ccd0', 1]], trim: [['#141516', 1]], speed: [16, 23], wheels: { alloy: ['alloy'] }, name: 'a police car', emergency: true },
@@ -77,7 +78,7 @@ const MIXES = {
   canyon: { pickup: 5, suv: 4, coupe: 2, saloon: 2, camper: 3, lorry: 2, tipper: 1, bike_tourer: 2, bike_sport: 2, hatch: 1, gt: 1.5, supercar: 1, roadster: 0.6, police: 0.4, ambulance: 0.2, fire: 0.15 },
   city: { taxi: 5, saloon: 3, hatch: 3, city: 3, bus: 2, van: 2, suv: 2, coupe: 1, lorry: 1, bike_sport: 2, bike_tourer: 1.5, minibus: 1, decker: 2, police: 1, ambulance: 0.7, fire: 0.4, supercar: 1, gt: 0.8, roadster: 0.4 },
   coast: { hatch: 3, estate: 3, camper: 4, suv: 2, coupe: 2, city: 2, van: 1, bus: 1, tractor: 0.6, lorry: 0.5, bike_tourer: 2, bike_sport: 1, saloon: 2, icecream: 1, roadster: 1.5, gt: 0.8, supercar: 0.8, police: 0.3, ambulance: 0.25, fire: 0.1 },
-  pass: { suv: 3, estate: 3, hatch: 2, camper: 3, coupe: 2, bike_sport: 3, bike_tourer: 3, lorry: 1, minibus: 1, saloon: 1, supercar: 1.5, gt: 1, roadster: 1, police: 0.3, ambulance: 0.25, fire: 0.1 },
+  pass: { bike_sport: 4, bike_tourer: 4, camper: 4, hatch: 3, estate: 3, suv: 3, saloon: 1, coupe: 1.5, postbus: 1.2, bus: 0.4, minibus: 0.6, supercar: 1.2, gt: 1, roadster: 1.2, police: 0.2, ambulance: 0.2, fire: 0.05 },
 };
 
 const VERB = { car: 'a car', van: 'a van', lorry: 'a lorry', bus: 'a bus', tractor: 'a tractor', bike: 'a motorbike' };
@@ -117,7 +118,53 @@ export class Traffic {
     this.side = 1; // +1 drive on the right, -1 on the left
     this.mix = MIXES.alpine;
     this.sideRoads = [];
+    this.parked = [];
+    this.drawn = [];
     this.configure();
+  }
+
+  // Parked cars: still traffic models, placed by the level's props.
+  clearParked() {
+    this.parked.length = 0;
+    this.parkRand = mulberry32(911);
+    this.heightAt = null; // known once the level's terrain is final
+  }
+
+  // type: a model name, or 'any' for an everyday car. yaw as props use it.
+  park(type, x, z, yaw, y = null) {
+    const r = this.parkRand || (this.parkRand = mulberry32(911));
+    if (!TYPES[type]) {
+      const any = ['hatch', 'hatch', 'saloon', 'estate', 'suv', 'city', 'city', 'coupe', 'van'];
+      type = any[Math.floor(r() * any.length)];
+    }
+    const T = TYPES[type];
+    const meta = this.fleet.meta(type) || { L: 4.4, W: 1.8 };
+    const look = sampleLook(type, r);
+    this.parked.push({
+      type, cls: T.kind, kind: T.sound || T.kind, name: 'a parked car', L: meta.L, W: meta.W,
+      s: 0, dir: 1, lane: 0, v: 0, x, y: y ?? 0, z, yaw: -yaw, pitch: 0, roll: 0, spin: 0,
+      settle: y === null, ...look, lamps: { head: 0, tail: 0, amber: 0 },
+      passed: true, minGap: Infinity, honked: true, lastLz: null,
+    });
+    // Endless adds them as it goes, on finished terrain; keep the list short.
+    if (this.heightAt) this.settleParked(this.heightAt);
+    if (this.parked.length > 160) this.parked.splice(0, this.parked.length - 160);
+  }
+
+  // Sits parked cars on the ground (once the terrain is final), tilted to it.
+  settleParked(heightAt) {
+    this.heightAt = heightAt;
+    for (const c of this.parked) {
+      if (!c.settle) continue;
+      c.settle = false;
+      const fx = Math.sin(c.yaw), fz = -Math.cos(c.yaw);
+      const a = c.L * 0.32, b = c.W * 0.4;
+      const hf = heightAt(c.x + fx * a, c.z + fz * a), hr = heightAt(c.x - fx * a, c.z - fz * a);
+      const hl = heightAt(c.x + fz * b, c.z - fx * b), hrt = heightAt(c.x - fz * b, c.z + fx * b);
+      c.y = (hf + hr + hl + hrt) / 4;
+      c.pitch = Math.atan2(hf - hr, 2 * a);
+      c.roll = Math.atan2(hl - hrt, 2 * b) * -1;
+    }
   }
 
   // Side roads (Structures.sideRoads) that cars pull out of.
@@ -393,6 +440,7 @@ export class Traffic {
     }
     const f = this.frame;
     const night = this.lights;
+    if (!player.crashed) for (const c of this.parked) this.interact(c, player, events);
     for (let i = this.cars.length - 1; i >= 0; i--) {
       const c = this.cars[i];
       if (c.join) {
@@ -513,7 +561,11 @@ export class Traffic {
 
   // Draws the traffic; call once a frame after update.
   draw(camera) {
-    this.fleet.update(this.cars, camera);
+    const d = this.drawn;
+    d.length = 0;
+    for (const c of this.cars) d.push(c);
+    for (const c of this.parked) d.push(c);
+    this.fleet.update(d, camera);
   }
 
   interact(c, player, events) {

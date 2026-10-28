@@ -409,6 +409,13 @@ export class Props {
   // Adds one prop. `y` is optional: by default it sits on the terrain (call
   // after the terrain mods are in place).
   add(type, x, z, yaw = 0, scale = 1, y = null) {
+    // Parked cars are real traffic models: "car:<model>" (car:hatch,
+    // car:any), and the old car_red, car_blue and car_pass_* props.
+    if (this.parked && (type.startsWith('car:') || type === 'car_red' || type === 'car_blue' || type.startsWith('car_pass'))) {
+      this.terrain?.block(x, z, 2);
+      this.parked(type.startsWith('car:') ? type.slice(4) : 'any', x, z, yaw, y);
+      return null;
+    }
     if (!PROP_TYPES[type]) {
       console.warn('unknown prop', type);
       return null;

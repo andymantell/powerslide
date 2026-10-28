@@ -1198,6 +1198,17 @@ def lightbar(B, s, u, z, lod, w=1.1):
         box(B, 'lamp', BLUE, (w * 0.42, 0.24, 0.1), (sx * w * 0.26, y, z + 0.1), 0.03 if lod == 0 else 0, 2)
 
 
+def spec_postbus():
+    """Alpine post bus: the single decker with a coach-like run of windows and
+    a red stripe under them (yellow paint comes from traffic.js)."""
+    s = spec_bus()
+    s.update(name='postbus')
+    L = s['L']
+    s['windows'] = [(0.5, 1.6), (2.75, 4.0), (4.08, 5.33), (5.41, 6.66), (6.74, 7.99), (8.07, 9.9)]
+    s['bands'] = s['bands'] + [(2.7, L - 0.05, 0.84, 1.04, 'trim', None)]
+    return s
+
+
 def spec_police():
     s = spec_estate()
     s.update(name='police')
@@ -1388,7 +1399,7 @@ SPECS = {
     'city': spec_city, 'hatch': spec_hatch, 'saloon': spec_saloon, 'estate': spec_estate, 'coupe': spec_coupe,
     'suv': spec_suv, 'utility': spec_utility, 'pickup': spec_pickup, 'taxi': spec_taxi,
     'van': spec_van, 'minibus': spec_minibus, 'camper': spec_camper,
-    'lorry': spec_box_lorry, 'tipper': spec_tipper, 'logger': spec_logger, 'bus': spec_bus,
+    'lorry': spec_box_lorry, 'tipper': spec_tipper, 'logger': spec_logger, 'postbus': spec_postbus, 'bus': spec_bus,
     'police': spec_police, 'ambulance': spec_ambulance, 'fire': spec_fire, 'icecream': spec_icecream,
     'horsebox': spec_horsebox, 'decker': spec_decker, 'supercar': spec_supercar, 'roadster': spec_roadster, 'gt': spec_gt,
 }
