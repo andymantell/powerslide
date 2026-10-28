@@ -23,6 +23,9 @@ const BEHIND = 700; // structures and props this far back are dropped
 // pieces: set pieces and how often each comes. animals and plants are
 // scattered in the fields; verge props stand by the road; houses line a
 // village, with `centre` props in the middle of it; fence runs along farms.
+// road: set pieces that need the road laid out for them (a level straight,
+// a gentle coast road), planned as the road is generated (see roadPlans).
+//
 // Pieces that aren't a plan of their own, and the plan each is built on.
 const NEEDS = { village: 'flat', farm: 'flat', yard: 'clearing', camp: 'flat', town: 'flat', hospice: 'flat', rockgallery: 'gallery', tors: 'flat' };
 
@@ -82,6 +85,7 @@ const PALETTES = {
     plants: ['tumbleweed', 'boulder_red', 'boulder_red_b', 'sagebrush'],
     town: ['motel', 'diner', 'gas_station', 'saloon', 'store', 'trading_post'],
     townSmall: ['hitching_rail', 'wagon_wheel', 'pickup', 'pickup_b', 'water_tank_west'],
+    road: { dam: 1 },
   },
   // Lit city streets of blocks, Victorian rows and neon, with trams,
   // strings of lights, an underpass and the docks.
@@ -98,6 +102,7 @@ const PALETTES = {
     towers: ['tower_a', 'tower_b', 'tower_c', 'tower_d', 'tower_e'],
     street: { style: 'city' },
     harbour: { near: 30, cranes: 3 },
+    road: { suspension: 1 },
   },
   // Clifftop farmland: field walls, sheep and gorse, wind turbines, and
   // fishing villages round a little harbour.
@@ -112,6 +117,7 @@ const PALETTES = {
     farm: ['cottage', 'cottage_b', 'tractor'],
     fence: 'fieldwall',
     harbour: { near: 14, style: 'fishing', arm: 70 },
+    road: { sea: 1 },
   },
   // The high pass: galleries blasted through the rock, snow cuttings,
   // meltwater across the road, rockfall and the hospice at the top.
@@ -121,6 +127,8 @@ const PALETTES = {
     verge: ['shrine', 'panorama', 'sign_rockfall'],
     snowpoles: true,
     far: ['summitcross'],
+    road: { dam: 1 },
+    spill: true,
     hospice: [['hospice', 26], ['chapel', 24], ['kennel', 14], ['souvenir_a', 10], ['souvenir_b', 10], ['stbernard', 9.5], ['pass_sign', 8.4]],
   },
   // Anything else: the plainer pieces only.
@@ -132,6 +140,12 @@ const PALETTES = {
     fence: 'fence',
   },
 };
+
+// The road's plans (Road.reset's shape.plans) for a biome's set pieces, or
+// null with set pieces off.
+export function roadPlans(biome, rate = 1) {
+  return rate > 0 ? PALETTES[biome]?.road || null : null;
+}
 
 export class Scenery {
   constructor(road, terrain, props, structures) {
@@ -204,10 +218,16 @@ export class Scenery {
       if (job) jobs.push(job);
     };
 
-    // A set piece now and then.
-    if (a >= this.pieceFrom && this.rate > 0) {
+    // A stretch the road laid out for a set piece comes first; otherwise a
+    // set piece now and then, clear of any such stretch.
+    const planned = road.planned.find((p) => !p.done && p.s0 < b);
+    if (planned) {
+      planned.done = true;
+      this.plannedPiece(planned, feature);
+      this.pieceFrom = planned.s1 + ((300 + rand() * 600) * (pal.gap ?? 1)) / Math.max(this.rate, 0.5);
+    } else if (a >= this.pieceFrom && this.rate > 0) {
       const piece = this.pickPiece(a, b);
-      if (piece) {
+      if (piece && !road.planned.some((p) => !p.done && this.pieceEnd > p.s0 - 250 && this.pieceStart < p.s1 + 150)) {
         piece(feature, entries);
         this.pieceFrom = this.pieceEnd + ((500 + rand() * 900) * (pal.gap ?? 1)) / this.rate;
       }
@@ -228,10 +248,13 @@ export class Scenery {
     if (pal.snowpoles && road.wildness(a) > 0.4 && rand() < 0.5) entries.push({ row: 'snowpole', from: at(a), to: at(b), d: 6.6, every: 22, both: true });
 
     dressRange(road, props, a, b, entries.filter((e) => [].concat(e.type || e.row || e.scatter || []).every((t) => PROP_TYPES[t])), rand);
-    // Nothing on another stretch of road (the leg below a hairpin).
+    // Nothing on another stretch of road (the leg below a hairpin), and
+    // nothing standing in the sea or a lake.
     const q = {};
+    const waters = [...(this.structures.endless || []), ...jobs].filter((j) => j.level != null && (j.f.type === 'sea' || j.f.type === 'lake'));
     props.list = props.list.filter((p) => {
       const g = road.field(p.x, p.z, q);
+      if (p.y === null && waters.some((w) => g.index > w.s0 - 200 && g.index < w.s1 + 200 && this.terrain.heightAt(p.x, p.z) < w.level + 0.5)) return false;
       return g.dist > 8 + (PROP_TYPES[p.type].r || 0) || (g.index > a - 150 && g.index < a + 800);
     });
     props.shape();
@@ -251,6 +274,23 @@ export class Scenery {
     });
     for (const job of jobs) this.structures.buildJob(job);
     props.finish(true);
+  }
+
+  // The set piece for a stretch the road laid out for it (road.planned).
+  plannedPiece(p, feature) {
+    const rand = this.rand;
+    const S = this.road.start;
+    const from = p.s0 - S, to = p.s1 - S;
+    const side = p.side > 0 ? 'right' : 'left';
+    if (p.type === 'sea') {
+      feature({ type: 'sea', from, to, side, near: 16 + rand() * 6, below: 22 + rand() * 16 });
+    } else if (p.type === 'dam') {
+      // The reservoir on one side, the drop on the other.
+      feature({ type: 'lake', from: from - 40, to: to + 40, side, near: 10, far: 500, below: 3 });
+      feature({ type: 'dam', from, to, side, depth: 65 + rand() * 20, ...(this.palette.spill ? { spill: 40 } : {}) });
+    } else if (p.type === 'suspension') {
+      feature({ type: 'suspension', from, to, depth: 28 + rand() * 4, river: (to - from) * 0.45, boats: 3 });
+    }
   }
 
   // Chooses a set piece that fits the road just ahead of a, or null. Each
@@ -300,6 +340,7 @@ export class Scenery {
       return c >= 0 ? -1 : 1;
     };
     const done = (end) => {
+      this.pieceStart = s0;
       this.pieceEnd = end;
     };
 

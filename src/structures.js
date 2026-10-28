@@ -366,9 +366,11 @@ export class Structures {
 
   // How slippery the road is at s from meltwater running over it, 0..1.
   slickAt(s) {
-    for (const j of this.todo || []) {
-      if (j.f.type !== 'melt' || s < j.s0 - 3 || s > j.s1 + 3) continue;
-      return smooth(j.s0 - 3, j.s0 - 1, s) * (1 - smooth(j.s1 + 1, j.s1 + 3, s));
+    for (const list of [this.todo, this.endless]) {
+      for (const j of list || []) {
+        if (j.f.type !== 'melt' || s < j.s0 - 3 || s > j.s1 + 3) continue;
+        return smooth(j.s0 - 3, j.s0 - 1, s) * (1 - smooth(j.s1 + 1, j.s1 + 3, s));
+      }
     }
     return 0;
   }
@@ -725,16 +727,29 @@ export const PLANS = {
   // in a cliff to rocks and the odd strip of sand. `beach` lays a gentle
   // shelf of sand down to the water instead, all along or over [from, to]. The land rises on the other
   // side, and the sea side gets the guardrail.
+  //
+  // Endless gives it `from` and `to`: a bay along that stretch only (the
+  // road is laid gently there, see road.js LAYOUTS), its water `below` m
+  // under the stretch's lowest point, with headlands at either end and a far
+  // shore `far` m (1400) out.
   sea(job) {
     const { f } = job;
     const road = this.road;
     const side = (job.side = f.side === 'left' ? -1 : 1);
+    const bay = (job.bay = f.from !== undefined);
+    const { s0, s1 } = job;
     let lo = Infinity;
     const end = Math.min(road.count, Math.round((road.finish ?? road.count) + 40));
-    for (let i = Math.round(road.start); i < end; i++) lo = Math.min(lo, road.y[i]);
-    const level = (job.level = this.seaLevel = this.props.seaLevel = lo - (f.below ?? 40));
+    if (bay) for (let i = Math.round(s0); i <= s1; i++) lo = Math.min(lo, road.y[i]);
+    else for (let i = Math.round(road.start); i < end; i++) lo = Math.min(lo, road.y[i]);
+    const level = (job.level = lo - (f.below ?? 40));
+    if (!bay) this.seaLevel = this.props.seaLevel = level;
     const near = f.near ?? 16;
-    for (let i = 0; i < road.count; i++) road.c[i] = -side;
+    const far = (job.far = f.far ?? 1400);
+    if (bay) for (let i = Math.max(0, Math.round(s0 - 60)); i < Math.min(road.count, s1 + 60); i++) road.c[i] = -side;
+    else for (let i = 0; i < road.count; i++) road.c[i] = -side;
+    // A bay: 1 along its middle, 0 at the headlands either end.
+    const inBay = (job.inBay = (s) => (bay ? smooth(s0, s0 + 250, s) * (1 - smooth(s1 - 250, s1, s)) : 1));
     // Coves and headlands: how far the cliff edge is from the road at s.
     const ph = (this.level?.seed ?? 1) * 0.37;
     // `heads`: [at, d, width] headlands reaching d m out at `at`, for a
@@ -760,11 +775,17 @@ export const PLANS = {
       e = near + e * (1 - beachAt(s));
       for (const [at, w] of coves) e += (near - 2 - e) * Math.exp(-(((s - at) / w) ** 2));
       for (const [at, d, w] of heads) e = Math.max(e, d * Math.exp(-(((s - at) / w) ** 2)));
-      return e;
+      return e + 3000 * (1 - inBay(s));
     });
     const n2 = this.terrain.noise2;
     this.terrain.mods.push((x, z, fd, h) => {
       if (fd.side !== side) return h;
+      if (bay) {
+        if (fd.index < s0 - 150 || fd.index > s1 + 150) return h;
+        // No dips below the water round the bay's ends (the water stops
+        // there), and a far shore rising out of it.
+        if (inBay(fd.index) < 1 || fd.dist > far - 300) h = Math.max(h, level + 2 + Math.max(0, fd.dist - far) * 0.12);
+      }
       const e = edge(fd.index);
       if (fd.dist < e - 4) return h;
       // A beach (all along, or [from, to]): a gentle shelf of sand from
@@ -793,7 +814,8 @@ export const PLANS = {
       const sand = sandAt(fd.index);
       if (sand > 0) bed += (level + 1.2 - Math.max(0, fd.dist - e - run) * 0.045 - bed) * sand;
       const y = t < 1 ? Math.max(face, bed) : bed;
-      const yc = Math.min(h, y + (h - y) * (1 - smooth(e - 4, e, fd.dist)));
+      let yc = Math.min(h, y + (h - y) * (1 - smooth(e - 4, e, fd.dist)));
+      if (bay) yc += (h - yc) * smooth(far - 300, far, fd.dist);
       return yc + (yb - yc) * wb;
     });
     // Sand on the beach, and wet rock and sand at the waterline.
@@ -811,9 +833,10 @@ export const PLANS = {
     };
     // Keep trees off the cliff face and out of the water.
     const fr = {};
-    for (let s = 0; s < road.count; s += 15) {
+    for (let s = bay ? s0 : 0; s < (bay ? s1 : road.count); s += 15) {
       road.sample(s, fr);
       const e = edge(s);
+      if (e > far) continue;
       for (let d = e - 2; d < e + 70; d += 14) this.terrain.block(fr.x + fr.rightX * d * side, fr.z + fr.rightZ * d * side, 12);
     }
   },
@@ -2137,8 +2160,9 @@ const BUILDS = {
     // Boulders fallen from the cliff, along its foot at the waterline.
     const road = this.road;
     const fr = {};
-    for (let s = road.start - 200; s < Math.min(road.count, (road.finish ?? road.count) + 300); s += 9) {
-      if (job.beachAt(s) > 0.3) continue;
+    const [b0, b1] = job.bay ? [job.s0, job.s1] : [road.start - 200, Math.min(road.count, (road.finish ?? road.count) + 300)];
+    for (let s = b0; s < b1; s += 9) {
+      if (job.beachAt(s) > 0.3 || job.edge(s) > job.far) continue;
       road.sample(s, fr);
       const e = job.edge(s);
       for (let d = e; d < e + 120; d += 3) {
@@ -2152,6 +2176,8 @@ const BUILDS = {
         break;
       }
     }
+    this.seaMat ||= seaMaterial(this.waterNormal, job.f.color);
+    if (job.bay) return bayWater.call(this, job);
     // One big sheet of water out to the horizon, centred on the road.
     const m = road.sample(road.count / 2, {});
     const g = new THREE.PlaneGeometry(24000, 24000, 1, 1);
@@ -2160,7 +2186,6 @@ const BUILDS = {
     const pos = g.attributes.position;
     const uv = g.attributes.uv;
     for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / 22, pos.getZ(i) / 22);
-    this.seaMat ||= seaMaterial(this.waterNormal, job.f.color);
     const sea = new THREE.Mesh(g, this.seaMat);
     sea.receiveShadow = true;
     this.group.add(sea);
@@ -3474,6 +3499,50 @@ function river(pts, width, fall = false) {
 // The rock over a rock gallery, [d, h] from the top of the windows' wall
 // back into the mountain (d towards it, h above the road).
 const GALLERY_ROOF = [[-8.2, 8.1], [-7.4, 10.4], [-2, 13.4], [4, 16.4], [9.5, 19.3]];
+
+// Endless bays: water over the bay only, a strip from under the cliffs out
+// past the far shore. Its cross lines all run square to the bay's overall
+// direction, so they never cross on the inside of a bend.
+function bayWater(job) {
+  const road = this.road;
+  const a = road.sample(job.s0, {}), b = road.sample(job.s1, {});
+  let dx = b.x - a.x, dz = b.z - a.z;
+  const l = Math.hypot(dx, dz);
+  dx /= l;
+  dz /= l;
+  // Right of the bay's direction, towards the sea.
+  const rx = -dz * job.side, rz = dx * job.side;
+  const pos = [], uv = [], index = [];
+  const fr = {};
+  const D0 = 6, D1 = job.far + 400;
+  let n = 0;
+  for (let s = job.s0; s <= job.s1 + 1e-6; s += 20) {
+    road.sample(Math.min(s, job.s1), fr);
+    for (const d of [D0, D1]) {
+      const x = fr.x + rx * d, z = fr.z + rz * d;
+      pos.push(x, job.level, z);
+      uv.push(x / 22, z / 22);
+    }
+    if (n) {
+      const i = n * 2;
+      index.push(i - 2, i - 1, i, i - 1, i + 1, i);
+    }
+    n++;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  if (g.attributes.normal.getY(0) < 0) {
+    for (let i = 0; i < index.length; i += 3) [index[i + 1], index[i + 2]] = [index[i + 2], index[i + 1]];
+    g.setIndex(index);
+    g.computeVertexNormals();
+  }
+  const sea = new THREE.Mesh(g, this.seaMat);
+  sea.receiveShadow = true;
+  this.group.add(sea);
+}
 
 // A gallery blasted through the rock (gallery "style": "rock"): a rough vault
 // with window openings through the valley-side wall every 16 m, lamps down

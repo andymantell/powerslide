@@ -21,7 +21,7 @@ import { Grass } from './grass.js';
 import { Props } from './props.js';
 import { Structures } from './structures.js';
 import { dressLevel } from './dressing.js';
-import { Scenery } from './scenery.js';
+import { Scenery, roadPlans } from './scenery.js';
 import { WHEEL_R } from './rider.js';
 import { lerp } from './noise.js';
 import { watchForUpdates } from './version.js';
@@ -189,7 +189,7 @@ async function loadWorld(level) {
   worldKey = level ? null : setupKey();
   game.worldRidden = false;
   game.seed = level ? level.seed : mix.seed;
-  road.reset(game.seed, level, mix.shape);
+  road.reset(game.seed, level, level ? mix.shape : { ...mix.shape, plans: roadPlans(mix.biome?.id, mix.sets) });
   const biome = level ? biomeOf(level) : mix.biome;
   road.drive = biome?.drive === 'left' ? -1 : 1;
   // The biome picks the traffic mix and the side of the road (and your lane).

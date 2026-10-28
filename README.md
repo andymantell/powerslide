@@ -76,8 +76,12 @@ biome has its own palette there (set pieces, verge props, animals, houses):
 streets in the suburbs and the city, redwood tunnels and trestles in the
 forest, arches, slot canyons and railways in the canyon, turbines and fishing
 harbours on the coast, rock galleries, snow walls and meltwater on the pass.
-The sea, dams and the suspension bridge stay campaign-only, since they need
-the whole road (or a level stretch) shaped for them. Building terraces are
+Set pieces that need the road itself shaped for them (a palette's `road`)
+are planned as the road is generated: `Road.planStretch` lays a level
+straight for a dam or the suspension bridge, or a couple of km of gentle
+coast road for a bay of sea (`sea` with `from`/`to`: its own water level,
+headlands at the ends and a far shore), and lists it in `road.planned` for
+the scenery to build. Building terraces are
 kept last in `terrain.mods`, so a later stretch's ground can't tilt a house.
 
 Alpine Meadows is built. The other seven biomes (Dartmoor, Hillside Suburbs,

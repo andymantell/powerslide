@@ -74,6 +74,14 @@ export class Road {
     this.finish = null;
     this.checkpoints = [];
     this.queue = null;
+    // Endless: stretches laid out on purpose for set pieces that need a
+    // particular road (shape.plans, { type: weight }, from src/scenery.js):
+    // a level straight for a dam or a bridge, a long gentle run for a
+    // coastline. planned lists them, { type, s0, s1, side }.
+    this.plans = !level && shape.plans && Object.keys(shape.plans).length ? shape.plans : null;
+    this.planned = [];
+    this.planRand = mulberry32(seed + 5150);
+    this.nextPlan = START_S + 1800 + this.planRand() * 1500;
     this.headingOver = 0; // furthest |heading| past MAX_HEADING, for the level checker
     // Which side traffic keeps to: 1 right, -1 left, and whether drops get
     // guardrails (main.js sets both per biome).
@@ -145,6 +153,7 @@ export class Road {
     }
     if (s.gradeLeft === Infinity) s.gradeLeft = 0;
     s.gradeRate = 0.0004;
+    if (this.plans && this.count * DS > this.nextPlan && this.planStretch()) return;
     const { corners, sharp } = this.shapeHere();
     // Chances of a straight, big sweeper and tight bend (the rest are
     // near-hairpins): 0.14, 0.44, 0.28, 0.14 with the default shape.
@@ -181,6 +190,28 @@ export class Road {
     }
     s.kappaTarget = kappa;
     s.segLeft = len;
+  }
+
+  // Lays out the next stretch for one of the planned set pieces, as a queue
+  // of pieces like a level's. Not while the road is heading well off down
+  // the hill: a long straight then would run past the heading limit.
+  planStretch() {
+    if (Math.abs(this.state.heading) > 0.6) return false;
+    const r = this.planRand;
+    const types = Object.entries(this.plans);
+    let total = 0;
+    for (const [, w] of types) total += w;
+    let k = r() * total, type = types[0][0];
+    for (const [t, w] of types) if ((k -= w) <= 0) { type = t; break; }
+    const at = this.count * DS;
+    const lay = LAYOUTS[type](r, this.state);
+    this.planned.push({ type, s0: at + lay.from, s1: at + lay.to, side: r() < 0.5 ? -1 : 1 });
+    let len = 0;
+    for (const p of lay.pieces) len += pieceLength(p);
+    this.nextPlan = at + len + 2500 + r() * 3500;
+    this.queue = lay.pieces;
+    this.pickSegment();
+    return true;
   }
 
   step() {
@@ -440,6 +471,43 @@ export function spanRange(f) {
   const half = (f.span ?? 18) / 2;
   return [f.at - half, f.at + half];
 }
+
+// Road layouts for planned set pieces: the pieces, and where along them
+// (from, to) the set piece goes. Each eases in from whatever came before.
+const LAYOUTS = {
+  // A dam's crest: level and straight.
+  dam: (r) => {
+    const L = 260 + r() * 80;
+    return { from: 90, to: 90 + L, pieces: [{ straight: 90, grade: 0.015, ramp: 70 }, { straight: L, grade: 0.015 }, { straight: 60, grade: 0.06, ramp: 50 }] };
+  },
+  // A long bridge over a river: level and straight.
+  suspension: (r) => {
+    const L = 440 + r() * 80;
+    return { from: 90, to: 90 + L, pieces: [{ straight: 90, grade: 0.015, ramp: 70 }, { straight: L, grade: 0.015 }, { straight: 60, grade: 0.06, ramp: 50 }] };
+  },
+  // A coast road: a couple of km of gentle sweepers and straights at an
+  // easy grade, so the cliffs down to the sea stay a sensible height.
+  sea: (r, st) => {
+    const grade = 0.03 + r() * 0.015;
+    const pieces = [{ straight: 80, grade, ramp: 80 }];
+    let len = 0, heading = st.heading;
+    const want = 1600 + r() * 900;
+    while (len < want) {
+      let p;
+      if (r() < 0.4) p = { straight: 60 + r() * 120, grade };
+      else {
+        const radius = 160 + r() * 200, length = 80 + r() * 120;
+        // Turn back towards straight down the hill when it has wandered.
+        const sign = Math.abs(heading) > 0.3 ? -Math.sign(heading) : r() < 0.5 ? -1 : 1;
+        heading += (sign * length) / radius;
+        p = { bend: sign > 0 ? 'right' : 'left', radius, length, grade };
+      }
+      pieces.push(p);
+      len += pieceLength(p);
+    }
+    return { from: 80, to: 80 + len, pieces };
+  },
+};
 
 export function pieceLength(p) {
   return p.straight ?? p.length;
