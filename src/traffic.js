@@ -8,7 +8,7 @@
 // or the same type in the same colour, doesn't come past twice in a row.
 
 import * as THREE from 'three';
-import { LANE_WIDTH } from './road.js';
+import { LANE_WIDTH, HALF_WIDTH } from './road.js';
 import { clamp, mulberry32 } from './noise.js';
 import { VehicleFleet } from './vehicles.js';
 
@@ -115,7 +115,13 @@ export class Traffic {
     this.frame = {};
     this.side = 1; // +1 drive on the right, -1 on the left
     this.mix = MIXES.alpine;
+    this.sideRoads = [];
     this.configure();
+  }
+
+  // Side roads (Structures.sideRoads) that cars pull out of.
+  setSideRoads(list) {
+    this.sideRoads = list || [];
   }
 
   // Headlamp level: 0 in daylight, 1 at night.
@@ -139,6 +145,7 @@ export class Traffic {
     this.clear();
     this.rand = mulberry32(seed);
     this.spawnTimer = 0;
+    this.joinTimer = 4;
     this.density = opts.density ?? 1;
     this.speedScale = opts.speed ?? 1;
     this.recent = []; // last spawns: { type, paint }
@@ -178,15 +185,17 @@ export class Traffic {
     return pick(this.rand, fresh.length ? fresh : list)[0];
   }
 
-  spawn(playerS, dir) {
+  spawn(playerS, dir, at, join) {
     const r = this.rand;
-    const type = this.pickType(dir);
+    let type = this.pickType(dir);
+    // Nothing big squeezes out of a side street.
+    if (join && !['car', 'van', 'bike'].includes(TYPES[type].kind)) type = 'hatch';
     const T = TYPES[type];
     const meta = this.fleet.meta(type) || { L: 4.4, W: 1.8, kind: T.kind };
     // Emergency vehicles mostly have their blue lights on. Going your way,
     // they come from behind and overtake you.
-    const siren = !!T.emergency && r() < 0.75;
-    const s = siren && dir > 0 ? playerS - 130 - r() * 60 : dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380;
+    const siren = !!T.emergency && r() < 0.75 && !join;
+    const s = at ?? (siren && dir > 0 ? playerS - 130 - r() * 60 : dir < 0 ? playerS + 550 + r() * 250 : playerS + 220 + r() * 380);
     // Keep a sensible gap to vehicles already in that lane.
     for (const c of this.cars) if (c.dir === dir && Math.abs(c.s - s) < 30 + (c.L + meta.L) * 1.5) return;
     const paintHex = this.pickPaint(type, T.paint);
@@ -233,8 +242,105 @@ export class Traffic {
       yaw: 0,
     };
     car.v = car.vmax * 0.8;
-    this.place(car, 0);
+    if (join) {
+      car.join = join;
+      car.v = 0;
+      this.placeJoin(car);
+    } else this.place(car, 0);
     this.cars.push(car);
+    return car;
+  }
+
+  // Now and then a car waits at a side road ahead of the rider, then pulls
+  // out into either lane when the gap is clear.
+  pullOut(ps) {
+    const r = this.rand;
+    const ahead = this.sideRoads.filter((j) => j.s > ps + 60 && j.s < ps + 260);
+    if (!ahead.length) return;
+    const j = ahead[Math.floor(r() * ahead.length)];
+    if (this.cars.some((c) => c.join && c.join.road === j)) return;
+    const dir = r() < 0.5 ? 1 : -1;
+    // Nearside: the lane on the side road's own side of the main road.
+    const near = dir * this.side === j.side;
+    const car = this.spawn(ps, dir, j.s, { road: j, phase: 'wait', u: 0, wait: 1.5 + r() * 2, near });
+    if (car) car.vmax = Math.min(car.vmax, 15);
+  }
+
+  // A joining car's path: a curve from the give-way line on the side road
+  // into its lane on the main road. Returns x, z (and the tangent) at u 0..1.
+  joinPath(c, u) {
+    const j = c.join.road;
+    const at = (t, n) => [j.ox + j.ux * t + j.vx * n, j.oz + j.uz * t + j.vz * n];
+    // On the side road it keeps to its side (left when driving on the left).
+    // Its right, heading in along -u, is (uz, -ux); keep to the driving side.
+    const n0 = this.side * (j.uz * j.vx - j.ux * j.vz) * (LANE_WIDTH / 2);
+    const t0 = HALF_WIDTH + 1.2 + c.L / 2;
+    const d = c.dir;
+    const lane = c.home; // lateral offset on the main road (right of +s)
+    const side = j.side; // +1: side road on the right of +s, so t = lane * side
+    // Points in (t out along the side road, n along the main road) terms.
+    const P = [
+      [t0, n0],
+      [t0 - c.L * 0.6, n0],
+      [lane * side, d * 4],
+      [lane * side, d * (9 + c.L / 2)],
+    ];
+    const v = 1 - u;
+    const b = [v * v * v, 3 * v * v * u, 3 * v * u * u, u * u * u];
+    const db = [-3 * v * v, 3 * v * v - 6 * v * u, 6 * v * u - 3 * u * u, 3 * u * u];
+    let t = 0, n = 0, dt = 0, dn = 0;
+    for (let i = 0; i < 4; i++) {
+      t += b[i] * P[i][0]; n += b[i] * P[i][1];
+      dt += db[i] * P[i][0]; dn += db[i] * P[i][1];
+    }
+    const [x, z] = at(t, n);
+    return { x, z, t, dx: j.ux * dt + j.vx * dn, dz: j.uz * dt + j.vz * dn };
+  }
+
+  placeJoin(c) {
+    const j = c.join.road;
+    const p = this.joinPath(c, c.join.u);
+    c.x = p.x;
+    c.z = p.z;
+    const fr = this.road.sample(j.s, this.frame);
+    const tw = Math.max(0, p.t);
+    c.y = tw > HALF_WIDTH ? j.y(tw) : fr.y;
+    c.yaw = Math.atan2(p.dx, -p.dz);
+    c.pitch = 0;
+    // Where it is in main-road terms, so following, overtaking and the
+    // rider's collision checks all see it.
+    const rx = p.x - j.ox, rz = p.z - j.oz;
+    c.s = j.s + rx * j.vx + rz * j.vz;
+    c.lane = rx * fr.rightX + rz * fr.rightZ;
+  }
+
+  // Waits for a gap, then follows the curve out; hands over to the normal
+  // driving at the end of it.
+  driveJoin(c, ps, player, dt) {
+    const J = c.join;
+    if (J.phase === 'wait') {
+      J.wait -= dt;
+      const busy = this.cars.some((o) => o !== c && !o.join && Math.abs(o.s - J.road.s) < 45 + o.v * 1.5);
+      // It gives way to the rider too, unless you're still a long way off.
+      const riderGap = J.road.s - ps;
+      const riderClose = riderGap > -6 && riderGap < 45 + player.speed * 1.2;
+      if (J.wait <= 0 && !busy && !riderClose) J.phase = 'go';
+      c.braking = true;
+      c.v = 0;
+    } else {
+      c.braking = false;
+      c.v = Math.min(c.v + 2.2 * dt, 7);
+      const len = 14 + c.L;
+      J.u = Math.min(1, J.u + (c.v * dt) / len);
+      if (J.u >= 1) {
+        c.join = null;
+        c.lane = c.home;
+        this.place(c, dt);
+        return;
+      }
+    }
+    this.placeJoin(c);
+    c.spin -= c.v * dt;
   }
 
   // Positions a vehicle from the road under its front and rear axles, so
@@ -277,10 +383,24 @@ export class Traffic {
       const dir = this.rand() < 0.62 ? -1 : 1;
       if (dir < 0 ? up < 5 : down < 3) this.spawn(ps, dir);
     }
+    if (this.sideRoads.length && this.density > 0) {
+      this.joinTimer -= dt;
+      if (this.joinTimer <= 0) {
+        this.joinTimer = (5 + this.rand() * 7) / this.density;
+        this.pullOut(ps);
+      }
+    }
     const f = this.frame;
     const night = this.lights;
     for (let i = this.cars.length - 1; i >= 0; i--) {
       const c = this.cars[i];
+      if (c.join) {
+        this.driveJoin(c, ps, player, dt);
+        this.lampsFor(c, night, dt);
+        if (c.s < ps - 220) this.cars.splice(i, 1);
+        else if (!player.crashed) this.interact(c, player, events);
+        continue;
+      }
       // Corner speed: drivers keep lateral acceleration modest (big ones more so).
       let vt = c.vmax;
       const look = c.s + c.dir * 25;
@@ -288,11 +408,24 @@ export class Traffic {
       const k = Math.abs(f.kappa);
       const latG = c.cls === 'lorry' || c.cls === 'bus' ? 0.22 : c.cls === 'bike' ? 0.42 : 0.32;
       if (k > 1e-4) vt = Math.min(vt, Math.sqrt((latG * G) / k));
+      // Ease right down for a mini roundabout and round the dome.
+      for (const j of this.sideRoads) {
+        if (!j.roundabout || j.side < 0) continue;
+        const ahead = (j.s - c.s) * c.dir;
+        if (ahead > -6 && ahead < 40) vt = Math.min(vt, 6 + Math.max(0, ahead - 12) * 0.35);
+      }
       // Follow the vehicle ahead in the same lane; pull over for a siren behind.
       let blocker = null;
       let pullOver = false;
       for (const o of this.cars) {
-        if (o === c || o.dir !== c.dir) continue;
+        if (o === c) continue;
+        // Something pulling out across or into this lane ahead: stop for it.
+        if (o.join && o.join.phase === 'go') {
+          const ahead = (o.s - c.s) * c.dir;
+          if (ahead > 0 && ahead < 40 && Math.abs(o.lane - c.lane) < 2.4) vt = Math.min(vt, Math.max(0, (ahead - c.L / 2 - 6) * 0.5));
+          continue;
+        }
+        if (o.dir !== c.dir) continue;
         const gap = (o.s - c.s) * c.dir - (o.L + c.L) / 2;
         if (Math.abs(o.lane - c.lane) < 1.6 && gap > 0 && gap < 36) {
           vt = Math.min(vt, o.v * (gap < 12 ? 0.7 : 1));
@@ -318,17 +451,7 @@ export class Traffic {
       c.v += clamp(vt - c.v, -6 * dt, accel * dt);
       c.s += c.v * c.dir * dt;
       this.place(c, dt);
-      c.lamps.head = 0.06 + night * 3.5;
-      c.lamps.tail = (c.braking ? 2.6 : 0.35) + night * 0.9;
-      if (c.beacon >= 0) {
-        c.beacon += dt;
-        c.lamps.amber = (c.beacon % 0.9) < 0.3 ? 4 : 0.1;
-      } else if (c.siren) {
-        // Blue lights: a quick double flash.
-        c.flash += dt;
-        const ph = c.flash % 0.7;
-        c.lamps.amber = ph < 0.08 || (ph > 0.16 && ph < 0.24) ? 6 : 0.15;
-      } else c.lamps.amber = TYPES[c.type].emergency ? 0.15 : 0.3 + night;
+      this.lampsFor(c, night, dt);
 
       if (c.s < ps - 220 || c.s > ps + 1000) {
         this.cars.splice(i, 1);
@@ -336,6 +459,24 @@ export class Traffic {
       }
       if (!player.crashed) this.interact(c, player, events);
     }
+  }
+
+  lampsFor(c, night, dt) {
+    c.lamps.head = 0.06 + night * 3.5;
+    c.lamps.tail = (c.braking ? 2.6 : 0.35) + night * 0.9;
+    if (c.beacon >= 0) {
+      c.beacon += dt;
+      c.lamps.amber = (c.beacon % 0.9) < 0.3 ? 4 : 0.1;
+    } else if (c.siren) {
+      // Blue lights: a quick double flash.
+      c.flash += dt;
+      const ph = c.flash % 0.7;
+      c.lamps.amber = ph < 0.08 || (ph > 0.16 && ph < 0.24) ? 6 : 0.15;
+    } else if (c.join && c.join.phase === 'wait') {
+      // Indicating: which way it's about to turn.
+      c.flash += dt;
+      c.lamps.amber = c.flash % 0.8 < 0.4 ? 3 : 0.1;
+    } else c.lamps.amber = TYPES[c.type].emergency ? 0.15 : 0.3 + night;
   }
 
   // Eases a vehicle towards a lateral position (m from the centreline).

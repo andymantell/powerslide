@@ -203,6 +203,7 @@ async function loadWorld(level) {
   dressLevel(level, road, props);
   props.shape();
   structures.build();
+  traffic.setSideRoads(structures.sideRoads());
   props.finish();
   // Endless dresses its road as it goes; the first stretch before any tiles.
   if (level) scenery.clear();

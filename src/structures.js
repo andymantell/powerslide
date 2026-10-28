@@ -396,6 +396,21 @@ export class Structures {
     return out;
   }
 
+  // Side roads traffic can pull out of: { s, side, roundabout, ox, oz, ux,
+  // uz, vx, vz, L, y(t) } where (ux, uz) points out along the side road and
+  // y(t) is its height t m out from the main road's centre line.
+  sideRoads() {
+    const out = [];
+    for (const j of this.todo || []) {
+      const arms = j.f.type === 'junction' ? [j] : j.f.type === 'roundabout' ? j.arms || [] : [];
+      for (const a of arms) {
+        if (a.ux === undefined) continue;
+        out.push({ s: j.s0, side: a.side, roundabout: j.f.type === 'roundabout', ox: a.ox, oz: a.oz, ux: a.ux, uz: a.uz, vx: a.vx, vz: a.vz, L: a.L, y: (tt) => junctionY(a, tt) });
+      }
+    }
+    return out;
+  }
+
   // Whether a side road comes in within `w` m of s on that side.
   mouthAt(s, side, w) {
     return this.mouths(side).some((m) => Math.abs(s - m) < SIDE_HALF + w);
