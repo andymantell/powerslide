@@ -63,6 +63,52 @@ export function createPropMaterial(renderer) {
           vec3 a = abs(n);
           if (a.y > a.x && a.y > a.z) return p.xz;
           return a.x > a.z ? vec2(p.z, p.y) : vec2(p.x, p.y);
+        }
+        // Interior mapping: a lit room behind a window, faked by casting the
+        // view ray into a box (one cell of the wall grid wide and tall, depth
+        // deep) and shading whichever wall, floor or ceiling it hits. h picks
+        // the room's colours and furnishings. Returns the room's light.
+        vec3 pRoom(vec3 pl, vec3 pn, vec3 nV, vec2 cell, float depth, float h, bool shop) {
+          vec3 tM = normalize(cross(vec3(0.0, 1.0, 0.0), pn));
+          vec2 f = fract(vec2(dot(pl, tM), pl.y) / cell);
+          vec3 up = (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
+          vec3 tV = normalize(cross(up, nV));
+          vec3 bV = cross(nV, tV);
+          vec3 rd = normalize(-vViewPosition);
+          vec3 d = vec3(dot(rd, tV) / cell.x, dot(rd, bV) / cell.y, min(dot(rd, nV), -0.05) / depth);
+          d.xy += sign(d.xy) * 1e-4;
+          vec2 txy = (step(0.0, d.xy) - f) / d.xy;
+          float tz = -1.0 / d.z;
+          float t = min(min(txy.x, txy.y), tz);
+          vec3 hit = vec3(f, 0.0) + d * t;
+          vec3 wall = mix(vec3(0.95, 0.82, 0.62), vec3(0.7, 0.8, 0.85), step(0.6, fract(h * 17.3)));
+          vec3 c;
+          if (t == tz) {
+            c = wall;
+            // Furniture against the back wall: a sofa, a desk or shelves.
+            float fx = abs(hit.x - 0.3 - fract(h * 5.7) * 0.4);
+            if (fx < 0.22 && hit.y < 0.25 + fract(h * 9.1) * 0.2) c *= 0.35;
+            // A picture or a poster.
+            if (abs(hit.x - 0.5 - (fract(h * 3.3) - 0.5) * 0.3) < 0.1 && abs(hit.y - 0.62) < 0.09) c = mix(c, vec3(0.5, 0.3, 0.25) + fract(h * vec3(7.1, 3.7, 5.3)) * 0.4, 0.8);
+          } else if (t == txy.y) {
+            c = d.y > 0.0 ? vec3(1.2) : vec3(0.3, 0.2, 0.13) * (0.6 + 0.8 * fract(h * 2.9));
+          } else {
+            c = wall * 0.6;
+            // A doorway in one side wall.
+            if (abs(hit.z + 0.55) < 0.14 && hit.y < 0.7 && hit.x > 0.5 == fract(h * 4.3) > 0.5) c *= 0.3;
+          }
+          if (shop && hit.y < 0.78 && t != txy.y) {
+            // Shelves of goods round a shop: bands of mixed colour.
+            float row = floor(hit.y * 5.0), sy = fract(hit.y * 5.0);
+            float along = t == tz ? hit.x : hit.z;
+            vec3 goods = 0.35 + 0.55 * fract(h * vec3(7.1, 3.7, 5.3) + floor(along * 9.0) * vec3(0.37, 0.61, 0.23) + row * 0.29);
+            c = mix(c, goods, step(0.25, sy) * 0.75);
+            c *= 0.6 + 0.4 * step(0.12, sy);
+          }
+          // Light from a ceiling lamp, falling off towards the floor and back.
+          float lamp = 0.45 + 0.75 * hit.y * hit.y;
+          lamp *= 1.0 - 0.5 * smoothstep(0.0, 1.0, -hit.z);
+          return c * lamp;
         }`,
       )
       .replace(
@@ -135,11 +181,19 @@ export function createPropMaterial(renderer) {
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
         if (pk > 6.5 && pk < 7.5) totalEmissiveRadiance += diffuseColor.rgb * (0.6 + uNight * 2.4);
-        else if (pk > 4.5 && pk < 5.5) totalEmissiveRadiance += vec3(1.0, 0.78, 0.45) * uNight * 0.9;
-        else if (pk > 10.5 && paneHash < 0.45) {
-          // Lit panes: mostly warm lamps, some cool office light, some dim.
-          vec3 lit = fract(paneHash * 13.7) < 0.25 ? vec3(0.62, 0.78, 1.0) : vec3(1.0, 0.66, 0.32);
-          totalEmissiveRadiance += lit * uNight * (0.12 + 0.5 * fract(paneHash * 3.1) * fract(paneHash * 5.3));
+        else if (uNight > 0.01 && ((pk > 4.5 && pk < 5.5) || (pk > 10.5 && paneHash < 0.45))) {
+          vec3 pn = normalize(vPNormal);
+          // Shop and cottage glass (5) shows a wider, deeper room than city
+          // panes, and is always lit.
+          bool shop = pk < 5.5;
+          vec2 cell = shop ? vec2(4.0, 3.2) : vec2(3.0, 3.2);
+          vec3 tM = normalize(cross(vec3(0.0, 1.0, 0.0), pn));
+          float h = shop ? pHash(vec3(floor(dot(vPLocal, tM) / 4.0), floor(vPLocal.y / 3.2), 3.0) + floor(vPInst * 0.37)) : paneHash;
+          // Mostly warm lamps, some cool office light, some dim.
+          vec3 lit = fract(h * 13.7) < 0.25 ? vec3(0.62, 0.78, 1.0) : vec3(1.0, 0.66, 0.32);
+          float k = shop ? 1.1 : 0.25 + 0.75 * fract(h * 3.1) * fract(h * 5.3);
+          vec3 room = abs(pn.y) < 0.5 ? pRoom(vPLocal, pn, normalize(nonPerturbedNormal), cell, shop ? 5.0 : 4.0, h, shop) : vec3(0.5);
+          totalEmissiveRadiance += room * lit * uNight * k;
         }`,
       );
     addLampLights(shader);
